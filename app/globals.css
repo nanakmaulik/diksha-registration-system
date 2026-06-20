@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #fff8ed;
+  color: #2d2418;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+@media print {
+  body {
+    background: white !important;
+  }
+
+  .admin-screen {
+    display: none !important;
+  }
+
+  .print-area {
+    display: block !important;
+  }
+
+  .print-area table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .print-area th,
+  .print-area td {
+    border: 1px solid black !important;
+    padding: 6px !important;
+    font-size: 10px !important;
+    vertical-align: top !important;
+  }
+
+  .print-area h1,
+  .print-area h2,
+  .print-area p {
+    color: black !important;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
 }
