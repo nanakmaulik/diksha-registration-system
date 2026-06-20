@@ -63,9 +63,16 @@ export default async function AdminPage() {
     );
   }
 
+  const cleanedRegistrations = (registrations || []).map((person: any) => ({
+    ...person,
+    slots: Array.isArray(person.slots)
+      ? person.slots[0] || null
+      : person.slots,
+  }));
+  
   return (
     <AdminDashboard
-      registrations={registrations || []}
+      registrations={cleanedRegistrations}
       slots={slots || []}
     />
   );
