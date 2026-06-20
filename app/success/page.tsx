@@ -2,87 +2,132 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 export default function SuccessPage() {
+  return (
+    <Suspense fallback={<SuccessLoading />}>
+      <SuccessContent />
+    </Suspense>
+  );
+}
+
+function SuccessContent() {
   const searchParams = useSearchParams();
 
-  const token = searchParams.get("token") || "DK-0001";
-  const date = searchParams.get("date") || "2026-07-02";
-  const time = searchParams.get("time") || "3:30 PM";
+  const token = searchParams.get("token") || "-";
+  const date = searchParams.get("date") || "-";
+  const time = searchParams.get("time") || "-";
 
   return (
-    <main className="min-h-screen bg-[#fff8ed] px-4 py-10 text-[#2d2418]">
-      <div className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm">
-        <div className="mx-auto w-36">
-          <Image
-            src="/logo.png"
-            alt="Diksha Logo"
-            width={400}
-            height={400}
-            className="h-auto w-full"
-            priority
-          />
-        </div>
+    <main className="min-h-screen bg-[#fff8ed] px-4 py-8 text-[#2d2418]">
+      <div className="mx-auto max-w-2xl">
+        <div className="rounded-3xl bg-white p-6 text-center shadow-sm md:p-10">
+          <div className="mx-auto w-32 md:w-40">
+            <Image
+              src="/logo.png"
+              alt="Diksha Logo"
+              width={400}
+              height={400}
+              className="h-auto w-full"
+              priority
+            />
+          </div>
 
-        <h1 className="mt-6 text-3xl font-extrabold">
-          Registration Successful
-        </h1>
+          <div className="mx-auto mt-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl">
+            ✓
+          </div>
 
-        <h2 className="mt-2 text-2xl font-bold text-green-700">
-          पंजीकरण सफल हुआ
-        </h2>
+          <h1 className="mt-6 text-3xl font-extrabold text-green-700">
+            Registration Successful
+          </h1>
 
-        <p className="mt-5 text-stone-700">
-          Your slot has been allotted automatically.
-        </p>
+          <h2 className="mt-2 text-2xl font-bold text-orange-800">
+            पंजीकरण सफल हुआ
+          </h2>
 
-        <p className="mt-1 text-stone-700">
-          आपका स्लॉट अपने आप निर्धारित कर दिया गया है।
-        </p>
-
-        <div className="mt-8 rounded-2xl bg-orange-50 p-5 text-left">
-          <InfoRow label="Token / टोकन" value={token} />
-          <InfoRow label="Date / दिनांक" value={formatDate(date)} />
-          <InfoRow label="Time / समय" value={time} />
-        </div>
-
-        <div className="mt-8 rounded-2xl border border-orange-100 p-5 text-left text-sm leading-6 text-stone-700">
-          <p className="font-bold text-stone-900">
-            Please come with your guardian/family and original ID proof.
+          <p className="mt-4 text-stone-600">
+            Please save your registration details.
           </p>
-          <p className="mt-1">
-            कृपया अपने अभिभावक/परिवार और मूल पहचान प्रमाण के साथ आएं।
-          </p>
-        </div>
 
-        <Link
-          href="/"
-          className="mt-8 inline-block rounded-2xl border border-orange-300 px-6 py-3 font-bold text-orange-800"
-        >
-          Back to Home
-          <span className="block text-sm font-normal">मुख्य पृष्ठ पर जाएं</span>
-        </Link>
+          <p className="text-stone-600">
+            कृपया अपनी पंजीकरण जानकारी सुरक्षित रखें।
+          </p>
+
+          <div className="mt-8 overflow-hidden rounded-2xl border border-orange-100 text-left">
+            <InfoRow label="Token / टोकन" value={token} />
+            <InfoRow label="Appointment Date / अपॉइंटमेंट तारीख" value={formatDate(date)} />
+            <InfoRow label="Appointment Time / अपॉइंटमेंट समय" value={time} />
+          </div>
+
+          <div className="mt-8 rounded-2xl bg-orange-50 p-5 text-left text-sm text-stone-700">
+            <p className="font-bold">Important Instructions:</p>
+            <p className="mt-2">
+              Please come on your selected date and time with your original ID proof.
+            </p>
+            <p className="mt-1">
+              कृपया चुनी हुई तारीख और समय पर अपना असली पहचान प्रमाण साथ लेकर आएं।
+            </p>
+          </div>
+
+          <div className="mt-8 flex flex-col gap-3 md:flex-row">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="w-full rounded-2xl bg-orange-700 px-5 py-4 font-bold text-white"
+            >
+              Print Confirmation
+              <span className="block text-sm font-normal">
+                पुष्टि प्रिंट करें
+              </span>
+            </button>
+
+            <Link
+              href="/"
+              className="w-full rounded-2xl border border-orange-300 px-5 py-4 text-center font-bold text-orange-800"
+            >
+              Back to Home
+              <span className="block text-sm font-normal">
+                मुख्य पृष्ठ पर जाएं
+              </span>
+            </Link>
+          </div>
+        </div>
       </div>
     </main>
   );
 }
 
+function SuccessLoading() {
+  return (
+    <main className="min-h-screen bg-[#fff8ed] px-4 py-8 text-[#2d2418]">
+      <div className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm">
+        <p className="font-bold">Loading confirmation...</p>
+        <p className="text-sm text-stone-600">पुष्टि लोड हो रही है...</p>
+      </div>
+    </main>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-2 border-b border-orange-100 p-4 last:border-b-0 md:grid-cols-2">
+      <p className="font-bold">{label}</p>
+      <p className="font-semibold text-orange-800">{value || "-"}</p>
+    </div>
+  );
+}
+
 function formatDate(dateString: string) {
-  const date = new Date(dateString);
+  if (!dateString || dateString === "-") return "-";
+
+  const [year, month, day] = dateString.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
 
   return date.toLocaleDateString("en-IN", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between border-b border-orange-100 py-3 last:border-b-0">
-      <span className="font-bold text-stone-700">{label}</span>
-      <span className="font-semibold text-stone-900">{value}</span>
-    </div>
-  );
 }
