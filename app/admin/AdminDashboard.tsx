@@ -90,8 +90,10 @@ export default function AdminDashboard({
     (slot) => slot.current_count < slot.capacity
   );
 
+  const tomorrowDate = getTomorrowDateString();
+
   const upcomingSlots = slots
-    .filter((slot) => slot.status !== "full")
+    .filter((slot) => slot.status !== "full" && slot.slot_date >= tomorrowDate)
     .slice(0, showAllSlots ? slots.length : 6);
 
   const selectedDateLabel =
@@ -686,4 +688,14 @@ function PrintHead({ children }: { children: React.ReactNode }) {
 
 function PrintCell({ children }: { children: React.ReactNode }) {
   return <td className="border border-black px-2 py-2">{children}</td>;
+}
+function getTomorrowDateString() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const year = tomorrow.getFullYear();
+  const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+  const day = String(tomorrow.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }

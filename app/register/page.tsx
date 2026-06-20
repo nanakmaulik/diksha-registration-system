@@ -77,9 +77,12 @@ export default function RegisterPage() {
 
   useEffect(() => {
     async function loadSlots() {
+      const tomorrow = getTomorrowDateString();
+    
       const { data, error } = await supabase
         .from("slots")
         .select("*")
+        .gte("slot_date", tomorrow)
         .order("slot_date", { ascending: true });
 
       if (error) {
@@ -1391,4 +1394,14 @@ function formatMonth(dateString: string) {
     month: "long",
     year: "numeric",
   });
+}
+function getTomorrowDateString() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const year = tomorrow.getFullYear();
+  const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+  const day = String(tomorrow.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
