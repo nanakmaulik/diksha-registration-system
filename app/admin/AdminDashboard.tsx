@@ -1,5 +1,6 @@
 "use client";
 
+import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -18,9 +19,9 @@ type Registration = {
   city: string | null;
   state: string | null;
   pin_code: string | null;
-  guardian_relation: string | null;
-  guardian_name: string | null;
-  guardian_mobile: string | null;
+  spouse_name: string | null;
+  father_name: string | null;
+  mother_name: string | null;
   family_name: string | null;
   family_relation: string | null;
   family_mobile: string | null;
@@ -28,6 +29,16 @@ type Registration = {
   id_number: string | null;
   remarks_by: string | null;
   status: string;
+  candidate_status: string | null;
+  final_meeting_attendance: string | null;
+  diksha_attendance: string | null;
+  final_meeting_date: string | null;
+  final_meeting_time: string | null;
+  diksha_date: string | null;
+  diksha_time: string | null;
+  evaluator_name: string | null;
+  evaluator_notes: string | null;
+  admin_remarks: string | null;
   created_at: string;
   aadhaar_file_url: string | null;
   aadhaar_file_name: string | null;
@@ -57,10 +68,84 @@ export default function AdminDashboard({
   const [slotDate, setSlotDate] = useState("all");
   const [showFullMobile, setShowFullMobile] = useState(false);
   const [showAllSlots, setShowAllSlots] = useState(false);
+
   const [selectedAadhaar, setSelectedAadhaar] = useState<{
     url: string;
     name: string;
   } | null>(null);
+
+  const [selectedAction, setSelectedAction] = useState<{
+    registrationId: string;
+    candidateName: string;
+    actionType: "status" | "attendance";
+    title: string;
+    newStatus?: string;
+    attendanceType?: string;
+    attendanceValue?: string;
+  } | null>(null);
+
+  const [actionNotes, setActionNotes] = useState("");
+  const [updatedBy, setUpdatedBy] = useState("Sewadar");
+  const [isUpdatingAction, setIsUpdatingAction] = useState(false);
+
+  async function handleSubmitAction(actionOverride?: {
+    actionType: "status" | "attendance";
+    title: string;
+    newStatus?: string;
+    attendanceType?: string;
+    attendanceValue?: string;
+  }) {
+    if (!selectedAction) return;
+
+    if (!updatedBy.trim()) {
+      alert("Please enter updated by name.\nकृपया अपडेट करने वाले का नाम भरें।");
+      return;
+    }
+
+    const actionToSave = actionOverride
+      ? { ...selectedAction, ...actionOverride }
+      : selectedAction;
+
+    setIsUpdatingAction(true);
+
+    if (actionToSave.actionType === "status") {
+      const { error } = await supabase.rpc("update_candidate_status", {
+        p_registration_id: selectedAction.registrationId,
+        p_new_status: actionToSave.newStatus,
+        p_action_type: actionToSave.title,
+        p_notes: actionNotes.trim(),
+        p_updated_by: updatedBy.trim(),
+      });
+
+      if (error) {
+        alert("Status update error: " + error.message);
+        setIsUpdatingAction(false);
+        return;
+      }
+    }
+
+    if (actionToSave.actionType === "attendance") {
+      const { error } = await supabase.rpc("update_candidate_attendance", {
+        p_registration_id: selectedAction.registrationId,
+        p_attendance_type: actionToSave.attendanceType,
+        p_attendance_value: actionToSave.attendanceValue,
+        p_notes: actionNotes.trim(),
+        p_updated_by: updatedBy.trim(),
+      });
+
+      if (error) {
+        alert("Attendance update error: " + error.message);
+        setIsUpdatingAction(false);
+        return;
+      }
+    }
+
+    setIsUpdatingAction(false);
+    setSelectedAction(null);
+    setActionNotes("");
+
+    window.location.reload();
+  }
 
   const filteredRegistrations = useMemo(() => {
     return registrations.filter((person) => {
@@ -71,7 +156,8 @@ export default function AdminDashboard({
         person.full_name.toLowerCase().includes(searchText) ||
         person.mobile.includes(searchText) ||
         person.token.toLowerCase().includes(searchText) ||
-        (person.city || "").toLowerCase().includes(searchText);
+        (person.city || "").toLowerCase().includes(searchText) ||
+        (person.candidate_status || "").toLowerCase().includes(searchText);
 
       const matchesSlot =
         slotDate === "all" || person.slots?.slot_date === slotDate;
@@ -142,10 +228,11 @@ export default function AdminDashboard({
                 प्रशासन डैशबोर्ड
               </h2>
               <p className="mt-2 text-sm text-stone-600">
-                View registrations and print date-wise registration list.
+                Manage registrations, final meetings, Diksha status and print
+                date-wise lists.
               </p>
               <p className="text-sm text-stone-600">
-                पंजीकरण देखें और तारीख अनुसार सूची प्रिंट करें।
+                पंजीकरण, फाइनल मीटिंग, दीक्षा स्थिति और तारीख अनुसार सूची देखें।
               </p>
             </div>
           </div>
@@ -330,7 +417,7 @@ export default function AdminDashboard({
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search name, mobile, token, city"
+              placeholder="Search name, mobile, token, city, status"
               className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
             />
 
@@ -384,7 +471,7 @@ export default function AdminDashboard({
           )}
 
           <div className="overflow-x-auto rounded-2xl border border-orange-100">
-            <table className="w-full min-w-[1050px] border-collapse text-left">
+            <table className="w-full min-w-[1450px] border-collapse text-left">
               <thead className="bg-orange-100">
                 <tr>
                   <TableHead>Token</TableHead>
@@ -393,6 +480,7 @@ export default function AdminDashboard({
                   <TableHead>City</TableHead>
                   <TableHead>Slot Date</TableHead>
                   <TableHead>Slot Time</TableHead>
+                  <TableHead>Actions</TableHead>
                   <TableHead>Aadhaar</TableHead>
                   <TableHead>Status</TableHead>
                 </tr>
@@ -404,6 +492,7 @@ export default function AdminDashboard({
                   <TableHead>शहर</TableHead>
                   <TableHead>स्लॉट दिनांक</TableHead>
                   <TableHead>स्लॉट समय</TableHead>
+                  <TableHead>कार्यवाही</TableHead>
                   <TableHead>आधार</TableHead>
                   <TableHead>स्थिति</TableHead>
                 </tr>
@@ -413,7 +502,7 @@ export default function AdminDashboard({
                 {filteredRegistrations.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       className="px-4 py-10 text-center font-semibold text-stone-600"
                     >
                       No matching registrations / कोई मिलान पंजीकरण नहीं मिला
@@ -426,7 +515,14 @@ export default function AdminDashboard({
                       className={index % 2 === 0 ? "bg-white" : "bg-orange-50"}
                     >
                       <TableCell>{person.token}</TableCell>
-                      <TableCell>{person.full_name}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p>{person.full_name || "-"}</p>
+                          <p className="mt-1 text-xs text-stone-500">
+                            {person.marital_status || "-"}
+                          </p>
+                        </div>
+                      </TableCell>
                       <TableCell>
                         {showFullMobile
                           ? person.mobile
@@ -439,6 +535,27 @@ export default function AdminDashboard({
                           : "-"}
                       </TableCell>
                       <TableCell>{person.slots?.slot_time || "-"}</TableCell>
+
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedAction({
+                              registrationId: person.id,
+                              candidateName: person.full_name || person.token,
+                              actionType: "status",
+                              title: "Manage Candidate",
+                              newStatus: person.candidate_status || person.status,
+                            })
+                          }
+                          className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
+                        >
+                          Manage
+                          <span className="block text-[10px] font-normal">
+                            अपडेट करें
+                          </span>
+                        </button>
+                      </TableCell>
 
                       <TableCell>
                         {person.aadhaar_file_url ? (
@@ -466,9 +583,28 @@ export default function AdminDashboard({
                       </TableCell>
 
                       <TableCell>
-                        <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-                          {person.status}
-                        </span>
+                        <div className="space-y-2">
+                          <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+                            {person.candidate_status || person.status}
+                          </span>
+
+                          <div className="text-xs text-stone-600">
+                            <p>
+                              FM:{" "}
+                              {person.final_meeting_attendance || "Not Marked"}
+                            </p>
+                            <p>
+                              Diksha:{" "}
+                              {person.diksha_attendance || "Not Marked"}
+                            </p>
+                          </div>
+
+                          {person.evaluator_name && (
+                            <p className="text-xs text-stone-500">
+                              By: {person.evaluator_name}
+                            </p>
+                          )}
+                        </div>
                       </TableCell>
                     </tr>
                   ))
@@ -505,14 +641,10 @@ export default function AdminDashboard({
               <PrintHead>Age</PrintHead>
               <PrintHead>Gender</PrintHead>
               <PrintHead>Mobile</PrintHead>
-              <PrintHead>WhatsApp</PrintHead>
               <PrintHead>City</PrintHead>
-              <PrintHead>State</PrintHead>
-              <PrintHead>Guardian</PrintHead>
-              <PrintHead>Guardian Mobile</PrintHead>
-              <PrintHead>Family Member</PrintHead>
-              <PrintHead>ID Type</PrintHead>
-              <PrintHead>ID Number</PrintHead>
+              <PrintHead>Family Approval</PrintHead>
+              <PrintHead>Status</PrintHead>
+              <PrintHead>Attendance</PrintHead>
               <PrintHead>Remarks</PrintHead>
             </tr>
           </thead>
@@ -522,33 +654,62 @@ export default function AdminDashboard({
               <tr key={person.id}>
                 <PrintCell>{index + 1}</PrintCell>
                 <PrintCell>{person.token}</PrintCell>
-                <PrintCell>{person.full_name}</PrintCell>
+                <PrintCell>
+                  <strong>{person.full_name || "-"}</strong>
+                  <br />
+                  Occupation: {person.occupation || "-"}
+                </PrintCell>
                 <PrintCell>{person.age || "-"}</PrintCell>
                 <PrintCell>{person.gender || "-"}</PrintCell>
-                <PrintCell>{person.mobile || "-"}</PrintCell>
-                <PrintCell>{person.whatsapp || "-"}</PrintCell>
-                <PrintCell>{person.city || "-"}</PrintCell>
-                <PrintCell>{person.state || "-"}</PrintCell>
                 <PrintCell>
-                  {person.guardian_name || "-"}
-                  {person.guardian_relation
-                    ? ` (${person.guardian_relation})`
-                    : ""}
+                  Mobile: {person.mobile || "-"}
+                  <br />
+                  WhatsApp: {person.whatsapp || "-"}
                 </PrintCell>
-                <PrintCell>{person.guardian_mobile || "-"}</PrintCell>
                 <PrintCell>
-                  {person.family_name || "-"}
-                  {person.family_relation
-                    ? ` (${person.family_relation})`
-                    : ""}
+                  {person.city || "-"}
+                  <br />
+                  {person.state || "-"}
+                  <br />
+                  PIN: {person.pin_code || "-"}
                 </PrintCell>
-                <PrintCell>{person.id_type || "-"}</PrintCell>
-                <PrintCell>{person.id_number || "-"}</PrintCell>
-                <PrintCell>{person.remarks_by || "-"}</PrintCell>
+                <PrintCell>
+                  {person.marital_status === "Married" ? (
+                    <>Spouse: {person.spouse_name || "-"}</>
+                  ) : (
+                    <>
+                      Father: {person.father_name || "-"}
+                      <br />
+                      Mother: {person.mother_name || "-"}
+                    </>
+                  )}
+                </PrintCell>
+                <PrintCell>{person.candidate_status || person.status}</PrintCell>
+                <PrintCell>
+                  FM: {person.final_meeting_attendance || "Not Marked"}
+                  <br />
+                  Diksha: {person.diksha_attendance || "Not Marked"}
+                </PrintCell>
+                <PrintCell>
+                  {person.evaluator_notes || person.remarks_by || "-"}
+                </PrintCell>
               </tr>
             ))}
           </tbody>
         </table>
+
+        <div className="mt-8">
+          <p className="font-bold">Address Details:</p>
+
+          {filteredRegistrations.map((person, index) => (
+            <p key={person.id} className="mt-2 text-xs">
+              <strong>
+                {index + 1}. {person.token} - {person.full_name || "-"}:
+              </strong>{" "}
+              {person.address || "-"}
+            </p>
+          ))}
+        </div>
 
         <div className="mt-10 grid grid-cols-2 gap-10 text-sm">
           <div>
@@ -561,6 +722,187 @@ export default function AdminDashboard({
           </div>
         </div>
       </section>
+
+      {selectedAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
+            <h3 className="text-2xl font-extrabold">Manage Candidate</h3>
+            <p className="mt-1 text-sm text-stone-600">
+              Candidate: {selectedAction.candidateName}
+            </p>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="mb-2 block font-bold">
+                  Updated By / अपडेट करने वाला
+                </label>
+                <input
+                  type="text"
+                  value={updatedBy}
+                  onChange={(event) => setUpdatedBy(event.target.value)}
+                  className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+                  placeholder="Sewadar name"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block font-bold">Notes / Remarks</label>
+                <textarea
+                  value={actionNotes}
+                  onChange={(event) => setActionNotes(event.target.value)}
+                  rows={3}
+                  className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+                  placeholder="Enter notes or remarks"
+                />
+              </div>
+
+              <div className="rounded-2xl bg-orange-50 p-4">
+                <h4 className="font-extrabold">Final Meeting Actions</h4>
+                <p className="text-sm text-stone-600">फाइनल मीटिंग कार्यवाही</p>
+
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <ActionButton
+                    label="Mark Present"
+                    labelHi="उपस्थित"
+                    className="bg-green-100 text-green-700"
+                    disabled={isUpdatingAction}
+                    onClick={() =>
+                      handleSubmitAction({
+                        actionType: "attendance",
+                        title: "Final Meeting Present",
+                        attendanceType: "Final Meeting",
+                        attendanceValue: "Present",
+                      })
+                    }
+                  />
+
+                  <ActionButton
+                    label="Mark Absent"
+                    labelHi="अनुपस्थित"
+                    className="bg-red-100 text-red-700"
+                    disabled={isUpdatingAction}
+                    onClick={() =>
+                      handleSubmitAction({
+                        actionType: "attendance",
+                        title: "Final Meeting Absent",
+                        attendanceType: "Final Meeting",
+                        attendanceValue: "Absent",
+                      })
+                    }
+                  />
+
+                  <ActionButton
+                    label="Approve"
+                    labelHi="स्वीकृत"
+                    className="bg-blue-100 text-blue-700"
+                    disabled={isUpdatingAction}
+                    onClick={() =>
+                      handleSubmitAction({
+                        actionType: "status",
+                        title: "Approved for Diksha",
+                        newStatus: "Approved",
+                      })
+                    }
+                  />
+
+                  <ActionButton
+                    label="Reject"
+                    labelHi="अस्वीकृत"
+                    className="bg-stone-200 text-stone-700"
+                    disabled={isUpdatingAction}
+                    onClick={() =>
+                      handleSubmitAction({
+                        actionType: "status",
+                        title: "Rejected",
+                        newStatus: "Rejected",
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-purple-50 p-4">
+                <h4 className="font-extrabold">Diksha Actions</h4>
+                <p className="text-sm text-stone-600">दीक्षा कार्यवाही</p>
+
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <ActionButton
+                    label="Schedule Diksha"
+                    labelHi="दीक्षा शेड्यूल"
+                    className="bg-purple-100 text-purple-700"
+                    disabled={isUpdatingAction}
+                    onClick={() =>
+                      handleSubmitAction({
+                        actionType: "status",
+                        title: "Scheduled for Diksha",
+                        newStatus: "Scheduled for Diksha",
+                      })
+                    }
+                  />
+
+                  <ActionButton
+                    label="Diksha Present"
+                    labelHi="दीक्षा उपस्थित"
+                    className="bg-green-100 text-green-700"
+                    disabled={isUpdatingAction}
+                    onClick={() =>
+                      handleSubmitAction({
+                        actionType: "attendance",
+                        title: "Diksha Present",
+                        attendanceType: "Diksha",
+                        attendanceValue: "Present",
+                      })
+                    }
+                  />
+
+                  <ActionButton
+                    label="Diksha Absent"
+                    labelHi="दीक्षा अनुपस्थित"
+                    className="bg-red-100 text-red-700"
+                    disabled={isUpdatingAction}
+                    onClick={() =>
+                      handleSubmitAction({
+                        actionType: "attendance",
+                        title: "Diksha Absent",
+                        attendanceType: "Diksha",
+                        attendanceValue: "Absent",
+                      })
+                    }
+                  />
+
+                  <ActionButton
+                    label="Diksha Completed"
+                    labelHi="दीक्षा पूर्ण"
+                    className="bg-orange-100 text-orange-800"
+                    disabled={isUpdatingAction}
+                    onClick={() =>
+                      handleSubmitAction({
+                        actionType: "status",
+                        title: "Diksha Completed",
+                        newStatus: "Diksha Completed",
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedAction(null);
+                  setActionNotes("");
+                }}
+                disabled={isUpdatingAction}
+                className="w-full rounded-2xl border border-orange-300 px-5 py-3 font-bold text-orange-800 disabled:opacity-60"
+              >
+                {isUpdatingAction ? "Saving..." : "Close / बंद करें"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selectedAadhaar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -639,6 +981,17 @@ function formatDateShort(dateString: string) {
   });
 }
 
+function getTomorrowDateString() {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const year = tomorrow.getFullYear();
+  const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+  const day = String(tomorrow.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 function maskMobile(mobile: string) {
   if (!mobile || mobile.length < 4) return mobile;
   return `${mobile.slice(0, 2)}xxxxxx${mobile.slice(-2)}`;
@@ -689,13 +1042,29 @@ function PrintHead({ children }: { children: React.ReactNode }) {
 function PrintCell({ children }: { children: React.ReactNode }) {
   return <td className="border border-black px-2 py-2">{children}</td>;
 }
-function getTomorrowDateString() {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const year = tomorrow.getFullYear();
-  const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
-  const day = String(tomorrow.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+function ActionButton({
+  label,
+  labelHi,
+  className,
+  disabled,
+  onClick,
+}: {
+  label: string;
+  labelHi: string;
+  className: string;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-2xl px-4 py-3 text-sm font-bold disabled:opacity-60 ${className}`}
+    >
+      {label}
+      <span className="block text-xs font-normal">{labelHi}</span>
+    </button>
+  );
 }
