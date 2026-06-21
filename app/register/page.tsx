@@ -17,9 +17,9 @@ type FormData = {
   city: string;
   state: string;
   pinCode: string;
-  guardianRelation: string;
-  guardianName: string;
-  guardianMobile: string;
+  spouseName: string;
+  fatherName: string;
+  motherName: string;
   familyName: string;
   familyRelation: string;
   familyMobile: string;
@@ -52,12 +52,12 @@ const initialFormData: FormData = {
   city: "",
   state: "",
   pinCode: "",
-  guardianRelation: "",
-  guardianName: "",
-  guardianMobile: "",
-  familyName: "",
-  familyRelation: "",
-  familyMobile: "",
+  spouseName: "",
+fatherName: "",
+motherName: "",
+familyName: "",
+familyRelation: "",
+familyMobile: "",
   idType: "aadhaar",
   idNumber: "",
   aadhaarFile: null,
@@ -301,38 +301,30 @@ export default function RegisterPage() {
     }
   
     if (currentStep === 3) {
-      if (!formData.guardianRelation.trim()) {
-        return {
-          isValid: false,
-          message:
-            "Please select guardian relation.\nकृपया अभिभावक से संबंध चुनें।",
-        };
+      if (formData.maritalStatus === "Married") {
+        if (!formData.spouseName.trim()) {
+          return {
+            isValid: false,
+            message:
+              "Please enter spouse name.\nकृपया पति / पत्नी का नाम भरें।",
+          };
+        }
+      } else {
+        if (!formData.fatherName.trim()) {
+          return {
+            isValid: false,
+            message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
+          };
+        }
+    
+        if (!formData.motherName.trim()) {
+          return {
+            isValid: false,
+            message: "Please enter mother's name.\nकृपया माता का नाम भरें।",
+          };
+        }
       }
-  
-      if (!formData.guardianName.trim()) {
-        return {
-          isValid: false,
-          message:
-            "Please enter guardian name.\nकृपया अभिभावक का नाम भरें।",
-        };
-      }
-  
-      if (!formData.guardianMobile.trim()) {
-        return {
-          isValid: false,
-          message:
-            "Please enter guardian mobile number.\nकृपया अभिभावक का मोबाइल नंबर भरें।",
-        };
-      }
-  
-      if (formData.guardianMobile.replace(/\D/g, "").length !== 10) {
-        return {
-          isValid: false,
-          message:
-            "Please enter a valid guardian mobile number.\nकृपया सही अभिभावक मोबाइल नंबर भरें।",
-        };
-      }
-  
+    
       if (!formData.familyName.trim()) {
         return {
           isValid: false,
@@ -340,7 +332,7 @@ export default function RegisterPage() {
             "Please enter family member name.\nकृपया परिवार के सदस्य का नाम भरें।",
         };
       }
-  
+    
       if (!formData.familyRelation.trim()) {
         return {
           isValid: false,
@@ -348,7 +340,7 @@ export default function RegisterPage() {
             "Please select family member relation.\nकृपया परिवार के सदस्य से संबंध चुनें।",
         };
       }
-  
+    
       if (!formData.familyMobile.trim()) {
         return {
           isValid: false,
@@ -356,7 +348,7 @@ export default function RegisterPage() {
             "Please enter family member mobile number.\nकृपया परिवार के सदस्य का मोबाइल नंबर भरें।",
         };
       }
-  
+    
       if (formData.familyMobile.replace(/\D/g, "").length !== 10) {
         return {
           isValid: false,
@@ -494,9 +486,9 @@ if (!finalValidation.isValid) {
         p_city: formData.city,
         p_state: formData.state,
         p_pin_code: formData.pinCode,
-        p_guardian_relation: formData.guardianRelation,
-        p_guardian_name: formData.guardianName,
-        p_guardian_mobile: formData.guardianMobile,
+        p_spouse_name: formData.maritalStatus === "Married" ? formData.spouseName : "",
+        p_father_name: formData.maritalStatus !== "Married" ? formData.fatherName : "",
+        p_mother_name: formData.maritalStatus !== "Married" ? formData.motherName : "",
         p_family_name: formData.familyName,
         p_family_relation: formData.familyRelation,
         p_family_mobile: formData.familyMobile,
@@ -747,98 +739,97 @@ if (!finalValidation.isValid) {
               </StepCard>
             )}
 
-            {step === 3 && (
-              <StepCard
-                titleEn="Guardian / Family Details"
-                titleHi="अभिभावक / परिवार की जानकारी"
-                subtitleEn="Please add guardian and family member details."
-                subtitleHi="कृपया अभिभावक और परिवार के सदस्य की जानकारी भरें।"
-              >
-                <SelectField
-                  labelEn="Guardian Relation"
-                  labelHi="अभिभावक से संबंध"
-                  name="guardianRelation"
-                  value={formData.guardianRelation}
-                  onChange={handleChange}
-                  required
-                  options={[
-                    ["", "Select relation"],
-                    ["Father", "Father / पिता"],
-                    ["Mother", "Mother / माता"],
-                    ["Husband", "Husband / पति"],
-                    ["Wife", "Wife / पत्नी"],
-                    ["Brother", "Brother / भाई"],
-                    ["Sister", "Sister / बहन"],
-                    ["Other", "Other / अन्य"],
-                  ]}
-                />
+{step === 3 && (
+  <StepCard
+    titleEn="Family Approval Information"
+    titleHi="परिवार की स्वीकृति जानकारी"
+    subtitleEn="Please provide family approval details based on marital status."
+    subtitleHi="कृपया वैवाहिक स्थिति के अनुसार परिवार की स्वीकृति जानकारी भरें।"
+  >
+    {formData.maritalStatus === "Married" ? (
+      <InputField
+        labelEn="Spouse Name"
+        labelHi="पति / पत्नी का नाम"
+        name="spouseName"
+        value={formData.spouseName}
+        onChange={handleChange}
+        placeholder="Enter spouse name"
+        required
+      />
+    ) : (
+      <>
+        <InputField
+          labelEn="Father's Name"
+          labelHi="पिता का नाम"
+          name="fatherName"
+          value={formData.fatherName}
+          onChange={handleChange}
+          placeholder="Enter father's name"
+          required
+        />
 
-                <InputField
-                  labelEn="Guardian Name"
-                  labelHi="अभिभावक का नाम"
-                  name="guardianName"
-                  value={formData.guardianName}
-                  onChange={handleChange}
-                  placeholder="Enter guardian name"
-                  required
-                />
+        <InputField
+          labelEn="Mother's Name"
+          labelHi="माता का नाम"
+          name="motherName"
+          value={formData.motherName}
+          onChange={handleChange}
+          placeholder="Enter mother's name"
+          required
+        />
+      </>
+    )}
 
-                <InputField
-                  labelEn="Guardian Mobile Number"
-                  labelHi="अभिभावक का मोबाइल नंबर"
-                  name="guardianMobile"
-                  type="tel"
-                  value={formData.guardianMobile}
-                  onChange={handleChange}
-                  placeholder="Enter guardian mobile number"
-                  required
-                />
+    <div className="rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
+      <p className="font-bold">Emergency / accompanying family member details</p>
+      <p className="mt-1">
+        आपातकालीन / साथ आने वाले परिवार सदस्य की जानकारी
+      </p>
+    </div>
 
-                <div className="border-t border-orange-100" />
+    <InputField
+      labelEn="Family Member Name"
+      labelHi="परिवार के सदस्य का नाम"
+      name="familyName"
+      value={formData.familyName}
+      onChange={handleChange}
+      placeholder="Enter family member name"
+      required
+    />
 
-                <InputField
-                  labelEn="Family Member Name"
-                  labelHi="परिवार के सदस्य का नाम"
-                  name="familyName"
-                  value={formData.familyName}
-                  onChange={handleChange}
-                  placeholder="Enter family member name"
-                  required
-                />
+    <SelectField
+      labelEn="Family Member Relation"
+      labelHi="परिवार के सदस्य से संबंध"
+      name="familyRelation"
+      value={formData.familyRelation}
+      onChange={handleChange}
+      required
+      options={[
+        ["", "Select relation"],
+        ["Father", "Father / पिता"],
+        ["Mother", "Mother / माता"],
+        ["Husband", "Husband / पति"],
+        ["Wife", "Wife / पत्नी"],
+        ["Brother", "Brother / भाई"],
+        ["Sister", "Sister / बहन"],
+        ["Son", "Son / पुत्र"],
+        ["Daughter", "Daughter / पुत्री"],
+        ["Other", "Other / अन्य"],
+      ]}
+    />
 
-                <SelectField
-                  labelEn="Family Member Relation"
-                  labelHi="परिवार के सदस्य से संबंध"
-                  name="familyRelation"
-                  value={formData.familyRelation}
-                  onChange={handleChange}
-                  required
-                  options={[
-                    ["", "Select relation"],
-                    ["Father", "Father / पिता"],
-                    ["Mother", "Mother / माता"],
-                    ["Husband", "Husband / पति"],
-                    ["Wife", "Wife / पत्नी"],
-                    ["Brother", "Brother / भाई"],
-                    ["Sister", "Sister / बहन"],
-                    ["Son", "Son / पुत्र"],
-                    ["Daughter", "Daughter / पुत्री"],
-                    ["Other", "Other / अन्य"],
-                  ]}
-                />
-
-                <InputField
-                  labelEn="Family Member Mobile"
-                  labelHi="परिवार के सदस्य का मोबाइल नंबर"
-                  name="familyMobile"
-                  type="tel"
-                  value={formData.familyMobile}
-                  onChange={handleChange}
-                  placeholder="Enter family member mobile number"
-                  required
-                />
-              </StepCard>
-            )}
+    <InputField
+      labelEn="Family Member Mobile"
+      labelHi="परिवार के सदस्य का मोबाइल नंबर"
+      name="familyMobile"
+      type="tel"
+      value={formData.familyMobile}
+      onChange={handleChange}
+      placeholder="Enter family member mobile number"
+      required
+    />
+  </StepCard>
+)}
 
             {step === 4 && (
               <StepCard
@@ -1342,7 +1333,12 @@ function ReviewBox({
     ["WhatsApp / व्हाट्सऐप", formData.whatsapp],
     ["City / शहर", formData.city],
     ["State / राज्य", formData.state],
-    ["Guardian / अभिभावक", formData.guardianName],
+    [
+      "Family Approval / परिवार स्वीकृति",
+      formData.maritalStatus === "Married"
+        ? `Spouse: ${formData.spouseName}`
+        : `Father: ${formData.fatherName}, Mother: ${formData.motherName}`,
+    ],
     ["Family Member / परिवार सदस्य", formData.familyName],
     ["ID Type / पहचान प्रकार", formData.idType],
     ["ID Number / पहचान नंबर", formData.idNumber],
