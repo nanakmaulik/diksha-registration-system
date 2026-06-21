@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 type Registration = {
   id: string;
@@ -56,6 +56,7 @@ type Slot = {
   current_count: number;
   status: string;
 };
+
 type ActivityLog = {
   id: string;
   registration_id: string;
@@ -68,6 +69,7 @@ type ActivityLog = {
   updated_by: string | null;
   created_at: string;
 };
+
 export default function AdminDashboard({
   registrations,
   slots,
@@ -89,6 +91,7 @@ export default function AdminDashboard({
     url: string;
     name: string;
   } | null>(null);
+
   const [selectedHistory, setSelectedHistory] = useState<Registration | null>(
     null
   );
@@ -106,6 +109,8 @@ export default function AdminDashboard({
   const [actionNotes, setActionNotes] = useState("");
   const [updatedBy, setUpdatedBy] = useState("Sewadar");
   const [isUpdatingAction, setIsUpdatingAction] = useState(false);
+
+  const todayDate = getTodayDateString();
 
   async function handleSubmitAction(actionOverride?: {
     actionType: "status" | "attendance";
@@ -220,9 +225,9 @@ export default function AdminDashboard({
 
       const matchesSearch =
         !searchText ||
-        person.full_name.toLowerCase().includes(searchText) ||
-        person.mobile.includes(searchText) ||
-        person.token.toLowerCase().includes(searchText) ||
+        (person.full_name || "").toLowerCase().includes(searchText) ||
+        (person.mobile || "").includes(searchText) ||
+        (person.token || "").toLowerCase().includes(searchText) ||
         (person.city || "").toLowerCase().includes(searchText) ||
         statusValue.toLowerCase().includes(searchText);
 
@@ -260,9 +265,73 @@ export default function AdminDashboard({
           finalMeetingAttendance === "Absent" || dikshaAttendance === "Absent";
       }
 
+      if (reportFilter === "today_final_meetings") {
+        matchesReport = person.slots?.slot_date === todayDate;
+      }
+
+      if (reportFilter === "today_diksha") {
+        matchesReport = person.diksha_date === todayDate;
+      }
+
       return matchesSearch && matchesSlot && matchesReport;
     });
-  }, [registrations, search, slotDate, reportFilter]);
+  }, [registrations, search, slotDate, reportFilter, todayDate]);
+
+  const reportCounts = useMemo(() => {
+    const scheduledFinalMeetings = registrations.filter(
+      (person) =>
+        (person.candidate_status || person.status) ===
+        "Scheduled for Final Meeting"
+    ).length;
+
+    const pending = registrations.filter(
+      (person) => (person.candidate_status || person.status) === "Pending"
+    ).length;
+
+    const approved = registrations.filter(
+      (person) => (person.candidate_status || person.status) === "Approved"
+    ).length;
+
+    const rejected = registrations.filter(
+      (person) => (person.candidate_status || person.status) === "Rejected"
+    ).length;
+
+    const scheduledDiksha = registrations.filter(
+      (person) =>
+        (person.candidate_status || person.status) === "Scheduled for Diksha"
+    ).length;
+
+    const dikshaCompleted = registrations.filter(
+      (person) =>
+        (person.candidate_status || person.status) === "Diksha Completed"
+    ).length;
+
+    const noShow = registrations.filter(
+      (person) =>
+        person.final_meeting_attendance === "Absent" ||
+        person.diksha_attendance === "Absent"
+    ).length;
+
+    const todayFinalMeetings = registrations.filter(
+      (person) => person.slots?.slot_date === todayDate
+    ).length;
+
+    const todayDiksha = registrations.filter(
+      (person) => person.diksha_date === todayDate
+    ).length;
+
+    return {
+      scheduledFinalMeetings,
+      pending,
+      approved,
+      rejected,
+      scheduledDiksha,
+      dikshaCompleted,
+      noShow,
+      todayFinalMeetings,
+      todayDiksha,
+    };
+  }, [registrations, todayDate]);
 
   const totalRegistered = registrations.length;
 
@@ -326,11 +395,11 @@ export default function AdminDashboard({
                 प्रशासन डैशबोर्ड
               </h2>
               <p className="mt-2 text-sm text-stone-600">
-                Manage registrations, final meetings, Diksha status and print
-                date-wise lists.
+                Manage registrations, final meetings, Diksha status, history and
+                reports.
               </p>
               <p className="text-sm text-stone-600">
-                पंजीकरण, फाइनल मीटिंग, दीक्षा स्थिति और तारीख अनुसार सूची देखें।
+                पंजीकरण, फाइनल मीटिंग, दीक्षा स्थिति, इतिहास और रिपोर्ट देखें।
               </p>
             </div>
           </div>
@@ -356,34 +425,133 @@ export default function AdminDashboard({
           </div>
         </header>
 
-        <section className="mb-8 grid gap-4 md:grid-cols-4">
-          <StatsCard
-            title="Total Registered"
-            titleHi="कुल पंजीकरण"
-            value={String(totalRegistered)}
-          />
+        <section className="mb-8 space-y-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <StatsCard
+              title="Total Registered"
+              titleHi="कुल पंजीकरण"
+              value={String(totalRegistered)}
+            />
 
-          <StatsCard
-            title="Showing Now"
-            titleHi="अभी दिख रहे हैं"
-            value={String(filteredRegistrations.length)}
-          />
+            <StatsCard
+              title="Showing Now"
+              titleHi="अभी दिख रहे हैं"
+              value={String(filteredRegistrations.length)}
+            />
 
-          <StatsCard
-            title="Slots Full"
-            titleHi="भरे हुए स्लॉट"
-            value={String(slotsFull)}
-          />
+            <StatsCard
+              title="Slots Full"
+              titleHi="भरे हुए स्लॉट"
+              value={String(slotsFull)}
+            />
 
-          <StatsCard
-            title="Next Available Slot"
-            titleHi="अगला उपलब्ध स्लॉट"
-            value={
-              nextAvailableSlot
-                ? formatDateShort(nextAvailableSlot.slot_date)
-                : "None"
-            }
-          />
+            <StatsCard
+              title="Next Available Slot"
+              titleHi="अगला उपलब्ध स्लॉट"
+              value={
+                nextAvailableSlot
+                  ? formatDateShort(nextAvailableSlot.slot_date)
+                  : "None"
+              }
+            />
+          </div>
+
+          <div className="rounded-3xl bg-white p-5 shadow-sm md:p-6">
+            <div className="mb-5">
+              <h3 className="text-2xl font-extrabold">Reports Summary</h3>
+              <h4 className="mt-1 text-xl font-bold text-orange-800">
+                रिपोर्ट सारांश
+              </h4>
+              <p className="mt-2 text-sm text-stone-600">
+                Click any report card to filter registrations.
+              </p>
+              <p className="text-sm text-stone-600">
+                पंजीकरण फ़िल्टर करने के लिए किसी भी रिपोर्ट कार्ड पर क्लिक करें।
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+              <ReportCountCard
+                title="Scheduled Final Meetings"
+                titleHi="फाइनल मीटिंग शेड्यूल"
+                value={reportCounts.scheduledFinalMeetings}
+                active={reportFilter === "scheduled_final_meetings"}
+                onClick={() => setReportFilter("scheduled_final_meetings")}
+              />
+
+              <ReportCountCard
+                title="Pending"
+                titleHi="लंबित"
+                value={reportCounts.pending}
+                active={reportFilter === "pending"}
+                onClick={() => setReportFilter("pending")}
+              />
+
+              <ReportCountCard
+                title="Approved"
+                titleHi="स्वीकृत"
+                value={reportCounts.approved}
+                active={reportFilter === "approved"}
+                onClick={() => setReportFilter("approved")}
+              />
+
+              <ReportCountCard
+                title="Rejected"
+                titleHi="अस्वीकृत"
+                value={reportCounts.rejected}
+                active={reportFilter === "rejected"}
+                onClick={() => setReportFilter("rejected")}
+              />
+
+              <ReportCountCard
+                title="Scheduled Diksha"
+                titleHi="दीक्षा शेड्यूल"
+                value={reportCounts.scheduledDiksha}
+                active={reportFilter === "scheduled_diksha"}
+                onClick={() => setReportFilter("scheduled_diksha")}
+              />
+
+              <ReportCountCard
+                title="Diksha Completed"
+                titleHi="दीक्षा पूर्ण"
+                value={reportCounts.dikshaCompleted}
+                active={reportFilter === "diksha_completed"}
+                onClick={() => setReportFilter("diksha_completed")}
+              />
+
+              <ReportCountCard
+                title="No Show"
+                titleHi="अनुपस्थित"
+                value={reportCounts.noShow}
+                active={reportFilter === "no_show"}
+                onClick={() => setReportFilter("no_show")}
+              />
+
+              <ReportCountCard
+                title="Today Final Meetings"
+                titleHi="आज फाइनल मीटिंग"
+                value={reportCounts.todayFinalMeetings}
+                active={reportFilter === "today_final_meetings"}
+                onClick={() => setReportFilter("today_final_meetings")}
+              />
+
+              <ReportCountCard
+                title="Today Diksha"
+                titleHi="आज दीक्षा"
+                value={reportCounts.todayDiksha}
+                active={reportFilter === "today_diksha"}
+                onClick={() => setReportFilter("today_diksha")}
+              />
+
+              <ReportCountCard
+                title="All"
+                titleHi="सभी"
+                value={registrations.length}
+                active={reportFilter === "all"}
+                onClick={() => setReportFilter("all")}
+              />
+            </div>
+          </div>
         </section>
 
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
@@ -396,10 +564,10 @@ export default function AdminDashboard({
                 आने वाले उपलब्ध स्लॉट
               </h4>
               <p className="mt-2 text-sm text-stone-600">
-                Showing only available upcoming slots to keep dashboard clean.
+                Showing only available upcoming slots.
               </p>
               <p className="text-sm text-stone-600">
-                डैशबोर्ड साफ रखने के लिए केवल आने वाले उपलब्ध स्लॉट दिखाए जा रहे हैं।
+                केवल आने वाले उपलब्ध स्लॉट दिखाए जा रहे हैं।
               </p>
             </div>
 
@@ -561,6 +729,18 @@ export default function AdminDashboard({
                 label="No Show"
                 onClick={() => setReportFilter("no_show")}
               />
+
+              <ReportButton
+                active={reportFilter === "today_final_meetings"}
+                label="Today Final Meetings"
+                onClick={() => setReportFilter("today_final_meetings")}
+              />
+
+              <ReportButton
+                active={reportFilter === "today_diksha"}
+                label="Today Diksha"
+                onClick={() => setReportFilter("today_diksha")}
+              />
             </div>
           </div>
 
@@ -668,6 +848,7 @@ export default function AdminDashboard({
                       className={index % 2 === 0 ? "bg-white" : "bg-orange-50"}
                     >
                       <TableCell>{person.token}</TableCell>
+
                       <TableCell>
                         <div>
                           <p>{person.full_name || "-"}</p>
@@ -676,50 +857,60 @@ export default function AdminDashboard({
                           </p>
                         </div>
                       </TableCell>
+
                       <TableCell>
                         {showFullMobile
                           ? person.mobile
                           : maskMobile(person.mobile)}
                       </TableCell>
+
                       <TableCell>{person.city || "-"}</TableCell>
+
                       <TableCell>
                         {person.slots?.slot_date
                           ? formatDate(person.slots.slot_date)
                           : "-"}
                       </TableCell>
+
                       <TableCell>{person.slots?.slot_time || "-"}</TableCell>
 
-                    <TableCell>
-  <div className="flex flex-wrap gap-2">
-    <button
-      type="button"
-      onClick={() => {
-        setSelectedAction({
-          registrationId: person.id,
-          candidateName: person.full_name || person.token,
-          actionType: "status",
-          title: "Manage Candidate",
-          newStatus: person.candidate_status || person.status,
-        });
-        setDikshaDate(person.diksha_date || "");
-        setDikshaTime(person.diksha_time || "3:30 PM");
-      }}
-      className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
-    >
-      Manage
-      <span className="block text-[10px] font-normal">अपडेट करें</span>
-    </button>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedAction({
+                                registrationId: person.id,
+                                candidateName:
+                                  person.full_name || person.token,
+                                actionType: "status",
+                                title: "Manage Candidate",
+                                newStatus:
+                                  person.candidate_status || person.status,
+                              });
+                              setDikshaDate(person.diksha_date || "");
+                              setDikshaTime(person.diksha_time || "3:30 PM");
+                            }}
+                            className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
+                          >
+                            Manage
+                            <span className="block text-[10px] font-normal">
+                              अपडेट करें
+                            </span>
+                          </button>
 
-    <button
-      type="button"
-      onClick={() => setSelectedHistory(person)}
-      className="rounded-full bg-stone-100 px-4 py-2 text-xs font-bold text-stone-700"
-    >
-      History
-      <span className="block text-[10px] font-normal">इतिहास</span>
-    </button>
-  </div>
-</TableCell>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedHistory(person)}
+                            className="rounded-full bg-stone-100 px-4 py-2 text-xs font-bold text-stone-700"
+                          >
+                            History
+                            <span className="block text-[10px] font-normal">
+                              इतिहास
+                            </span>
+                          </button>
+                        </div>
+                      </TableCell>
 
                       <TableCell>
                         {person.aadhaar_file_url ? (
@@ -729,7 +920,8 @@ export default function AdminDashboard({
                               setSelectedAadhaar({
                                 url: person.aadhaar_file_url || "",
                                 name:
-                                  person.aadhaar_file_name || person.full_name,
+                                  person.aadhaar_file_name ||
+                                  person.full_name,
                               })
                             }
                             className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-800"
@@ -755,7 +947,8 @@ export default function AdminDashboard({
                           <div className="text-xs text-stone-600">
                             <p>
                               FM:{" "}
-                              {person.final_meeting_attendance || "Not Marked"}
+                              {person.final_meeting_attendance ||
+                                "Not Marked"}
                             </p>
                             <p>
                               Diksha:{" "}
@@ -903,113 +1096,115 @@ export default function AdminDashboard({
           </div>
         </div>
       </section>
+
       {selectedHistory && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-    <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-2xl font-extrabold">Candidate History</h3>
-          <p className="mt-1 text-sm text-stone-600">
-            {selectedHistory.token} - {selectedHistory.full_name || "-"}
-          </p>
-          <p className="text-sm text-stone-600">
-            उम्मीदवार की पूरी कार्यवाही का इतिहास
-          </p>
-        </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-2xl font-extrabold">Candidate History</h3>
+                <p className="mt-1 text-sm text-stone-600">
+                  {selectedHistory.token} - {selectedHistory.full_name || "-"}
+                </p>
+                <p className="text-sm text-stone-600">
+                  उम्मीदवार की पूरी कार्यवाही का इतिहास
+                </p>
+              </div>
 
-        <button
-          type="button"
-          onClick={() => setSelectedHistory(null)}
-          className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
-        >
-          Close
-          <span className="block text-[10px] font-normal">बंद करें</span>
-        </button>
-      </div>
-
-      <div className="mt-6 space-y-4">
-        {activityLogs.filter(
-          (log) => log.registration_id === selectedHistory.id
-        ).length === 0 ? (
-          <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
-            No history found for this candidate.
-            <span className="block text-sm font-normal">
-              इस उम्मीदवार का कोई इतिहास नहीं मिला।
-            </span>
-          </div>
-        ) : (
-          activityLogs
-            .filter((log) => log.registration_id === selectedHistory.id)
-            .map((log) => (
-              <div
-                key={log.id}
-                className="rounded-2xl border border-orange-100 bg-orange-50 p-4"
+              <button
+                type="button"
+                onClick={() => setSelectedHistory(null)}
+                className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
               >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="font-extrabold text-orange-900">
-                      {log.action_type || "Status Updated"}
-                    </p>
+                Close
+                <span className="block text-[10px] font-normal">बंद करें</span>
+              </button>
+            </div>
 
-                    <p className="mt-1 text-sm text-stone-600">
-                      {formatDateTime(log.created_at)}
-                    </p>
-                  </div>
-
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-orange-800">
-                    Updated by: {log.updated_by || "-"}
+            <div className="mt-6 space-y-4">
+              {activityLogs.filter(
+                (log) => log.registration_id === selectedHistory.id
+              ).length === 0 ? (
+                <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
+                  No history found for this candidate.
+                  <span className="block text-sm font-normal">
+                    इस उम्मीदवार का कोई इतिहास नहीं मिला।
                   </span>
                 </div>
+              ) : (
+                activityLogs
+                  .filter((log) => log.registration_id === selectedHistory.id)
+                  .map((log) => (
+                    <div
+                      key={log.id}
+                      className="rounded-2xl border border-orange-100 bg-orange-50 p-4"
+                    >
+                      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <p className="font-extrabold text-orange-900">
+                            {log.action_type || "Status Updated"}
+                          </p>
 
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-xl bg-white p-3">
-                    <p className="text-xs font-bold text-stone-500">
-                      Old Status
-                    </p>
-                    <p className="font-bold text-stone-800">
-                      {log.old_status || "-"}
-                    </p>
-                  </div>
+                          <p className="mt-1 text-sm text-stone-600">
+                            {formatDateTime(log.created_at)}
+                          </p>
+                        </div>
 
-                  <div className="rounded-xl bg-white p-3">
-                    <p className="text-xs font-bold text-stone-500">
-                      New Status
-                    </p>
-                    <p className="font-bold text-stone-800">
-                      {log.new_status || "-"}
-                    </p>
-                  </div>
-                </div>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-orange-800">
+                          Updated by: {log.updated_by || "-"}
+                        </span>
+                      </div>
 
-                {(log.attendance_type || log.attendance_value) && (
-                  <div className="mt-3 rounded-xl bg-white p-3">
-                    <p className="text-xs font-bold text-stone-500">
-                      Attendance
-                    </p>
-                    <p className="font-bold text-stone-800">
-                      {log.attendance_type || "-"}:{" "}
-                      {log.attendance_value || "-"}
-                    </p>
-                  </div>
-                )}
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        <div className="rounded-xl bg-white p-3">
+                          <p className="text-xs font-bold text-stone-500">
+                            Old Status
+                          </p>
+                          <p className="font-bold text-stone-800">
+                            {log.old_status || "-"}
+                          </p>
+                        </div>
 
-                {log.notes && (
-                  <div className="mt-3 rounded-xl bg-white p-3">
-                    <p className="text-xs font-bold text-stone-500">
-                      Notes / Remarks
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-stone-800">
-                      {log.notes}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))
-        )}
-      </div>
-    </div>
-  </div>
-)}
+                        <div className="rounded-xl bg-white p-3">
+                          <p className="text-xs font-bold text-stone-500">
+                            New Status
+                          </p>
+                          <p className="font-bold text-stone-800">
+                            {log.new_status || "-"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {(log.attendance_type || log.attendance_value) && (
+                        <div className="mt-3 rounded-xl bg-white p-3">
+                          <p className="text-xs font-bold text-stone-500">
+                            Attendance
+                          </p>
+                          <p className="font-bold text-stone-800">
+                            {log.attendance_type || "-"}:{" "}
+                            {log.attendance_value || "-"}
+                          </p>
+                        </div>
+                      )}
+
+                      {log.notes && (
+                        <div className="mt-3 rounded-xl bg-white p-3">
+                          <p className="text-xs font-bold text-stone-500">
+                            Notes / Remarks
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-stone-800">
+                            {log.notes}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
@@ -1114,10 +1309,14 @@ export default function AdminDashboard({
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <div className="rounded-2xl border border-purple-200 bg-white p-4 md:col-span-2">
-                  <p className="font-bold">
-  {dikshaDate ? "Reschedule Diksha Date" : "Schedule Diksha Date"}
-</p>
-                    <p className="text-sm text-stone-600">दीक्षा तारीख चुनें</p>
+                    <p className="font-bold">
+                      {dikshaDate
+                        ? "Reschedule Diksha Date"
+                        : "Schedule Diksha Date"}
+                    </p>
+                    <p className="text-sm text-stone-600">
+                      {dikshaDate ? "दीक्षा तारीख बदलें" : "दीक्षा तारीख चुनें"}
+                    </p>
 
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       <input
@@ -1142,7 +1341,9 @@ export default function AdminDashboard({
                       disabled={isUpdatingAction}
                       className="mt-4 w-full rounded-2xl bg-purple-100 px-4 py-3 text-sm font-bold text-purple-700 disabled:opacity-60"
                     >
-                      {dikshaDate ? "Save Rescheduled Diksha" : "Save Diksha Schedule"}
+                      {dikshaDate
+                        ? "Save Rescheduled Diksha"
+                        : "Save Diksha Schedule"}
                       <span className="block text-xs font-normal">
                         दीक्षा शेड्यूल सेव करें
                       </span>
@@ -1291,6 +1492,7 @@ function formatDateShort(dateString: string) {
     month: "short",
   });
 }
+
 function formatDateTime(dateString: string) {
   const date = new Date(dateString);
 
@@ -1303,6 +1505,17 @@ function formatDateTime(dateString: string) {
     hour12: true,
   });
 }
+
+function getTodayDateString() {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 function getTomorrowDateString() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1337,32 +1550,59 @@ function StatsCard({
   );
 }
 
-function TableHead({ children }: { children: React.ReactNode }) {
+function ReportCountCard({
+  title,
+  titleHi,
+  value,
+  active,
+  onClick,
+}: {
+  title: string;
+  titleHi: string;
+  value: number;
+  active: boolean;
+  onClick: () => void;
+}) {
   return (
-    <th className="border-b border-orange-200 px-4 py-3 text-sm font-extrabold text-stone-800">
-      {children}
-    </th>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-3xl border p-5 text-left shadow-sm transition hover:border-orange-500 ${
+        active
+          ? "border-orange-600 bg-orange-100"
+          : "border-orange-100 bg-orange-50"
+      }`}
+    >
+      <p className="text-sm font-bold text-stone-700">{title}</p>
+      <p className="mt-1 text-xs font-semibold text-stone-500">{titleHi}</p>
+      <p className="mt-4 text-3xl font-extrabold text-orange-800">{value}</p>
+      <p className="mt-2 text-xs font-semibold text-orange-700">
+        Click to view / देखने के लिए क्लिक करें
+      </p>
+    </button>
   );
 }
 
-function TableCell({ children }: { children: React.ReactNode }) {
+function ReportButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
   return (
-    <td className="border-b border-orange-100 px-4 py-4 text-sm font-semibold text-stone-800">
-      {children}
-    </td>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-4 py-2 text-xs font-bold ${
+        active ? "bg-orange-700 text-white" : "bg-white text-orange-800"
+      }`}
+    >
+      {label}
+    </button>
   );
-}
-
-function PrintHead({ children }: { children: React.ReactNode }) {
-  return (
-    <th className="border border-black px-2 py-2 text-left font-bold">
-      {children}
-    </th>
-  );
-}
-
-function PrintCell({ children }: { children: React.ReactNode }) {
-  return <td className="border border-black px-2 py-2">{children}</td>;
 }
 
 function ActionButton({
@@ -1391,24 +1631,30 @@ function ActionButton({
   );
 }
 
-function ReportButton({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
+function TableHead({ children }: { children: ReactNode }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-4 py-2 text-xs font-bold ${
-        active ? "bg-orange-700 text-white" : "bg-white text-orange-800"
-      }`}
-    >
-      {label}
-    </button>
+    <th className="border-b border-orange-200 px-4 py-3 text-sm font-extrabold text-stone-800">
+      {children}
+    </th>
   );
+}
+
+function TableCell({ children }: { children: ReactNode }) {
+  return (
+    <td className="border-b border-orange-100 px-4 py-4 text-sm font-semibold text-stone-800">
+      {children}
+    </td>
+  );
+}
+
+function PrintHead({ children }: { children: ReactNode }) {
+  return (
+    <th className="border border-black px-2 py-2 text-left font-bold">
+      {children}
+    </th>
+  );
+}
+
+function PrintCell({ children }: { children: ReactNode }) {
+  return <td className="border border-black px-2 py-2">{children}</td>;
 }
