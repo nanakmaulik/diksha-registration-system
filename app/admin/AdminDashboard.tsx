@@ -371,6 +371,94 @@ export default function AdminDashboard({
     window.print();
   }
 
+  function handleExportCsv() {
+    if (filteredRegistrations.length === 0) {
+      alert("No records to export.\nExport करने के लिए कोई रिकॉर्ड नहीं है।");
+      return;
+    }
+
+    const headers = [
+      "Token",
+      "Name",
+      "Age",
+      "Gender",
+      "Mobile",
+      "WhatsApp",
+      "City",
+      "State",
+      "Slot Date",
+      "Slot Time",
+      "Candidate Status",
+      "Final Meeting Attendance",
+      "Diksha Attendance",
+      "Diksha Date",
+      "Diksha Time",
+      "Family Approval",
+      "Updated By",
+      "Remarks",
+    ];
+
+    const rows = filteredRegistrations.map((person) => {
+      const familyApproval =
+        person.marital_status === "Married"
+          ? `Spouse: ${person.spouse_name || "-"}`
+          : `Father: ${person.father_name || "-"} | Mother: ${
+              person.mother_name || "-"
+            }`;
+
+      return [
+        person.token || "-",
+        person.full_name || "-",
+        person.age || "-",
+        person.gender || "-",
+        person.mobile || "-",
+        person.whatsapp || "-",
+        person.city || "-",
+        person.state || "-",
+        person.slots?.slot_date ? formatDate(person.slots.slot_date) : "-",
+        person.slots?.slot_time || "-",
+        person.candidate_status || person.status || "-",
+        person.final_meeting_attendance || "Not Marked",
+        person.diksha_attendance || "Not Marked",
+        person.diksha_date ? formatDate(person.diksha_date) : "-",
+        person.diksha_time || "-",
+        familyApproval,
+        person.evaluator_name || "-",
+        person.evaluator_notes ||
+          person.admin_remarks ||
+          person.remarks_by ||
+          "-",
+      ];
+    });
+
+    const csvContent = [
+      headers.map(csvEscape).join(","),
+      ...rows.map((row) =>
+        row.map((value) => csvEscape(String(value))).join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    const fileNameParts = [
+      "diksha-registrations",
+      reportFilter !== "all" ? reportFilter : null,
+      slotDate !== "all" ? slotDate : null,
+      getTodayDateString(),
+    ].filter(Boolean);
+
+    link.href = url;
+    link.download = `${fileNameParts.join("-")}.csv`;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <main className="min-h-screen bg-[#fff8ed] px-4 py-6 text-[#2d2418] md:py-10">
       <div className="admin-screen mx-auto max-w-7xl">
@@ -666,16 +754,29 @@ export default function AdminDashboard({
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={handlePrintSelectedDate}
-              className="rounded-2xl bg-orange-700 px-5 py-3 font-bold text-white"
-            >
-              Print Selected Date
-              <span className="block text-sm font-normal">
-                चुनी हुई तारीख प्रिंट करें
-              </span>
-            </button>
+            <div className="flex flex-col gap-3 md:flex-row">
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                className="rounded-2xl bg-green-700 px-5 py-3 font-bold text-white"
+              >
+                Export Current List
+                <span className="block text-sm font-normal">
+                  वर्तमान सूची डाउनलोड करें
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePrintSelectedDate}
+                className="rounded-2xl bg-orange-700 px-5 py-3 font-bold text-white"
+              >
+                Print Selected Date
+                <span className="block text-sm font-normal">
+                  चुनी हुई तारीख प्रिंट करें
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="mb-5 rounded-2xl bg-orange-50 p-4">
@@ -1530,6 +1631,20 @@ function getTomorrowDateString() {
 function maskMobile(mobile: string) {
   if (!mobile || mobile.length < 4) return mobile;
   return `${mobile.slice(0, 2)}xxxxxx${mobile.slice(-2)}`;
+}
+
+function csvEscape(value: string) {
+  const cleanedValue = value.replace(/\n/g, " ").replace(/\r/g, " ");
+
+  if (
+    cleanedValue.includes(",") ||
+    cleanedValue.includes('"') ||
+    cleanedValue.includes("'")
+  ) {
+    return `"${cleanedValue.replace(/"/g, '""')}"`;
+  }
+
+  return cleanedValue;
 }
 
 function StatsCard({
