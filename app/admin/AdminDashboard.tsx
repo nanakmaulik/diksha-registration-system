@@ -68,6 +68,9 @@ export default function AdminDashboard({
   const [slotDate, setSlotDate] = useState("all");
   const [showFullMobile, setShowFullMobile] = useState(false);
   const [showAllSlots, setShowAllSlots] = useState(false);
+  const [reportFilter, setReportFilter] = useState("all");
+  const [dikshaDate, setDikshaDate] = useState("");
+  const [dikshaTime, setDikshaTime] = useState("3:30 PM");
 
   const [selectedAadhaar, setSelectedAadhaar] = useState<{
     url: string;
@@ -147,9 +150,57 @@ export default function AdminDashboard({
     window.location.reload();
   }
 
+  async function handleScheduleDiksha() {
+    if (!selectedAction) return;
+
+    if (!updatedBy.trim()) {
+      alert("Please enter updated by name.\nकृपया अपडेट करने वाले का नाम भरें।");
+      return;
+    }
+
+    if (!dikshaDate) {
+      alert("Please select Diksha date.\nकृपया दीक्षा तारीख चुनें।");
+      return;
+    }
+
+    if (!dikshaTime.trim()) {
+      alert("Please enter Diksha time.\nकृपया दीक्षा समय भरें।");
+      return;
+    }
+
+    setIsUpdatingAction(true);
+
+    const { error } = await supabase.rpc("schedule_candidate_diksha", {
+      p_registration_id: selectedAction.registrationId,
+      p_diksha_date: dikshaDate,
+      p_diksha_time: dikshaTime.trim(),
+      p_notes: actionNotes.trim(),
+      p_updated_by: updatedBy.trim(),
+    });
+
+    if (error) {
+      alert("Diksha schedule error: " + error.message);
+      setIsUpdatingAction(false);
+      return;
+    }
+
+    setIsUpdatingAction(false);
+    setSelectedAction(null);
+    setActionNotes("");
+    setDikshaDate("");
+    setDikshaTime("3:30 PM");
+
+    window.location.reload();
+  }
+
   const filteredRegistrations = useMemo(() => {
     return registrations.filter((person) => {
       const searchText = search.toLowerCase().trim();
+
+      const statusValue = person.candidate_status || person.status || "";
+      const finalMeetingAttendance =
+        person.final_meeting_attendance || "Not Marked";
+      const dikshaAttendance = person.diksha_attendance || "Not Marked";
 
       const matchesSearch =
         !searchText ||
@@ -157,14 +208,45 @@ export default function AdminDashboard({
         person.mobile.includes(searchText) ||
         person.token.toLowerCase().includes(searchText) ||
         (person.city || "").toLowerCase().includes(searchText) ||
-        (person.candidate_status || "").toLowerCase().includes(searchText);
+        statusValue.toLowerCase().includes(searchText);
 
       const matchesSlot =
         slotDate === "all" || person.slots?.slot_date === slotDate;
 
-      return matchesSearch && matchesSlot;
+      let matchesReport = true;
+
+      if (reportFilter === "scheduled_final_meetings") {
+        matchesReport = statusValue === "Scheduled for Final Meeting";
+      }
+
+      if (reportFilter === "pending") {
+        matchesReport = statusValue === "Pending";
+      }
+
+      if (reportFilter === "approved") {
+        matchesReport = statusValue === "Approved";
+      }
+
+      if (reportFilter === "rejected") {
+        matchesReport = statusValue === "Rejected";
+      }
+
+      if (reportFilter === "scheduled_diksha") {
+        matchesReport = statusValue === "Scheduled for Diksha";
+      }
+
+      if (reportFilter === "diksha_completed") {
+        matchesReport = statusValue === "Diksha Completed";
+      }
+
+      if (reportFilter === "no_show") {
+        matchesReport =
+          finalMeetingAttendance === "Absent" || dikshaAttendance === "Absent";
+      }
+
+      return matchesSearch && matchesSlot && matchesReport;
     });
-  }, [registrations, search, slotDate]);
+  }, [registrations, search, slotDate, reportFilter]);
 
   const totalRegistered = registrations.length;
 
@@ -412,6 +494,60 @@ export default function AdminDashboard({
             </button>
           </div>
 
+          <div className="mb-5 rounded-2xl bg-orange-50 p-4">
+            <p className="mb-3 font-extrabold">Reports / रिपोर्ट</p>
+
+            <div className="flex flex-wrap gap-2">
+              <ReportButton
+                active={reportFilter === "all"}
+                label="All"
+                onClick={() => setReportFilter("all")}
+              />
+
+              <ReportButton
+                active={reportFilter === "scheduled_final_meetings"}
+                label="Scheduled Final Meetings"
+                onClick={() => setReportFilter("scheduled_final_meetings")}
+              />
+
+              <ReportButton
+                active={reportFilter === "pending"}
+                label="Pending"
+                onClick={() => setReportFilter("pending")}
+              />
+
+              <ReportButton
+                active={reportFilter === "approved"}
+                label="Approved"
+                onClick={() => setReportFilter("approved")}
+              />
+
+              <ReportButton
+                active={reportFilter === "rejected"}
+                label="Rejected"
+                onClick={() => setReportFilter("rejected")}
+              />
+
+              <ReportButton
+                active={reportFilter === "scheduled_diksha"}
+                label="Scheduled Diksha"
+                onClick={() => setReportFilter("scheduled_diksha")}
+              />
+
+              <ReportButton
+                active={reportFilter === "diksha_completed"}
+                label="Diksha Completed"
+                onClick={() => setReportFilter("diksha_completed")}
+              />
+
+              <ReportButton
+                active={reportFilter === "no_show"}
+                label="No Show"
+                onClick={() => setReportFilter("no_show")}
+              />
+            </div>
+          </div>
+
           <div className="mb-5 grid gap-3 md:grid-cols-[1fr_240px_180px]">
             <input
               type="text"
@@ -446,7 +582,7 @@ export default function AdminDashboard({
             </button>
           </div>
 
-          {(search || slotDate !== "all") && (
+          {(search || slotDate !== "all" || reportFilter !== "all") && (
             <div className="mb-5 flex flex-col gap-3 rounded-2xl bg-orange-50 p-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="font-bold">
@@ -462,6 +598,7 @@ export default function AdminDashboard({
                 onClick={() => {
                   setSearch("");
                   setSlotDate("all");
+                  setReportFilter("all");
                 }}
                 className="rounded-xl bg-white px-4 py-2 text-sm font-bold text-orange-800"
               >
@@ -539,15 +676,18 @@ export default function AdminDashboard({
                       <TableCell>
                         <button
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
                             setSelectedAction({
                               registrationId: person.id,
                               candidateName: person.full_name || person.token,
                               actionType: "status",
                               title: "Manage Candidate",
-                              newStatus: person.candidate_status || person.status,
-                            })
-                          }
+                              newStatus:
+                                person.candidate_status || person.status,
+                            });
+                            setDikshaDate(person.diksha_date || "");
+                            setDikshaTime(person.diksha_time || "3:30 PM");
+                          }}
                           className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
                         >
                           Manage
@@ -597,6 +737,15 @@ export default function AdminDashboard({
                               Diksha:{" "}
                               {person.diksha_attendance || "Not Marked"}
                             </p>
+
+                            {person.diksha_date && (
+                              <p>
+                                Diksha Date: {formatDate(person.diksha_date)}
+                                {person.diksha_time
+                                  ? ` - ${person.diksha_time}`
+                                  : ""}
+                              </p>
+                            )}
                           </div>
 
                           {person.evaluator_name && (
@@ -645,6 +794,7 @@ export default function AdminDashboard({
               <PrintHead>Family Approval</PrintHead>
               <PrintHead>Status</PrintHead>
               <PrintHead>Attendance</PrintHead>
+              <PrintHead>Diksha Date</PrintHead>
               <PrintHead>Remarks</PrintHead>
             </tr>
           </thead>
@@ -689,6 +839,13 @@ export default function AdminDashboard({
                   FM: {person.final_meeting_attendance || "Not Marked"}
                   <br />
                   Diksha: {person.diksha_attendance || "Not Marked"}
+                </PrintCell>
+                <PrintCell>
+                  {person.diksha_date
+                    ? `${formatDate(person.diksha_date)} ${
+                        person.diksha_time || ""
+                      }`
+                    : "-"}
                 </PrintCell>
                 <PrintCell>
                   {person.evaluator_notes || person.remarks_by || "-"}
@@ -826,19 +983,41 @@ export default function AdminDashboard({
                 <p className="text-sm text-stone-600">दीक्षा कार्यवाही</p>
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <ActionButton
-                    label="Schedule Diksha"
-                    labelHi="दीक्षा शेड्यूल"
-                    className="bg-purple-100 text-purple-700"
-                    disabled={isUpdatingAction}
-                    onClick={() =>
-                      handleSubmitAction({
-                        actionType: "status",
-                        title: "Scheduled for Diksha",
-                        newStatus: "Scheduled for Diksha",
-                      })
-                    }
-                  />
+                  <div className="rounded-2xl border border-purple-200 bg-white p-4 md:col-span-2">
+                  <p className="font-bold">
+  {dikshaDate ? "Reschedule Diksha Date" : "Schedule Diksha Date"}
+</p>
+                    <p className="text-sm text-stone-600">दीक्षा तारीख चुनें</p>
+
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <input
+                        type="date"
+                        value={dikshaDate}
+                        onChange={(event) => setDikshaDate(event.target.value)}
+                        className="rounded-2xl border border-purple-200 px-4 py-3 outline-none focus:border-purple-600"
+                      />
+
+                      <input
+                        type="text"
+                        value={dikshaTime}
+                        onChange={(event) => setDikshaTime(event.target.value)}
+                        placeholder="3:30 PM"
+                        className="rounded-2xl border border-purple-200 px-4 py-3 outline-none focus:border-purple-600"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleScheduleDiksha}
+                      disabled={isUpdatingAction}
+                      className="mt-4 w-full rounded-2xl bg-purple-100 px-4 py-3 text-sm font-bold text-purple-700 disabled:opacity-60"
+                    >
+                      {dikshaDate ? "Save Rescheduled Diksha" : "Save Diksha Schedule"}
+                      <span className="block text-xs font-normal">
+                        दीक्षा शेड्यूल सेव करें
+                      </span>
+                    </button>
+                  </div>
 
                   <ActionButton
                     label="Diksha Present"
@@ -873,7 +1052,7 @@ export default function AdminDashboard({
                   <ActionButton
                     label="Diksha Completed"
                     labelHi="दीक्षा पूर्ण"
-                    className="bg-orange-100 text-orange-800"
+                    className="bg-orange-100 text-orange-800 md:col-span-2"
                     disabled={isUpdatingAction}
                     onClick={() =>
                       handleSubmitAction({
@@ -893,6 +1072,8 @@ export default function AdminDashboard({
                 onClick={() => {
                   setSelectedAction(null);
                   setActionNotes("");
+                  setDikshaDate("");
+                  setDikshaTime("3:30 PM");
                 }}
                 disabled={isUpdatingAction}
                 className="w-full rounded-2xl border border-orange-300 px-5 py-3 font-bold text-orange-800 disabled:opacity-60"
@@ -1065,6 +1246,28 @@ function ActionButton({
     >
       {label}
       <span className="block text-xs font-normal">{labelHi}</span>
+    </button>
+  );
+}
+
+function ReportButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-4 py-2 text-xs font-bold ${
+        active ? "bg-orange-700 text-white" : "bg-white text-orange-800"
+      }`}
+    >
+      {label}
     </button>
   );
 }
