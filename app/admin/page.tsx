@@ -119,8 +119,12 @@ export default async function AdminPage({
     .from("slots")
     .select("*")
     .order("slot_date", { ascending: true });
+    const { data: activityLogs, error: activityLogsError } = await supabase
+  .from("candidate_activity_logs")
+  .select("*")
+  .order("created_at", { ascending: false });
 
-  if (registrationsError || slotsError) {
+  if (registrationsError || slotsError || activityLogsError) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fff8ed] px-4">
         <div className="max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
@@ -131,7 +135,9 @@ export default async function AdminPage({
             Could not load admin dashboard data.
           </p>
           <p className="mt-2 text-sm text-stone-500">
-            {registrationsError?.message || slotsError?.message}
+          {registrationsError?.message ||
+  slotsError?.message ||
+  activityLogsError?.message}
           </p>
         </div>
       </main>
@@ -158,9 +164,10 @@ export default async function AdminPage({
       </form>
 
       <AdminDashboard
-        registrations={cleanedRegistrations}
-        slots={slots || []}
-      />
+  registrations={cleanedRegistrations}
+  slots={slots || []}
+  activityLogs={activityLogs || []}
+/>
     </>
   );
 }

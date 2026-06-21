@@ -56,13 +56,26 @@ type Slot = {
   current_count: number;
   status: string;
 };
-
+type ActivityLog = {
+  id: string;
+  registration_id: string;
+  old_status: string | null;
+  new_status: string | null;
+  action_type: string | null;
+  attendance_type: string | null;
+  attendance_value: string | null;
+  notes: string | null;
+  updated_by: string | null;
+  created_at: string;
+};
 export default function AdminDashboard({
   registrations,
   slots,
+  activityLogs,
 }: {
   registrations: Registration[];
   slots: Slot[];
+  activityLogs: ActivityLog[];
 }) {
   const [search, setSearch] = useState("");
   const [slotDate, setSlotDate] = useState("all");
@@ -76,6 +89,9 @@ export default function AdminDashboard({
     url: string;
     name: string;
   } | null>(null);
+  const [selectedHistory, setSelectedHistory] = useState<Registration | null>(
+    null
+  );
 
   const [selectedAction, setSelectedAction] = useState<{
     registrationId: string;
@@ -673,29 +689,37 @@ export default function AdminDashboard({
                       </TableCell>
                       <TableCell>{person.slots?.slot_time || "-"}</TableCell>
 
-                      <TableCell>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedAction({
-                              registrationId: person.id,
-                              candidateName: person.full_name || person.token,
-                              actionType: "status",
-                              title: "Manage Candidate",
-                              newStatus:
-                                person.candidate_status || person.status,
-                            });
-                            setDikshaDate(person.diksha_date || "");
-                            setDikshaTime(person.diksha_time || "3:30 PM");
-                          }}
-                          className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
-                        >
-                          Manage
-                          <span className="block text-[10px] font-normal">
-                            अपडेट करें
-                          </span>
-                        </button>
-                      </TableCell>
+                    <TableCell>
+  <div className="flex flex-wrap gap-2">
+    <button
+      type="button"
+      onClick={() => {
+        setSelectedAction({
+          registrationId: person.id,
+          candidateName: person.full_name || person.token,
+          actionType: "status",
+          title: "Manage Candidate",
+          newStatus: person.candidate_status || person.status,
+        });
+        setDikshaDate(person.diksha_date || "");
+        setDikshaTime(person.diksha_time || "3:30 PM");
+      }}
+      className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
+    >
+      Manage
+      <span className="block text-[10px] font-normal">अपडेट करें</span>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setSelectedHistory(person)}
+      className="rounded-full bg-stone-100 px-4 py-2 text-xs font-bold text-stone-700"
+    >
+      History
+      <span className="block text-[10px] font-normal">इतिहास</span>
+    </button>
+  </div>
+</TableCell>
 
                       <TableCell>
                         {person.aadhaar_file_url ? (
@@ -879,7 +903,113 @@ export default function AdminDashboard({
           </div>
         </div>
       </section>
+      {selectedHistory && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-2xl font-extrabold">Candidate History</h3>
+          <p className="mt-1 text-sm text-stone-600">
+            {selectedHistory.token} - {selectedHistory.full_name || "-"}
+          </p>
+          <p className="text-sm text-stone-600">
+            उम्मीदवार की पूरी कार्यवाही का इतिहास
+          </p>
+        </div>
 
+        <button
+          type="button"
+          onClick={() => setSelectedHistory(null)}
+          className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
+        >
+          Close
+          <span className="block text-[10px] font-normal">बंद करें</span>
+        </button>
+      </div>
+
+      <div className="mt-6 space-y-4">
+        {activityLogs.filter(
+          (log) => log.registration_id === selectedHistory.id
+        ).length === 0 ? (
+          <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
+            No history found for this candidate.
+            <span className="block text-sm font-normal">
+              इस उम्मीदवार का कोई इतिहास नहीं मिला।
+            </span>
+          </div>
+        ) : (
+          activityLogs
+            .filter((log) => log.registration_id === selectedHistory.id)
+            .map((log) => (
+              <div
+                key={log.id}
+                className="rounded-2xl border border-orange-100 bg-orange-50 p-4"
+              >
+                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <p className="font-extrabold text-orange-900">
+                      {log.action_type || "Status Updated"}
+                    </p>
+
+                    <p className="mt-1 text-sm text-stone-600">
+                      {formatDateTime(log.created_at)}
+                    </p>
+                  </div>
+
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-orange-800">
+                    Updated by: {log.updated_by || "-"}
+                  </span>
+                </div>
+
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div className="rounded-xl bg-white p-3">
+                    <p className="text-xs font-bold text-stone-500">
+                      Old Status
+                    </p>
+                    <p className="font-bold text-stone-800">
+                      {log.old_status || "-"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-white p-3">
+                    <p className="text-xs font-bold text-stone-500">
+                      New Status
+                    </p>
+                    <p className="font-bold text-stone-800">
+                      {log.new_status || "-"}
+                    </p>
+                  </div>
+                </div>
+
+                {(log.attendance_type || log.attendance_value) && (
+                  <div className="mt-3 rounded-xl bg-white p-3">
+                    <p className="text-xs font-bold text-stone-500">
+                      Attendance
+                    </p>
+                    <p className="font-bold text-stone-800">
+                      {log.attendance_type || "-"}:{" "}
+                      {log.attendance_value || "-"}
+                    </p>
+                  </div>
+                )}
+
+                {log.notes && (
+                  <div className="mt-3 rounded-xl bg-white p-3">
+                    <p className="text-xs font-bold text-stone-500">
+                      Notes / Remarks
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-stone-800">
+                      {log.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))
+        )}
+      </div>
+    </div>
+  </div>
+)}
       {selectedAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
@@ -1161,7 +1291,18 @@ function formatDateShort(dateString: string) {
     month: "short",
   });
 }
+function formatDateTime(dateString: string) {
+  const date = new Date(dateString);
 
+  return date.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
 function getTomorrowDateString() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
