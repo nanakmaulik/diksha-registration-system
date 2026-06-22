@@ -1,10 +1,11 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
-import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
-type FormData = {
+type RegistrationFormData = {
   fullName: string;
   age: string;
   gender: string;
@@ -16,6 +17,7 @@ type FormData = {
   address: string;
   city: string;
   state: string;
+  country: string;
   pinCode: string;
   spouseName: string;
   fatherName: string;
@@ -39,7 +41,7 @@ type Slot = {
   status: string;
 };
 
-const initialFormData: FormData = {
+const initialFormData: RegistrationFormData = {
   fullName: "",
   age: "",
   gender: "",
@@ -51,13 +53,14 @@ const initialFormData: FormData = {
   address: "",
   city: "",
   state: "",
+  country: "India",
   pinCode: "",
   spouseName: "",
-fatherName: "",
-motherName: "",
-familyName: "",
-familyRelation: "",
-familyMobile: "",
+  fatherName: "",
+  motherName: "",
+  familyName: "",
+  familyRelation: "",
+  familyMobile: "",
   idType: "aadhaar",
   idNumber: "",
   aadhaarFile: null,
@@ -66,8 +69,11 @@ familyMobile: "",
 };
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] =
+    useState<RegistrationFormData>(initialFormData);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedMonth, setSelectedMonth] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,7 +84,7 @@ export default function RegisterPage() {
   useEffect(() => {
     async function loadSlots() {
       const tomorrow = getTomorrowDateString();
-    
+
       const { data, error } = await supabase
         .from("slots")
         .select("*")
@@ -123,12 +129,16 @@ export default function RegisterPage() {
 
   const selectedSlot = slots.find((slot) => slot.id === formData.selectedSlotId);
 
+  const visibleSlots = slots.filter(
+    (slot) => !selectedMonth || slot.slot_date.startsWith(selectedMonth)
+  );
+
   function handleChange(
-    e: React.ChangeEvent<
+    event: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) {
-    const target = e.target;
+    const target = event.target;
     const { name, value } = target;
 
     if (target instanceof HTMLInputElement && target.type === "file") {
@@ -172,9 +182,13 @@ export default function RegisterPage() {
     }));
   }
 
-  function handleMonthChange(event: React.ChangeEvent<HTMLSelectElement>) {
+  function handleMonthChange(
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) {
     setSelectedMonth(event.target.value);
-
+  
     setFormData((prev) => ({
       ...prev,
       selectedSlotId: "",
@@ -187,6 +201,7 @@ export default function RegisterPage() {
       selectedSlotId: slotId,
     }));
   }
+
   function validateStep(currentStep: number) {
     if (currentStep === 1) {
       if (!formData.fullName.trim()) {
@@ -195,35 +210,35 @@ export default function RegisterPage() {
           message: "Please enter full name.\nकृपया पूरा नाम भरें।",
         };
       }
-  
+
       if (!formData.age.trim()) {
         return {
           isValid: false,
           message: "Please enter age.\nकृपया आयु भरें।",
         };
       }
-  
+
       if (Number(formData.age) <= 0) {
         return {
           isValid: false,
           message: "Please enter a valid age.\nकृपया सही आयु भरें।",
         };
       }
-  
+
       if (!formData.gender.trim()) {
         return {
           isValid: false,
           message: "Please select gender.\nकृपया लिंग चुनें।",
         };
       }
-  
+
       if (!formData.occupation.trim()) {
         return {
           isValid: false,
           message: "Please enter occupation.\nकृपया व्यवसाय भरें।",
         };
       }
-  
+
       if (!formData.maritalStatus.trim()) {
         return {
           isValid: false,
@@ -231,7 +246,7 @@ export default function RegisterPage() {
         };
       }
     }
-  
+
     if (currentStep === 2) {
       if (!formData.mobile.trim()) {
         return {
@@ -239,67 +254,80 @@ export default function RegisterPage() {
           message: "Please enter mobile number.\nकृपया मोबाइल नंबर भरें।",
         };
       }
-  
-      if (formData.mobile.replace(/\D/g, "").length !== 10) {
+
+      const mobileDigits = formData.mobile.replace(/\D/g, "");
+
+      if (mobileDigits.length < 7 || mobileDigits.length > 15) {
         return {
           isValid: false,
           message:
-            "Please enter a valid 10 digit mobile number.\nकृपया सही 10 अंकों का मोबाइल नंबर भरें।",
+            "Please enter a valid mobile number. If outside India, include country code.\nकृपया सही मोबाइल नंबर भरें। भारत के बाहर हैं तो country code भी डालें।",
         };
       }
-  
+
       if (!formData.whatsapp.trim()) {
         return {
           isValid: false,
-          message: "Please enter WhatsApp number.\nकृपया व्हाट्सऐप नंबर भरें।",
+          message: "Please enter WhatsApp number.\nकृपया WhatsApp नंबर भरें।",
         };
       }
-  
-      if (formData.whatsapp.replace(/\D/g, "").length !== 10) {
+
+      const whatsappDigits = formData.whatsapp.replace(/\D/g, "");
+
+      if (whatsappDigits.length < 7 || whatsappDigits.length > 15) {
         return {
           isValid: false,
           message:
-            "Please enter a valid 10 digit WhatsApp number.\nकृपया सही 10 अंकों का व्हाट्सऐप नंबर भरें।",
+            "Please enter a valid WhatsApp number. If outside India, include country code.\nकृपया सही WhatsApp नंबर भरें।",
         };
       }
-  
+
       if (!formData.address.trim()) {
         return {
           isValid: false,
           message: "Please enter full address.\nकृपया पूरा पता भरें।",
         };
       }
-  
+
       if (!formData.city.trim()) {
         return {
           isValid: false,
           message: "Please enter city.\nकृपया शहर भरें।",
         };
       }
-  
+
       if (!formData.state.trim()) {
         return {
           isValid: false,
-          message: "Please enter state.\nकृपया राज्य भरें।",
+          message:
+            "Please enter state / province / region.\nकृपया राज्य / प्रांत / क्षेत्र भरें।",
         };
       }
-  
+
+      if (!formData.country.trim()) {
+        return {
+          isValid: false,
+          message: "Please select country.\nकृपया देश चुनें।",
+        };
+      }
+
       if (!formData.pinCode.trim()) {
         return {
           isValid: false,
-          message: "Please enter pin code.\nकृपया पिन कोड भरें।",
+          message:
+            "Please enter postal / ZIP code.\nकृपया पोस्टल / ज़िप कोड भरें।",
         };
       }
-  
-      if (formData.pinCode.replace(/\D/g, "").length !== 6) {
+
+      if (formData.pinCode.trim().length < 3) {
         return {
           isValid: false,
           message:
-            "Please enter a valid 6 digit pin code.\nकृपया सही 6 अंकों का पिन कोड भरें।",
+            "Please enter a valid postal / ZIP code.\nकृपया सही पोस्टल / ज़िप कोड भरें।",
         };
       }
     }
-  
+
     if (currentStep === 3) {
       if (formData.maritalStatus === "Married") {
         if (!formData.spouseName.trim()) {
@@ -316,7 +344,7 @@ export default function RegisterPage() {
             message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
           };
         }
-    
+
         if (!formData.motherName.trim()) {
           return {
             isValid: false,
@@ -324,7 +352,7 @@ export default function RegisterPage() {
           };
         }
       }
-    
+
       if (!formData.familyName.trim()) {
         return {
           isValid: false,
@@ -332,7 +360,7 @@ export default function RegisterPage() {
             "Please enter family member name.\nकृपया परिवार के सदस्य का नाम भरें।",
         };
       }
-    
+
       if (!formData.familyRelation.trim()) {
         return {
           isValid: false,
@@ -340,7 +368,7 @@ export default function RegisterPage() {
             "Please select family member relation.\nकृपया परिवार के सदस्य से संबंध चुनें।",
         };
       }
-    
+
       if (!formData.familyMobile.trim()) {
         return {
           isValid: false,
@@ -348,16 +376,18 @@ export default function RegisterPage() {
             "Please enter family member mobile number.\nकृपया परिवार के सदस्य का मोबाइल नंबर भरें।",
         };
       }
-    
-      if (formData.familyMobile.replace(/\D/g, "").length !== 10) {
+
+      const familyMobileDigits = formData.familyMobile.replace(/\D/g, "");
+
+      if (familyMobileDigits.length < 7 || familyMobileDigits.length > 15) {
         return {
           isValid: false,
           message:
-            "Please enter a valid family member mobile number.\nकृपया सही परिवार सदस्य मोबाइल नंबर भरें।",
+            "Please enter a valid family member mobile number. If outside India, include country code.\nकृपया सही परिवार सदस्य मोबाइल नंबर भरें।",
         };
       }
     }
-  
+
     if (currentStep === 4) {
       if (!formData.idType.trim()) {
         return {
@@ -365,14 +395,14 @@ export default function RegisterPage() {
           message: "Please select ID type.\nकृपया पहचान प्रमाण का प्रकार चुनें।",
         };
       }
-  
+
       if (!formData.idNumber.trim()) {
         return {
           isValid: false,
-          message: "Please enter Aadhaar / ID number.\nकृपया आधार / पहचान नंबर भरें।",
+          message: "Please enter ID number.\nकृपया पहचान नंबर भरें।",
         };
       }
-  
+
       if (!formData.aadhaarFile) {
         return {
           isValid: false,
@@ -381,7 +411,7 @@ export default function RegisterPage() {
         };
       }
     }
-  
+
     if (currentStep === 5) {
       if (!formData.selectedSlotId) {
         return {
@@ -391,30 +421,21 @@ export default function RegisterPage() {
         };
       }
     }
-  
-    // if (currentStep === 6) {
-    //   if (!formData.remarksBy.trim()) {
-    //     return {
-    //       isValid: false,
-    //       message:
-    //         "Please enter who filled this form.\nकृपया लिखें कि फॉर्म किसने भरा।",
-    //     };
-    //   }
-    // }
-  
+
     return {
       isValid: true,
       message: "",
     };
   }
+
   function nextStep() {
     const validation = validateStep(step);
-  
+
     if (!validation.isValid) {
       alert(validation.message);
       return;
     }
-  
+
     setStep((prev) => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
   }
@@ -424,22 +445,17 @@ export default function RegisterPage() {
     window.scrollTo(0, 0);
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
     if (isSubmitting) return;
 
-    if (!formData.selectedSlotId) {
-      alert("Please select an appointment date.\nकृपया अपॉइंटमेंट तारीख चुनें।");
+    const finalValidation = validateStep(5);
+
+    if (!finalValidation.isValid) {
+      alert(finalValidation.message);
       return;
     }
-    const finalValidation = validateStep(6);
-
-if (!finalValidation.isValid) {
-  alert(finalValidation.message);
-  setIsSubmitting(false);
-  return;
-}
 
     setIsSubmitting(true);
 
@@ -460,7 +476,7 @@ if (!finalValidation.isValid) {
           });
 
         if (uploadError) {
-          alert("Aadhaar upload error: " + uploadError.message);
+          alert("Aadhaar / ID upload error: " + uploadError.message);
           setIsSubmitting(false);
           return;
         }
@@ -473,31 +489,38 @@ if (!finalValidation.isValid) {
         aadhaarFileName = formData.aadhaarFile.name;
       }
 
-      const { data, error } = await supabase.rpc("create_registration_with_slot", {
-        p_slot_id: formData.selectedSlotId,
-        p_full_name: formData.fullName,
-        p_age: formData.age ? Number(formData.age) : null,
-        p_gender: formData.gender,
-        p_occupation: formData.occupation,
-        p_marital_status: formData.maritalStatus,
-        p_mobile: formData.mobile,
-        p_whatsapp: formData.whatsapp,
-        p_address: formData.address,
-        p_city: formData.city,
-        p_state: formData.state,
-        p_pin_code: formData.pinCode,
-        p_spouse_name: formData.maritalStatus === "Married" ? formData.spouseName : "",
-        p_father_name: formData.maritalStatus !== "Married" ? formData.fatherName : "",
-        p_mother_name: formData.maritalStatus !== "Married" ? formData.motherName : "",
-        p_family_name: formData.familyName,
-        p_family_relation: formData.familyRelation,
-        p_family_mobile: formData.familyMobile,
-        p_id_type: formData.idType,
-        p_id_number: formData.idNumber,
-        p_aadhaar_file_url: aadhaarFileUrl,
-        p_aadhaar_file_name: aadhaarFileName,
-        p_remarks_by: formData.remarksBy.trim() || "Self",
-      });
+      const { data, error } = await supabase.rpc(
+        "create_registration_with_slot",
+        {
+          p_slot_id: formData.selectedSlotId,
+          p_full_name: formData.fullName,
+          p_age: formData.age ? Number(formData.age) : null,
+          p_gender: formData.gender,
+          p_occupation: formData.occupation,
+          p_marital_status: formData.maritalStatus,
+          p_mobile: formData.mobile,
+          p_whatsapp: formData.whatsapp,
+          p_address: formData.address,
+          p_city: formData.city,
+          p_state: formData.state,
+          p_country: formData.country,
+          p_pin_code: formData.pinCode,
+          p_spouse_name:
+            formData.maritalStatus === "Married" ? formData.spouseName : "",
+          p_father_name:
+            formData.maritalStatus !== "Married" ? formData.fatherName : "",
+          p_mother_name:
+            formData.maritalStatus !== "Married" ? formData.motherName : "",
+          p_family_name: formData.familyName,
+          p_family_relation: formData.familyRelation,
+          p_family_mobile: formData.familyMobile,
+          p_id_type: formData.idType,
+          p_id_number: formData.idNumber,
+          p_aadhaar_file_url: aadhaarFileUrl,
+          p_aadhaar_file_name: aadhaarFileName,
+          p_remarks_by: formData.remarksBy.trim() || "Self",
+        }
+      );
 
       if (error) {
         const message = error.message.toLowerCase();
@@ -524,641 +547,572 @@ if (!finalValidation.isValid) {
         return;
       }
 
-      const result = data?.[0];
+      const result = Array.isArray(data) ? data[0] : data;
 
-      if (!result) {
-        alert("Registration completed, but confirmation data was not received.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      const params = new URLSearchParams({
-        token: result.token,
-        date: result.slot_date,
-        time: result.slot_time,
-      });
-
-      window.location.href = `/success?${params.toString()}`;
+      router.push(
+        `/success?token=${encodeURIComponent(
+          result?.token || ""
+        )}&date=${encodeURIComponent(
+          result?.slot_date || ""
+        )}&time=${encodeURIComponent(result?.slot_time || "")}`
+      );
     } catch (error) {
-      alert("Something went wrong. Please try again.");
-      console.error(error);
+      alert("Unexpected error. Please try again.");
       setIsSubmitting(false);
     }
   }
 
   return (
     <main className="min-h-screen bg-[#fff8ed] px-4 py-6 text-[#2d2418] md:py-10">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-6 text-center">
-          <div className="mx-auto w-32 md:w-40">
+      <div className="mx-auto max-w-5xl">
+        <header className="mb-8 rounded-3xl bg-white p-5 text-center shadow-sm md:p-8">
+          <div className="mx-auto mb-4 w-24">
             <Image
               src="/logo.png"
               alt="Diksha Logo"
-              width={400}
-              height={400}
+              width={250}
+              height={250}
               className="h-auto w-full"
               priority
             />
           </div>
 
-          <h1 className="mt-2 text-3xl font-extrabold">
+          <h1 className="text-3xl font-extrabold md:text-4xl">
             Diksha Registration
           </h1>
-
-          <h2 className="mt-1 text-2xl font-bold text-orange-800">
+          <h2 className="mt-2 text-2xl font-bold text-orange-800">
             दीक्षा पंजीकरण
           </h2>
+          <p className="mt-3 text-sm text-stone-600">
+            Please fill the registration form carefully. International address
+            and phone numbers are supported.
+          </p>
+          <p className="text-sm text-stone-600">
+            कृपया फॉर्म ध्यान से भरें। भारत और विदेश दोनों के पते स्वीकार हैं।
+          </p>
+        </header>
+
+        <div className="mb-6 rounded-3xl bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between text-sm font-bold text-stone-600">
+            <span>
+              Step {step} of {totalSteps}
+            </span>
+            <span>{Math.round((step / totalSteps) * 100)}%</span>
+          </div>
+
+          <div className="h-3 overflow-hidden rounded-full bg-orange-100">
+            <div
+              className="h-full rounded-full bg-orange-700 transition-all"
+              style={{ width: `${(step / totalSteps) * 100}%` }}
+            />
+          </div>
         </div>
 
-        <div className="rounded-3xl bg-white p-5 shadow-sm md:p-8">
-          <StepIndicator currentStep={step} totalSteps={totalSteps} />
+        <form onSubmit={handleSubmit}>
+          {step === 1 && (
+            <StepCard
+              titleEn="Personal Details"
+              titleHi="व्यक्तिगत जानकारी"
+              subtitleEn="Please enter candidate details."
+              subtitleHi="कृपया उम्मीदवार की जानकारी भरें।"
+            >
+              <InputField
+                labelEn="Full Name"
+                labelHi="पूरा नाम"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                placeholder="Enter full name"
+                required
+              />
 
-          <form onSubmit={handleSubmit} className="mt-8">
-            {step === 1 && (
-              <StepCard
-                titleEn="Personal Details"
-                titleHi="व्यक्तिगत जानकारी"
-                subtitleEn="Please fill the basic details carefully."
-                subtitleHi="कृपया मूल जानकारी ध्यानपूर्वक भरें।"
-              >
-                <InputField
-                  labelEn="Full Name"
-                  labelHi="पूरा नाम"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Enter full name"
-                  required
-                />
+              <InputField
+                labelEn="Age"
+                labelHi="आयु"
+                name="age"
+                type="number"
+                value={formData.age}
+                onChange={handleChange}
+                placeholder="Enter age"
+                required
+              />
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <InputField
-                    labelEn="Age"
-                    labelHi="आयु"
-                    name="age"
-                    type="number"
-                    value={formData.age}
-                    onChange={handleChange}
-                    placeholder="Enter age"
-                    required
-                  />
+              <SelectField
+                labelEn="Gender"
+                labelHi="लिंग"
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                required
+                options={[
+                  ["", "Select gender"],
+                  ["Male", "Male / पुरुष"],
+                  ["Female", "Female / महिला"],
+                  ["Other", "Other / अन्य"],
+                ]}
+              />
 
-                  <SelectField
-                    labelEn="Gender"
-                    labelHi="लिंग"
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    required
-                    options={[
-                      ["", "Select gender"],
-                      ["Male", "Male / पुरुष"],
-                      ["Female", "Female / महिला"],
-                      ["Other", "Other / अन्य"],
-                    ]}
-                  />
-                </div>
+              <InputField
+                labelEn="Occupation"
+                labelHi="व्यवसाय"
+                name="occupation"
+                value={formData.occupation}
+                onChange={handleChange}
+                placeholder="Enter occupation"
+                required
+              />
 
-                <InputField
-                  labelEn="Occupation"
-                  labelHi="व्यवसाय"
-                  name="occupation"
-                  value={formData.occupation}
-                  onChange={handleChange}
-                  placeholder="Enter occupation"
-                  required
-                />
+              <SelectField
+                labelEn="Marital Status"
+                labelHi="वैवाहिक स्थिति"
+                name="maritalStatus"
+                value={formData.maritalStatus}
+                onChange={handleChange}
+                required
+                options={[
+                  ["", "Select marital status"],
+                  ["Single", "Single / अविवाहित"],
+                  ["Married", "Married / विवाहित"],
+                  ["Widowed", "Widowed / विधवा / विधुर"],
+                  ["Divorced", "Divorced / तलाकशुदा"],
+                ]}
+              />
+            </StepCard>
+          )}
 
-                <SelectField
-                  labelEn="Marital Status"
-                  labelHi="वैवाहिक स्थिति"
-                  name="maritalStatus"
-                  value={formData.maritalStatus}
-                  onChange={handleChange}
-                  required
-                  options={[
-                    ["", "Select marital status"],
-                    ["Single", "Single / अविवाहित"],
-                    ["Married", "Married / विवाहित"],
-                    ["Widowed", "Widowed / विधवा / विधुर"],
-                  ]}
-                />
-              </StepCard>
-            )}
+          {step === 2 && (
+            <StepCard
+              titleEn="Contact & International Address"
+              titleHi="संपर्क और अंतरराष्ट्रीय पता"
+              subtitleEn="Indian and international addresses are accepted."
+              subtitleHi="भारत और विदेश दोनों के पते स्वीकार हैं।"
+            >
+              <InputField
+                labelEn="Mobile Number"
+                labelHi="मोबाइल नंबर"
+                name="mobile"
+                type="tel"
+                value={formData.mobile}
+                onChange={handleChange}
+                placeholder="+91 9876543210 / +1 2125551234"
+                required
+              />
 
-            {step === 2 && (
-              <StepCard
-                titleEn="Contact & Address"
-                titleHi="संपर्क और पता"
-                subtitleEn="Please provide correct mobile number and address."
-                subtitleHi="कृपया सही मोबाइल नंबर और पता भरें।"
-              >
-                <InputField
-                  labelEn="Mobile Number"
-                  labelHi="मोबाइल नंबर"
-                  name="mobile"
-                  type="tel"
-                  value={formData.mobile}
-                  onChange={handleChange}
-                  placeholder="Enter 10 digit mobile number"
-                  required
-                />
-
-                <label className="flex items-start gap-3 rounded-2xl bg-orange-50 p-4">
+              <div className="rounded-2xl bg-orange-50 p-4">
+                <label className="flex items-center gap-3 text-sm font-bold text-stone-700">
                   <input
                     type="checkbox"
                     name="sameWhatsapp"
                     checked={formData.sameWhatsapp}
                     onChange={handleChange}
-                    className="mt-1 h-5 w-5 accent-orange-700"
+                    className="h-5 w-5"
                   />
-
-                  <span>
-                    <span className="block font-bold">
-                      WhatsApp number is same as mobile number
-                    </span>
-                    <span className="block text-sm text-stone-600">
-                      व्हाट्सऐप नंबर मोबाइल नंबर जैसा ही है
-                    </span>
-                  </span>
+                  WhatsApp same as mobile / WhatsApp मोबाइल जैसा ही है
                 </label>
+              </div>
 
+              <InputField
+                labelEn="WhatsApp Number"
+                labelHi="WhatsApp नंबर"
+                name="whatsapp"
+                type="tel"
+                value={formData.whatsapp}
+                onChange={handleChange}
+                placeholder="+91 9876543210 / +1 2125551234"
+                required
+              />
+
+              <TextareaField
+                labelEn="Full Address"
+                labelHi="पूरा पता"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                placeholder="House number, street, area"
+                required
+              />
+
+              <InputField
+                labelEn="City"
+                labelHi="शहर"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                placeholder="Enter city"
+                required
+              />
+
+              <InputField
+                labelEn="State / Province / Region"
+                labelHi="राज्य / प्रांत / क्षेत्र"
+                name="state"
+                value={formData.state}
+                onChange={handleChange}
+                placeholder="Punjab, California, Ontario, etc."
+                required
+              />
+
+              <SelectField
+                labelEn="Country"
+                labelHi="देश"
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                required
+                options={[
+                  ["India", "India / भारत"],
+                  ["United States", "United States / अमेरिका"],
+                  ["Canada", "Canada / कनाडा"],
+                  ["United Kingdom", "United Kingdom / यूके"],
+                  ["Australia", "Australia / ऑस्ट्रेलिया"],
+                  ["New Zealand", "New Zealand / न्यूज़ीलैंड"],
+                  ["Germany", "Germany / जर्मनी"],
+                  ["France", "France / फ्रांस"],
+                  ["Italy", "Italy / इटली"],
+                  ["Spain", "Spain / स्पेन"],
+                  ["United Arab Emirates", "United Arab Emirates / यूएई"],
+                  ["Singapore", "Singapore / सिंगापुर"],
+                  ["Malaysia", "Malaysia / मलेशिया"],
+                  ["Other", "Other / अन्य"],
+                ]}
+              />
+
+              <InputField
+                labelEn="Postal / ZIP Code"
+                labelHi="पोस्टल / ज़िप कोड"
+                name="pinCode"
+                value={formData.pinCode}
+                onChange={handleChange}
+                placeholder="143001, 10001, SW1A 1AA, etc."
+                required
+              />
+            </StepCard>
+          )}
+
+          {step === 3 && (
+            <StepCard
+              titleEn="Family Approval Information"
+              titleHi="परिवार की स्वीकृति जानकारी"
+              subtitleEn="Please provide family approval details based on marital status."
+              subtitleHi="कृपया वैवाहिक स्थिति के अनुसार परिवार की स्वीकृति जानकारी भरें।"
+            >
+              {formData.maritalStatus === "Married" ? (
                 <InputField
-                  labelEn="WhatsApp Number"
-                  labelHi="व्हाट्सऐप नंबर"
-                  name="whatsapp"
-                  type="tel"
-                  value={formData.whatsapp}
+                  labelEn="Spouse Name"
+                  labelHi="पति / पत्नी का नाम"
+                  name="spouseName"
+                  value={formData.spouseName}
                   onChange={handleChange}
-                  placeholder="Enter WhatsApp number"
-                  required
-                  disabled={formData.sameWhatsapp}
-                />
-
-                <TextAreaField
-                  labelEn="Full Address"
-                  labelHi="पूरा पता"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder="House/flat no., street, locality, landmark"
+                  placeholder="Enter spouse name"
                   required
                 />
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <InputField
-                    labelEn="City"
-                    labelHi="शहर"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="City"
-                    required
-                  />
-
-                  <InputField
-                    labelEn="State"
-                    labelHi="राज्य"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    placeholder="State"
-                    required
-                  />
-
-                  <InputField
-                    labelEn="Pin Code"
-                    labelHi="पिन कोड"
-                    name="pinCode"
-                    value={formData.pinCode}
-                    onChange={handleChange}
-                    placeholder="6 digits"
-                    required
-                  />
-                </div>
-              </StepCard>
-            )}
-
-{step === 3 && (
-  <StepCard
-    titleEn="Family Approval Information"
-    titleHi="परिवार की स्वीकृति जानकारी"
-    subtitleEn="Please provide family approval details based on marital status."
-    subtitleHi="कृपया वैवाहिक स्थिति के अनुसार परिवार की स्वीकृति जानकारी भरें।"
-  >
-    {formData.maritalStatus === "Married" ? (
-      <InputField
-        labelEn="Spouse Name"
-        labelHi="पति / पत्नी का नाम"
-        name="spouseName"
-        value={formData.spouseName}
-        onChange={handleChange}
-        placeholder="Enter spouse name"
-        required
-      />
-    ) : (
-      <>
-        <InputField
-          labelEn="Father's Name"
-          labelHi="पिता का नाम"
-          name="fatherName"
-          value={formData.fatherName}
-          onChange={handleChange}
-          placeholder="Enter father's name"
-          required
-        />
-
-        <InputField
-          labelEn="Mother's Name"
-          labelHi="माता का नाम"
-          name="motherName"
-          value={formData.motherName}
-          onChange={handleChange}
-          placeholder="Enter mother's name"
-          required
-        />
-      </>
-    )}
-
-    <div className="rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
-      <p className="font-bold">Emergency / accompanying family member details</p>
-      <p className="mt-1">
-        आपातकालीन / साथ आने वाले परिवार सदस्य की जानकारी
-      </p>
-    </div>
-
-    <InputField
-      labelEn="Family Member Name"
-      labelHi="परिवार के सदस्य का नाम"
-      name="familyName"
-      value={formData.familyName}
-      onChange={handleChange}
-      placeholder="Enter family member name"
-      required
-    />
-
-    <SelectField
-      labelEn="Family Member Relation"
-      labelHi="परिवार के सदस्य से संबंध"
-      name="familyRelation"
-      value={formData.familyRelation}
-      onChange={handleChange}
-      required
-      options={[
-        ["", "Select relation"],
-        ["Father", "Father / पिता"],
-        ["Mother", "Mother / माता"],
-        ["Husband", "Husband / पति"],
-        ["Wife", "Wife / पत्नी"],
-        ["Brother", "Brother / भाई"],
-        ["Sister", "Sister / बहन"],
-        ["Son", "Son / पुत्र"],
-        ["Daughter", "Daughter / पुत्री"],
-        ["Other", "Other / अन्य"],
-      ]}
-    />
-
-    <InputField
-      labelEn="Family Member Mobile"
-      labelHi="परिवार के सदस्य का मोबाइल नंबर"
-      name="familyMobile"
-      type="tel"
-      value={formData.familyMobile}
-      onChange={handleChange}
-      placeholder="Enter family member mobile number"
-      required
-    />
-  </StepCard>
-)}
-
-            {step === 4 && (
-              <StepCard
-                titleEn="Identity Proof"
-                titleHi="पहचान प्रमाण"
-                subtitleEn="Please enter identity details and upload a clear document."
-                subtitleHi="कृपया पहचान की जानकारी भरें और साफ दस्तावेज़ अपलोड करें।"
-              >
-                <div className="rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
-                  <p className="font-bold">
-                    Your document will be used only for registration verification.
-                  </p>
-                  <p className="mt-1">
-                    आपका दस्तावेज़ केवल पंजीकरण सत्यापन के लिए उपयोग किया जाएगा।
-                  </p>
-                </div>
-
-                <SelectField
-                  labelEn="ID Type"
-                  labelHi="पहचान प्रमाण का प्रकार"
-                  name="idType"
-                  value={formData.idType}
-                  onChange={handleChange}
-                  required
-                  options={[
-                    ["aadhaar", "Aadhaar Card / आधार कार्ड"],
-                    ["passport", "Passport / पासपोर्ट"],
-                    ["other", "Other / अन्य"],
-                  ]}
-                />
-
-                <InputField
-                  labelEn="Aadhaar / ID Number"
-                  labelHi="आधार / पहचान नंबर"
-                  name="idNumber"
-                  value={formData.idNumber}
-                  onChange={handleChange}
-                  placeholder="Enter ID number"
-                  required
-                />
-
-                <div>
-                  <Label
-                    labelEn="Upload Aadhaar / ID Proof"
-                    labelHi="आधार / पहचान प्रमाण अपलोड करें"
-                    required
-                  />
-
-                  <input
-                    type="file"
-                    name="aadhaarFile"
-                    onChange={handleChange}
-                    accept="image/*,.pdf"
-                    required
-                    className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-4 outline-none file:mr-4 file:rounded-xl file:border-0 file:bg-orange-700 file:px-4 file:py-2 file:font-bold file:text-white"
-                  />
-
-                  <p className="mt-2 text-sm text-stone-600">
-                    Upload clear photo or PDF.
-                  </p>
-                  <p className="text-sm text-stone-600">
-                    साफ फोटो या PDF अपलोड करें।
-                  </p>
-
-                  {formData.aadhaarFile && (
-                    <div className="mt-3 rounded-2xl bg-green-50 p-3 text-sm font-semibold text-green-700">
-                      Selected file: {formData.aadhaarFile.name}
-                      <span className="block text-xs font-normal">
-                        चुनी गई फाइल: {formData.aadhaarFile.name}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </StepCard>
-            )}
-
-            {step === 5 && (
-              <StepCard
-                titleEn="Select Appointment Date"
-                titleHi="अपॉइंटमेंट तारीख चुनें"
-                subtitleEn="You may select any available date. Full dates cannot be selected."
-                subtitleHi="आप कोई भी उपलब्ध तारीख चुन सकते हैं। भरी हुई तारीख नहीं चुनी जा सकती।"
-              >
-                {isLoadingSlots ? (
-                  <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold">
-                    Loading available dates...
-                    <span className="block text-sm font-normal">
-                      उपलब्ध तारीखें लोड हो रही हैं...
-                    </span>
-                  </div>
-                ) : (
-                  <CalendarSlotSelector
-                    slots={slots}
-                    selectedMonth={selectedMonth}
-                    selectedSlotId={formData.selectedSlotId}
-                    onMonthChange={handleMonthChange}
-                    onSelectSlot={selectSlot}
-                    monthOptions={monthOptions}
-                  />
-                )}
-              </StepCard>
-            )}
-
-            {step === 6 && (
-              <StepCard
-                titleEn="Review & Submit"
-                titleHi="जांच करें और जमा करें"
-                subtitleEn="Please check all details before submitting."
-                subtitleHi="जमा करने से पहले कृपया सभी जानकारी जांच लें।"
-              >
-                <ReviewBox formData={formData} selectedSlot={selectedSlot} />
-
-                <TextAreaField
-  labelEn="Remarks By"
-  labelHi="फॉर्म किसने भरा"
-  name="remarksBy"
-  value={formData.remarksBy}
-  onChange={handleChange}
-  placeholder="Optional - Self / Sewadar / Family member"
-/>
-              </StepCard>
-            )}
-
-            <div className="mt-8 flex gap-3">
-              {step > 1 && (
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  disabled={isSubmitting}
-                  className="w-1/2 rounded-2xl border border-orange-300 px-5 py-4 font-bold text-orange-800 disabled:opacity-60"
-                >
-                  Back
-                  <span className="block text-sm font-normal">पीछे जाएं</span>
-                </button>
-              )}
-
-              {step < totalSteps ? (
-                <button
-                  type="button"
-                  onClick={nextStep}
-                  disabled={isSubmitting}
-                  className="w-full rounded-2xl bg-orange-700 px-5 py-4 font-bold text-white disabled:opacity-60"
-                >
-                  Next
-                  <span className="block text-sm font-normal">आगे बढ़ें</span>
-                </button>
               ) : (
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full rounded-2xl bg-orange-700 px-5 py-4 font-bold text-white disabled:opacity-60"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Registration"}
-                  <span className="block text-sm font-normal">
-                    {isSubmitting ? "जमा हो रहा है..." : "पंजीकरण जमा करें"}
-                  </span>
-                </button>
+                <>
+                  <InputField
+                    labelEn="Father's Name"
+                    labelHi="पिता का नाम"
+                    name="fatherName"
+                    value={formData.fatherName}
+                    onChange={handleChange}
+                    placeholder="Enter father's name"
+                    required
+                  />
+
+                  <InputField
+                    labelEn="Mother's Name"
+                    labelHi="माता का नाम"
+                    name="motherName"
+                    value={formData.motherName}
+                    onChange={handleChange}
+                    placeholder="Enter mother's name"
+                    required
+                  />
+                </>
               )}
-            </div>
-          </form>
-        </div>
+
+              <div className="rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
+                <p className="font-bold">
+                  Emergency / accompanying family member details
+                </p>
+                <p className="mt-1">
+                  आपातकालीन / साथ आने वाले परिवार सदस्य की जानकारी
+                </p>
+              </div>
+
+              <InputField
+                labelEn="Family Member Name"
+                labelHi="परिवार के सदस्य का नाम"
+                name="familyName"
+                value={formData.familyName}
+                onChange={handleChange}
+                placeholder="Enter family member name"
+                required
+              />
+
+              <SelectField
+                labelEn="Family Member Relation"
+                labelHi="परिवार के सदस्य से संबंध"
+                name="familyRelation"
+                value={formData.familyRelation}
+                onChange={handleChange}
+                required
+                options={[
+                  ["", "Select relation"],
+                  ["Father", "Father / पिता"],
+                  ["Mother", "Mother / माता"],
+                  ["Husband", "Husband / पति"],
+                  ["Wife", "Wife / पत्नी"],
+                  ["Brother", "Brother / भाई"],
+                  ["Sister", "Sister / बहन"],
+                  ["Son", "Son / पुत्र"],
+                  ["Daughter", "Daughter / पुत्री"],
+                  ["Friend", "Friend / मित्र"],
+                  ["Other", "Other / अन्य"],
+                ]}
+              />
+
+              <InputField
+                labelEn="Family Member Mobile"
+                labelHi="परिवार के सदस्य का मोबाइल नंबर"
+                name="familyMobile"
+                type="tel"
+                value={formData.familyMobile}
+                onChange={handleChange}
+                placeholder="+91 9876543210 / +1 2125551234"
+                required
+              />
+            </StepCard>
+          )}
+
+          {step === 4 && (
+            <StepCard
+              titleEn="Identity Proof"
+              titleHi="पहचान प्रमाण"
+              subtitleEn="Upload Aadhaar or any valid government ID."
+              subtitleHi="आधार या कोई मान्य सरकारी पहचान प्रमाण अपलोड करें।"
+            >
+              <SelectField
+                labelEn="ID Type"
+                labelHi="पहचान प्रमाण का प्रकार"
+                name="idType"
+                value={formData.idType}
+                onChange={handleChange}
+                required
+                options={[
+                  ["aadhaar", "Aadhaar / आधार"],
+                  ["passport", "Passport / पासपोर्ट"],
+                  ["driving_license", "Driving License / ड्राइविंग लाइसेंस"],
+                  ["voter_id", "Voter ID / वोटर आईडी"],
+                  ["other", "Other Government ID / अन्य सरकारी पहचान"],
+                ]}
+              />
+
+              <InputField
+                labelEn="ID Number"
+                labelHi="पहचान नंबर"
+                name="idNumber"
+                value={formData.idNumber}
+                onChange={handleChange}
+                placeholder="Enter ID number"
+                required
+              />
+
+              <FileField
+                labelEn="Upload Aadhaar / ID Proof"
+                labelHi="आधार / पहचान प्रमाण अपलोड करें"
+                name="aadhaarFile"
+                onChange={handleChange}
+                required
+              />
+
+              {formData.aadhaarFile && (
+                <div className="rounded-2xl bg-green-50 p-4 text-sm font-bold text-green-700">
+                  Selected file: {formData.aadhaarFile.name}
+                </div>
+              )}
+            </StepCard>
+          )}
+
+          {step === 5 && (
+            <StepCard
+              titleEn="Select Appointment Date"
+              titleHi="अपॉइंटमेंट तारीख चुनें"
+              subtitleEn="Please choose one available date for final meeting."
+              subtitleHi="कृपया फाइनल मीटिंग के लिए एक उपलब्ध तारीख चुनें।"
+            >
+              {isLoadingSlots ? (
+                <div className="rounded-2xl bg-orange-50 p-6 text-center font-bold text-stone-700">
+                  Loading available dates...
+                </div>
+              ) : slots.length === 0 ? (
+                <div className="rounded-2xl bg-red-50 p-6 text-center font-bold text-red-700">
+                  No appointment dates available right now.
+                </div>
+              ) : (
+                <>
+                  <SelectField
+                    labelEn="Month"
+                    labelHi="महीना"
+                    name="selectedMonth"
+                    value={selectedMonth}
+                    onChange={handleMonthChange}
+                    options={monthOptions.map(([value, label]) => [
+                      value,
+                      label,
+                    ])}
+                  />
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {visibleSlots.map((slot) => {
+                      const isFull =
+                        slot.current_count >= slot.capacity ||
+                        slot.status === "full";
+                      const isSelected = formData.selectedSlotId === slot.id;
+                      const seatsLeft = slot.capacity - slot.current_count;
+
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          disabled={isFull}
+                          onClick={() => selectSlot(slot.id)}
+                          className={`rounded-2xl border p-5 text-left transition ${
+                            isSelected
+                              ? "border-orange-700 bg-orange-100"
+                              : "border-orange-100 bg-white"
+                          } ${
+                            isFull
+                              ? "cursor-not-allowed opacity-50"
+                              : "hover:border-orange-400"
+                          }`}
+                        >
+                          <p className="text-lg font-extrabold">
+                            {formatDate(slot.slot_date)}
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-stone-600">
+                            {slot.slot_time}
+                          </p>
+
+                          <p
+                            className={`mt-4 inline-block rounded-full px-3 py-1 text-xs font-bold ${
+                              isFull
+                                ? "bg-red-100 text-red-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {isFull ? "Full / भरा हुआ" : `${seatsLeft} seats left`}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </StepCard>
+          )}
+
+          {step === 6 && (
+            <StepCard
+              titleEn="Review & Submit"
+              titleHi="जांचें और जमा करें"
+              subtitleEn="Please verify details before final submission."
+              subtitleHi="जमा करने से पहले कृपया जानकारी जांच लें।"
+            >
+              <div className="grid gap-3">
+                <ReviewRow label="Name / नाम" value={formData.fullName} />
+                <ReviewRow
+                  label="Age / Gender"
+                  value={`${formData.age} / ${formData.gender}`}
+                />
+                <ReviewRow
+                  label="Mobile / मोबाइल"
+                  value={formData.mobile}
+                />
+                <ReviewRow
+                  label="WhatsApp"
+                  value={formData.whatsapp}
+                />
+                <ReviewRow
+                  label="Address / पता"
+                  value={`${formData.address}, ${formData.city}, ${formData.state}, ${formData.country} - ${formData.pinCode}`}
+                />
+                <ReviewRow
+                  label="Family Approval / परिवार स्वीकृति"
+                  value={
+                    formData.maritalStatus === "Married"
+                      ? `Spouse: ${formData.spouseName}`
+                      : `Father: ${formData.fatherName}, Mother: ${formData.motherName}`
+                  }
+                />
+                <ReviewRow
+                  label="Family Contact / परिवार संपर्क"
+                  value={`${formData.familyName} (${formData.familyRelation}) - ${formData.familyMobile}`}
+                />
+                <ReviewRow
+                  label="ID Proof / पहचान प्रमाण"
+                  value={`${formData.idType} - ${formData.idNumber}`}
+                />
+                <ReviewRow
+                  label="Appointment / अपॉइंटमेंट"
+                  value={
+                    selectedSlot
+                      ? `${formatDate(selectedSlot.slot_date)} - ${
+                          selectedSlot.slot_time
+                        }`
+                      : "-"
+                  }
+                />
+              </div>
+
+              <TextareaField
+                labelEn="Filled By / Remarks"
+                labelHi="फॉर्म भरने वाला / टिप्पणी"
+                name="remarksBy"
+                value={formData.remarksBy}
+                onChange={handleChange}
+                placeholder="Self / Sewadar name / remarks"
+              />
+            </StepCard>
+          )}
+
+          <div className="mt-6 flex flex-col gap-3 md:flex-row">
+            {step > 1 && (
+              <button
+                type="button"
+                onClick={prevStep}
+                disabled={isSubmitting}
+                className="rounded-2xl border border-orange-300 px-6 py-4 font-bold text-orange-800 disabled:opacity-60 md:w-1/2"
+              >
+                Back
+                <span className="block text-sm font-normal">पीछे जाएं</span>
+              </button>
+            )}
+
+            {step < totalSteps ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                className="rounded-2xl bg-orange-700 px-6 py-4 font-bold text-white md:flex-1"
+              >
+                Continue
+                <span className="block text-sm font-normal">आगे बढ़ें</span>
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="rounded-2xl bg-orange-700 px-6 py-4 font-bold text-white disabled:opacity-60 md:flex-1"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Registration"}
+                <span className="block text-sm font-normal">
+                  {isSubmitting ? "जमा हो रहा है..." : "पंजीकरण जमा करें"}
+                </span>
+              </button>
+            )}
+          </div>
+        </form>
       </div>
     </main>
-  );
-}
-
-function CalendarSlotSelector({
-  slots,
-  selectedMonth,
-  selectedSlotId,
-  onMonthChange,
-  onSelectSlot,
-  monthOptions,
-}: {
-  slots: Slot[];
-  selectedMonth: string;
-  selectedSlotId: string;
-  onMonthChange: React.ChangeEventHandler<HTMLSelectElement>;
-  onSelectSlot: (slotId: string) => void;
-  monthOptions: string[][];
-}) {
-  const slotsForMonth = slots.filter((slot) =>
-    slot.slot_date.startsWith(selectedMonth)
-  );
-
-  const slotByDate = new Map(slotsForMonth.map((slot) => [slot.slot_date, slot]));
-
-  const [year, month] = selectedMonth.split("-").map(Number);
-  const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
-  const daysInMonth = new Date(year, month, 0).getDate();
-
-  const blankDays = Array.from({ length: firstDayOfMonth });
-  const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
-
-  return (
-    <div>
-      <Label
-        labelEn="Select Month"
-        labelHi="महीना चुनें"
-        required
-      />
-
-      <select
-        value={selectedMonth}
-        onChange={onMonthChange}
-        className="mb-5 w-full rounded-2xl border border-orange-200 bg-white px-4 py-4 outline-none focus:border-orange-600"
-      >
-        {monthOptions.map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-
-      <div className="mb-3 grid grid-cols-7 gap-2 text-center text-xs font-bold text-stone-600">
-        <div>Sun</div>
-        <div>Mon</div>
-        <div>Tue</div>
-        <div>Wed</div>
-        <div>Thu</div>
-        <div>Fri</div>
-        <div>Sat</div>
-      </div>
-
-      <div className="grid grid-cols-7 gap-2">
-        {blankDays.map((_, index) => (
-          <div key={`blank-${index}`} />
-        ))}
-
-        {days.map((day) => {
-          const dateString = `${selectedMonth}-${String(day).padStart(2, "0")}`;
-          const slot = slotByDate.get(dateString);
-
-          if (!slot) {
-            return (
-              <div
-                key={dateString}
-                className="min-h-20 rounded-2xl border border-stone-100 bg-stone-50 p-2 text-center text-stone-300"
-              >
-                <p className="font-bold">{day}</p>
-              </div>
-            );
-          }
-
-          const isFull = slot.current_count >= slot.capacity || slot.status === "full";
-          const isSelected = selectedSlotId === slot.id;
-          const seatsLeft = slot.capacity - slot.current_count;
-
-          return (
-            <button
-              key={slot.id}
-              type="button"
-              disabled={isFull}
-              onClick={() => onSelectSlot(slot.id)}
-              className={`min-h-24 rounded-2xl border p-2 text-left transition ${
-                isSelected
-                  ? "border-orange-700 bg-orange-100"
-                  : "border-orange-200 bg-white"
-              } ${
-                isFull
-                  ? "cursor-not-allowed opacity-50"
-                  : "hover:border-orange-700"
-              }`}
-            >
-              <p className="text-lg font-extrabold">{day}</p>
-
-              <p className="mt-1 text-[11px] font-bold text-stone-600">
-                {slot.slot_time}
-              </p>
-
-              {isFull ? (
-                <p className="mt-1 text-[11px] font-bold text-red-700">
-                  Full
-                  <span className="block">भरा</span>
-                </p>
-              ) : (
-                <p className="mt-1 text-[11px] font-bold text-green-700">
-                  {seatsLeft} left
-                  <span className="block">बाकी</span>
-                </p>
-              )}
-
-              {isSelected && (
-                <p className="mt-1 text-[11px] font-bold text-orange-800">
-                  Selected
-                </p>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-5 rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
-        <p className="font-bold">
-          Each date has a maximum capacity of 50 registrations.
-        </p>
-        <p className="mt-1">
-          हर तारीख पर अधिकतम 50 पंजीकरण हो सकते हैं।
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function StepIndicator({
-  currentStep,
-  totalSteps,
-}: {
-  currentStep: number;
-  totalSteps: number;
-}) {
-  return (
-    <div>
-      <div className="mb-3 flex items-center justify-between text-sm font-bold text-stone-700">
-        <span>
-          Step {currentStep} of {totalSteps}
-        </span>
-        <span>
-          चरण {currentStep} / {totalSteps}
-        </span>
-      </div>
-
-      <div className="h-3 rounded-full bg-orange-100">
-        <div
-          className="h-full rounded-full bg-orange-700"
-          style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-        />
-      </div>
-    </div>
   );
 }
 
@@ -1176,37 +1130,16 @@ function StepCard({
   children: React.ReactNode;
 }) {
   return (
-    <section>
+    <section className="rounded-3xl bg-white p-5 shadow-sm md:p-8">
       <div className="mb-6">
         <h3 className="text-2xl font-extrabold">{titleEn}</h3>
         <h4 className="mt-1 text-xl font-bold text-orange-800">{titleHi}</h4>
-        <p className="mt-3 text-sm text-stone-600">{subtitleEn}</p>
-        <p className="mt-1 text-sm text-stone-600">{subtitleHi}</p>
+        <p className="mt-2 text-sm text-stone-600">{subtitleEn}</p>
+        <p className="text-sm text-stone-600">{subtitleHi}</p>
       </div>
 
-      <div className="space-y-5">{children}</div>
+      <div className="grid gap-5">{children}</div>
     </section>
-  );
-}
-
-function Label({
-  labelEn,
-  labelHi,
-  required,
-}: {
-  labelEn: string;
-  labelHi: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="mb-2 block">
-      <span className="block font-bold">
-        {labelEn} {required && <span className="text-red-600">*</span>}
-      </span>
-      <span className="block text-sm font-semibold text-stone-600">
-        {labelHi}
-      </span>
-    </label>
   );
 }
 
@@ -1219,36 +1152,41 @@ function InputField({
   placeholder,
   type = "text",
   required = false,
-  disabled = false,
 }: {
   labelEn: string;
   labelHi: string;
   name: string;
   value: string;
-  onChange: React.ChangeEventHandler<HTMLInputElement>;
-  placeholder: string;
+  onChange: (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
+  placeholder?: string;
   type?: string;
   required?: boolean;
-  disabled?: boolean;
 }) {
   return (
     <div>
-      <Label labelEn={labelEn} labelHi={labelHi} required={required} />
+      <label className="mb-2 block font-bold">
+        {labelEn} {required && <span className="text-red-600">*</span>}
+        <span className="block text-sm font-semibold text-orange-800">
+          {labelHi}
+        </span>
+      </label>
       <input
         type={type}
         name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        required={required}
-        disabled={disabled}
-        className="w-full rounded-2xl border border-orange-200 px-4 py-4 outline-none focus:border-orange-600 disabled:bg-stone-100"
+        className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
       />
     </div>
   );
 }
 
-function TextAreaField({
+function TextareaField({
   labelEn,
   labelHi,
   name,
@@ -1261,21 +1199,29 @@ function TextAreaField({
   labelHi: string;
   name: string;
   value: string;
-  onChange: React.ChangeEventHandler<HTMLTextAreaElement>;
-  placeholder: string;
+  onChange: (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
+  placeholder?: string;
   required?: boolean;
 }) {
   return (
     <div>
-      <Label labelEn={labelEn} labelHi={labelHi} required={required} />
+      <label className="mb-2 block font-bold">
+        {labelEn} {required && <span className="text-red-600">*</span>}
+        <span className="block text-sm font-semibold text-orange-800">
+          {labelHi}
+        </span>
+      </label>
       <textarea
         name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        required={required}
         rows={4}
-        className="w-full rounded-2xl border border-orange-200 px-4 py-4 outline-none focus:border-orange-600"
+        className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
       />
     </div>
   );
@@ -1294,23 +1240,31 @@ function SelectField({
   labelHi: string;
   name: string;
   value: string;
-  onChange: React.ChangeEventHandler<HTMLSelectElement>;
+  onChange: (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
   options: string[][];
   required?: boolean;
 }) {
   return (
     <div>
-      <Label labelEn={labelEn} labelHi={labelHi} required={required} />
+      <label className="mb-2 block font-bold">
+        {labelEn} {required && <span className="text-red-600">*</span>}
+        <span className="block text-sm font-semibold text-orange-800">
+          {labelHi}
+        </span>
+      </label>
       <select
         name={name}
         value={value}
         onChange={onChange}
-        required={required}
-        className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-4 outline-none focus:border-orange-600"
+        className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
       >
-        {options.map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
+        {options.map(([optionValue, optionLabel]) => (
+          <option key={optionValue} value={optionValue}>
+            {optionLabel}
           </option>
         ))}
       </select>
@@ -1318,52 +1272,50 @@ function SelectField({
   );
 }
 
-function ReviewBox({
-  formData,
-  selectedSlot,
+function FileField({
+  labelEn,
+  labelHi,
+  name,
+  onChange,
+  required = false,
 }: {
-  formData: FormData;
-  selectedSlot?: Slot;
+  labelEn: string;
+  labelHi: string;
+  name: string;
+  onChange: (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
+  required?: boolean;
 }) {
-  const rows = [
-    ["Full Name / पूरा नाम", formData.fullName],
-    ["Age / आयु", formData.age],
-    ["Gender / लिंग", formData.gender],
-    ["Mobile / मोबाइल", formData.mobile],
-    ["WhatsApp / व्हाट्सऐप", formData.whatsapp],
-    ["City / शहर", formData.city],
-    ["State / राज्य", formData.state],
-    [
-      "Family Approval / परिवार स्वीकृति",
-      formData.maritalStatus === "Married"
-        ? `Spouse: ${formData.spouseName}`
-        : `Father: ${formData.fatherName}, Mother: ${formData.motherName}`,
-    ],
-    ["Family Member / परिवार सदस्य", formData.familyName],
-    ["ID Type / पहचान प्रकार", formData.idType],
-    ["ID Number / पहचान नंबर", formData.idNumber],
-    ["Aadhaar File / आधार फाइल", formData.aadhaarFile?.name || "-"],
-    [
-      "Selected Appointment / चुनी गई तारीख",
-      selectedSlot
-        ? `${formatDate(selectedSlot.slot_date)} - ${selectedSlot.slot_time}`
-        : "-",
-    ],
-  ];
-
   return (
-    <div className="overflow-hidden rounded-2xl border border-orange-100">
-      {rows.map(([label, value], index) => (
-        <div
-          key={label}
-          className={`grid gap-2 p-4 md:grid-cols-2 ${
-            index % 2 === 0 ? "bg-orange-50" : "bg-white"
-          }`}
-        >
-          <p className="font-bold">{label}</p>
-          <p className="font-semibold">{value || "-"}</p>
-        </div>
-      ))}
+    <div>
+      <label className="mb-2 block font-bold">
+        {labelEn} {required && <span className="text-red-600">*</span>}
+        <span className="block text-sm font-semibold text-orange-800">
+          {labelHi}
+        </span>
+      </label>
+      <input
+        type="file"
+        name={name}
+        onChange={onChange}
+        accept=".jpg,.jpeg,.png,.pdf"
+        className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
+      />
+      <p className="mt-2 text-xs text-stone-500">
+        Accepted: JPG, PNG, PDF
+      </p>
+    </div>
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-orange-50 p-4">
+      <p className="text-sm font-bold text-stone-500">{label}</p>
+      <p className="mt-1 font-bold text-stone-800">{value || "-"}</p>
     </div>
   );
 }
@@ -1391,6 +1343,7 @@ function formatMonth(dateString: string) {
     year: "numeric",
   });
 }
+
 function getTomorrowDateString() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
