@@ -240,7 +240,7 @@ function AdminLoginPage({ error }: { error: string }) {
         </form>
 
         <p className="mt-5 text-center text-xs text-stone-500">
-          This page is protected for sewadars/admin use only.
+          This page is protected for sadhaks/admin use only.
         </p>
       </div>
     </main>

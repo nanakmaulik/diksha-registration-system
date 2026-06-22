@@ -110,7 +110,7 @@ export default function AdminDashboard({
   } | null>(null);
 
   const [actionNotes, setActionNotes] = useState("");
-  const [updatedBy, setUpdatedBy] = useState("Sewadar");
+  const [updatedBy, setUpdatedBy] = useState("Sadhak");
   const [isUpdatingAction, setIsUpdatingAction] = useState(false);
 
   const todayDate = getTodayDateString();
@@ -251,7 +251,7 @@ export default function AdminDashboard({
     const { data, error } = await supabase.rpc("bulk_schedule_next_day_diksha", {
       p_meeting_date: slotDate,
       p_diksha_time: "3:30 PM",
-      p_updated_by: "Sewadar",
+      p_updated_by: "Sadhak",
     });
   
     if (error) {
@@ -1343,7 +1343,7 @@ export default function AdminDashboard({
 
         <div className="mt-10 grid grid-cols-2 gap-10 text-sm">
           <div>
-            <p className="border-t border-black pt-2">Sewadar Signature</p>
+            <p className="border-t border-black pt-2">Sadhak Signature</p>
           </div>
           <div>
             <p className="border-t border-black pt-2">
@@ -1647,7 +1647,7 @@ export default function AdminDashboard({
                   value={updatedBy}
                   onChange={(event) => setUpdatedBy(event.target.value)}
                   className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
-                  placeholder="Sewadar name"
+                  placeholder="Sadhak name"
                 />
               </div>
 

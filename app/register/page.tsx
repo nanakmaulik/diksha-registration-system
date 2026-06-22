@@ -1069,7 +1069,7 @@ export default function RegisterPage() {
                 name="remarksBy"
                 value={formData.remarksBy}
                 onChange={handleChange}
-                placeholder="Self / Sewadar name / remarks"
+                placeholder="Self / Sadhak name / remarks"
               />
             </StepCard>
           )}
