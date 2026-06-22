@@ -334,7 +334,7 @@ export default function RegisterPage() {
           return {
             isValid: false,
             message:
-              "Please enter spouse name.\nकृपया पति / पत्नी का नाम भरें।",
+  "Please enter husband / wife name.\nकृपया पति / पत्नी का नाम भरें।",
           };
         }
       } else {
@@ -798,12 +798,12 @@ export default function RegisterPage() {
             >
               {formData.maritalStatus === "Married" ? (
                 <InputField
-                  labelEn="Spouse Name"
+                  labelEn="Husband / Wife Name"
                   labelHi="पति / पत्नी का नाम"
                   name="spouseName"
                   value={formData.spouseName}
                   onChange={handleChange}
-                  placeholder="Enter spouse name"
+                  placeholder="Enter husband / wife name"
                   required
                 />
               ) : (
@@ -1040,7 +1040,7 @@ export default function RegisterPage() {
                   label="Family Approval / परिवार स्वीकृति"
                   value={
                     formData.maritalStatus === "Married"
-                      ? `Spouse: ${formData.spouseName}`
+                      ? `Husband / Wife: ${formData.spouseName}`
                       : `Father: ${formData.fatherName}, Mother: ${formData.motherName}`
                   }
                 />

@@ -401,7 +401,7 @@ export default function AdminDashboard({
     const rows = filteredRegistrations.map((person) => {
       const familyApproval =
         person.marital_status === "Married"
-          ? `Spouse: ${person.spouse_name || "-"}`
+          ? `Husband / Wife: ${person.spouse_name || "-"}`
           : `Father: ${person.father_name || "-"} | Mother: ${
               person.mother_name || "-"
             }`;
@@ -1143,7 +1143,7 @@ export default function AdminDashboard({
                 </PrintCell>
                 <PrintCell>
                   {person.marital_status === "Married" ? (
-                    <>Spouse: {person.spouse_name || "-"}</>
+                    <>Husband / Wife: {person.spouse_name || "-"}</>
                   ) : (
                     <>
                       Father: {person.father_name || "-"}
