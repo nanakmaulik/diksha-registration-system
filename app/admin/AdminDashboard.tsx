@@ -17,8 +17,9 @@ type Registration = {
   whatsapp: string | null;
   address: string | null;
   city: string | null;
-  state: string | null;
-  pin_code: string | null;
+state: string | null;
+country: string | null;
+pin_code: string | null;
   spouse_name: string | null;
   father_name: string | null;
   mother_name: string | null;
@@ -86,6 +87,8 @@ export default function AdminDashboard({
   const [reportFilter, setReportFilter] = useState("all");
   const [dikshaDate, setDikshaDate] = useState("");
   const [dikshaTime, setDikshaTime] = useState("3:30 PM");
+  const [printMode, setPrintMode] = useState<"list" | "forms">("list");
+  const [isBulkScheduling, setIsBulkScheduling] = useState(false);
 
   const [selectedAadhaar, setSelectedAadhaar] = useState<{
     url: string;
@@ -214,6 +217,58 @@ export default function AdminDashboard({
     window.location.reload();
   }
 
+  async function handleBulkScheduleNextDayDiksha() {
+    if (slotDate === "all") {
+      alert(
+        "Please select one meeting date first.\nकृपया पहले एक मीटिंग तारीख चुनें।"
+      );
+      return;
+    }
+  
+    const selectedDateRegistrations = registrations.filter(
+      (person) => person.slots?.slot_date === slotDate
+    );
+  
+    if (selectedDateRegistrations.length === 0) {
+      alert(
+        "No registrations found for this meeting date.\nइस मीटिंग तारीख के लिए कोई पंजीकरण नहीं मिला।"
+      );
+      return;
+    }
+  
+    const confirmed = window.confirm(
+      `This will auto-schedule next-day Diksha for eligible candidates of ${formatDate(
+        slotDate
+      )}.\n\nDefault Diksha Date: ${formatDate(
+        addDaysToDateString(slotDate, 1)
+      )}\nDefault Time: 3:30 PM\n\nContinue?`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsBulkScheduling(true);
+  
+    const { data, error } = await supabase.rpc("bulk_schedule_next_day_diksha", {
+      p_meeting_date: slotDate,
+      p_diksha_time: "3:30 PM",
+      p_updated_by: "Sewadar",
+    });
+  
+    if (error) {
+      alert("Bulk Diksha schedule error: " + error.message);
+      setIsBulkScheduling(false);
+      return;
+    }
+  
+    alert(
+      `Next-day Diksha scheduled successfully.\nUpdated candidates: ${
+        data || 0
+      }\n\nअगले दिन की दीक्षा शेड्यूल हो गई।`
+    );
+  
+    setIsBulkScheduling(false);
+    window.location.reload();
+  }
   const filteredRegistrations = useMemo(() => {
     return registrations.filter((person) => {
       const searchText = search.toLowerCase().trim();
@@ -272,6 +327,18 @@ export default function AdminDashboard({
       if (reportFilter === "today_diksha") {
         matchesReport = person.diksha_date === todayDate;
       }
+      if (reportFilter === "rescheduled_diksha") {
+        const defaultDikshaDate = person.slots?.slot_date
+          ? addDaysToDateString(person.slots.slot_date, 1)
+          : "";
+      
+        matchesReport =
+          !!person.diksha_date &&
+          !!defaultDikshaDate &&
+          person.diksha_date !== defaultDikshaDate &&
+          (statusValue === "Scheduled for Diksha" ||
+            statusValue === "Diksha Completed");
+      }
 
       return matchesSearch && matchesSlot && matchesReport;
     });
@@ -319,6 +386,21 @@ export default function AdminDashboard({
     const todayDiksha = registrations.filter(
       (person) => person.diksha_date === todayDate
     ).length;
+    const rescheduledDiksha = registrations.filter((person) => {
+      const defaultDikshaDate = person.slots?.slot_date
+        ? addDaysToDateString(person.slots.slot_date, 1)
+        : "";
+    
+      const statusValue = person.candidate_status || person.status || "";
+    
+      return (
+        !!person.diksha_date &&
+        !!defaultDikshaDate &&
+        person.diksha_date !== defaultDikshaDate &&
+        (statusValue === "Scheduled for Diksha" ||
+          statusValue === "Diksha Completed")
+      );
+    }).length;
 
     return {
       scheduledFinalMeetings,
@@ -330,6 +412,7 @@ export default function AdminDashboard({
       noShow,
       todayFinalMeetings,
       todayDiksha,
+      rescheduledDiksha,
     };
   }, [registrations, todayDate]);
 
@@ -355,21 +438,45 @@ export default function AdminDashboard({
   const selectedDateTime =
     filteredRegistrations[0]?.slots?.slot_time || "3:30 PM";
 
-  function handlePrintSelectedDate() {
-    if (slotDate === "all") {
-      alert("Please select one date first.\nकृपया पहले एक तारीख चुनें।");
-      return;
+    function handlePrintSelectedDate() {
+      if (slotDate === "all") {
+        alert("Please select one date first.\nकृपया पहले एक तारीख चुनें।");
+        return;
+      }
+    
+      if (filteredRegistrations.length === 0) {
+        alert(
+          "No registrations found for this date.\nइस तारीख के लिए कोई पंजीकरण नहीं मिला।"
+        );
+        return;
+      }
+    
+      setPrintMode("list");
+    
+      setTimeout(() => {
+        window.print();
+      }, 100);
     }
-
-    if (filteredRegistrations.length === 0) {
-      alert(
-        "No registrations found for this date.\nइस तारीख के लिए कोई पंजीकरण नहीं मिला।"
-      );
-      return;
+    
+    function handlePrintDevoteeForms() {
+      if (slotDate === "all") {
+        alert("Please select one date first.\nकृपया पहले एक तारीख चुनें।");
+        return;
+      }
+    
+      if (filteredRegistrations.length === 0) {
+        alert(
+          "No registrations found for this date.\nइस तारीख के लिए कोई पंजीकरण नहीं मिला।"
+        );
+        return;
+      }
+    
+      setPrintMode("forms");
+    
+      setTimeout(() => {
+        window.print();
+      }, 100);
     }
-
-    window.print();
-  }
 
   function handleExportCsv() {
     if (filteredRegistrations.length === 0) {
@@ -386,8 +493,8 @@ export default function AdminDashboard({
       "WhatsApp",
       "City",
       "State",
-      "Slot Date",
-      "Slot Time",
+      "Meeting Date",
+"Meeting Time",
       "Candidate Status",
       "Final Meeting Attendance",
       "Diksha Attendance",
@@ -623,16 +730,24 @@ export default function AdminDashboard({
                 onClick={() => setReportFilter("today_final_meetings")}
               />
 
-              <ReportCountCard
-                title="Today Diksha"
-                titleHi="आज दीक्षा"
-                value={reportCounts.todayDiksha}
-                active={reportFilter === "today_diksha"}
-                onClick={() => setReportFilter("today_diksha")}
-              />
+<ReportCountCard
+  title="Today Diksha"
+  titleHi="आज दीक्षा"
+  value={reportCounts.todayDiksha}
+  active={reportFilter === "today_diksha"}
+  onClick={() => setReportFilter("today_diksha")}
+/>
 
-              <ReportCountCard
-                title="All"
+<ReportCountCard
+  title="Rescheduled Diksha"
+  titleHi="बदली हुई दीक्षा"
+  value={reportCounts.rescheduledDiksha}
+  active={reportFilter === "rescheduled_diksha"}
+  onClick={() => setReportFilter("rescheduled_diksha")}
+/>
+
+<ReportCountCard
+  title="All"
                 titleHi="सभी"
                 value={registrations.length}
                 active={reportFilter === "all"}
@@ -646,10 +761,10 @@ export default function AdminDashboard({
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <h3 className="text-2xl font-extrabold">
-                Upcoming Available Slots
+              Upcoming Meeting Dates
               </h3>
               <h4 className="mt-1 text-xl font-bold text-orange-800">
-                आने वाले उपलब्ध स्लॉट
+              आने वाली मीटिंग तारीखें
               </h4>
               <p className="mt-2 text-sm text-stone-600">
                 Showing only available upcoming slots.
@@ -766,16 +881,40 @@ export default function AdminDashboard({
                 </span>
               </button>
 
+              <div className="flex flex-col gap-3 md:flex-row">
               <button
-                type="button"
-                onClick={handlePrintSelectedDate}
-                className="rounded-2xl bg-orange-700 px-5 py-3 font-bold text-white"
-              >
-                Print Selected Date
-                <span className="block text-sm font-normal">
-                  चुनी हुई तारीख प्रिंट करें
-                </span>
-              </button>
+  type="button"
+  onClick={handleBulkScheduleNextDayDiksha}
+  disabled={isBulkScheduling}
+  className="rounded-2xl bg-purple-700 px-5 py-3 font-bold text-white disabled:opacity-60"
+>
+  {isBulkScheduling ? "Scheduling..." : "Auto Next-Day Diksha"}
+  <span className="block text-sm font-normal">
+    अगले दिन की दीक्षा शेड्यूल करें
+  </span>
+</button>
+  <button
+    type="button"
+    onClick={handlePrintDevoteeForms}
+    className="rounded-2xl bg-green-700 px-5 py-3 font-bold text-white"
+  >
+    Print Devotee Forms
+    <span className="block text-sm font-normal">
+      सभी फॉर्म प्रिंट करें
+    </span>
+  </button>
+
+  <button
+    type="button"
+    onClick={handlePrintSelectedDate}
+    className="rounded-2xl bg-orange-700 px-5 py-3 font-bold text-white"
+  >
+    Print Selected Date
+    <span className="block text-sm font-normal">
+      चुनी हुई तारीख प्रिंट करें
+    </span>
+  </button>
+</div>
             </div>
           </div>
 
@@ -842,6 +981,11 @@ export default function AdminDashboard({
                 label="Today Diksha"
                 onClick={() => setReportFilter("today_diksha")}
               />
+              <ReportButton
+  active={reportFilter === "rescheduled_diksha"}
+  label="Rescheduled Diksha"
+  onClick={() => setReportFilter("rescheduled_diksha")}
+/>
             </div>
           </div>
 
@@ -912,8 +1056,8 @@ export default function AdminDashboard({
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile</TableHead>
                   <TableHead>City</TableHead>
-                  <TableHead>Slot Date</TableHead>
-                  <TableHead>Slot Time</TableHead>
+                  <TableHead>Meeting Date</TableHead>
+                  <TableHead>Meeting Time</TableHead>
                   <TableHead>Actions</TableHead>
                   <TableHead>Aadhaar</TableHead>
                   <TableHead>Status</TableHead>
@@ -924,8 +1068,8 @@ export default function AdminDashboard({
                   <TableHead>नाम</TableHead>
                   <TableHead>मोबाइल</TableHead>
                   <TableHead>शहर</TableHead>
-                  <TableHead>स्लॉट दिनांक</TableHead>
-                  <TableHead>स्लॉट समय</TableHead>
+                  <TableHead>मीटिंग दिनांक</TableHead>
+                  <TableHead>मीटिंग समय</TableHead>
                   <TableHead>कार्यवाही</TableHead>
                   <TableHead>आधार</TableHead>
                   <TableHead>स्थिति</TableHead>
@@ -1057,13 +1201,20 @@ export default function AdminDashboard({
                             </p>
 
                             {person.diksha_date && (
-                              <p>
-                                Diksha Date: {formatDate(person.diksha_date)}
-                                {person.diksha_time
-                                  ? ` - ${person.diksha_time}`
-                                  : ""}
-                              </p>
-                            )}
+  <>
+    <p>
+      Diksha Date: {formatDate(person.diksha_date)}
+      {person.diksha_time ? ` - ${person.diksha_time}` : ""}
+    </p>
+
+    {person.slots?.slot_date &&
+    person.diksha_date !== addDaysToDateString(person.slots.slot_date, 1) ? (
+      <p className="font-bold text-purple-700">Rescheduled</p>
+    ) : (
+      <p className="font-bold text-green-700">Default Next-Day</p>
+    )}
+  </>
+)}
                           </div>
 
                           {person.evaluator_name && (
@@ -1082,7 +1233,11 @@ export default function AdminDashboard({
         </section>
       </div>
 
-      <section className="print-area hidden">
+      <section
+  className={`print-area print-list-area ${
+    printMode === "list" ? "" : "print-hidden"
+  } hidden`}
+>
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold">Diksha Registration List</h1>
           <h2 className="text-xl font-bold">दीक्षा पंजीकरण सूची</h2>
@@ -1305,7 +1460,175 @@ export default function AdminDashboard({
           </div>
         </div>
       )}
+      <section
+        className={`print-area devotee-forms-area ${
+          printMode === "forms" ? "" : "print-hidden"
+        } hidden`}
+      >
+        {filteredRegistrations.map((person, index) => {
+          const mantraDate = person.diksha_date
+            ? formatDate(person.diksha_date)
+            : "____ / ____ / ______";
 
+          const formFillDate = person.created_at
+            ? formatDateTime(person.created_at)
+            : "-";
+
+          const guardianLabel =
+            person.marital_status === "Married"
+              ? "Husband / Wife Name"
+              : "Father / Mother Name";
+
+          const guardianValue =
+            person.marital_status === "Married"
+              ? person.spouse_name || "-"
+              : `Father: ${person.father_name || "-"} / Mother: ${
+                  person.mother_name || "-"
+                }`;
+
+          return (
+            <div key={person.id} className="devotee-form-page">
+              <div className="devotee-form-top">
+                <div>
+                  <p>
+                    <strong>Date Of Mantra Diksha :</strong> {mantraDate}
+                  </p>
+                  <p>
+                    <strong>Card No :</strong> {person.token || "-"}
+                  </p>
+                </div>
+
+                <div>
+                  <p>
+                    <strong>Form No :</strong> {index + 1}
+                  </p>
+                </div>
+              </div>
+
+              <div className="devotee-form-title">
+                <h1>DEVOTEE INFORMATION & DECLARATION FORM</h1>
+                <h2>(शिष्य परिचय एवं घोषणा पत्र)</h2>
+              </div>
+
+              <div className="devotee-form-main">
+                <div className="devotee-form-details">
+                  <DevoteeLine label="Name" value={person.full_name || "-"} />
+                  <DevoteeLine label={guardianLabel} value={guardianValue} />
+                  <DevoteeLine label="Gender" value={person.gender || "-"} />
+                  <DevoteeLine
+                    label="Age"
+                    value={person.age ? String(person.age) : "-"}
+                  />
+                  <DevoteeLine
+                    label="Marital Status"
+                    value={person.marital_status || "-"}
+                  />
+                  <DevoteeLine label="Address" value={person.address || "-"} />
+                  <DevoteeLine label="City" value={person.city || "-"} />
+                  <DevoteeLine label="State" value={person.state || "-"} />
+                  <DevoteeLine label="Country" value={person.country || "-"} />
+                  <DevoteeLine
+                    label="PIN / ZIP"
+                    value={person.pin_code || "-"}
+                  />
+                  <DevoteeLine
+                    label="Occupation"
+                    value={person.occupation || "-"}
+                  />
+                  <DevoteeLine label="Mobile No" value={person.mobile || "-"} />
+                  <DevoteeLine
+                    label="WhatsApp No"
+                    value={person.whatsapp || "-"}
+                  />
+                  <DevoteeLine
+                    label="ID / Aadhaar No"
+                    value={person.id_number || "-"}
+                  />
+                </div>
+
+                <div className="devotee-photo-box">
+                  <p>Applicant Photo</p>
+                </div>
+              </div>
+
+              <div className="declaration-section">
+                <h3>DECLARATION</h3>
+
+                <p>
+                  1. मैं अक्षर श्रीधाम वृन्दावन में दर्शन एवं आध्यात्मिक
+                  क्रिया-कलापों में भाग लेने के लिए आता / आती रहता / रहती हूँ।
+                  मैं पूर्ण रूप से आध्यात्मिक भावनाओं से ओतप्रोत हूँ तथा भजन
+                  जीवन का परम लक्ष्य भगवान प्राप्ति करना चाहता / चाहती हूँ।
+                </p>
+
+                <p>
+                  2. मैं आजीवन का व्रतवान बन रहा / रही हूँ और समाज / शहर के
+                  लोग तरह-तरह के आरोप-प्रत्यारोप लगाते रहें तो भी दीक्षा लेना
+                  मेरा स्वयं का निर्णय है। भविष्य में यदि मेरे परिवारजन या कोई
+                  व्यक्ति मेरी दीक्षा या वृन्दावन वास पर किसी प्रकार का विवाद
+                  करता है तो वह पूर्ण रूप से अस्वीकार माना जाये।
+                </p>
+
+                <p>
+                  ☑ मेरे द्वारा ऊपर दी गई सारी जानकारी पूर्ण तरह से सही व
+                  प्रमाणिक है।
+                </p>
+              </div>
+
+              <div className="family-details-section">
+                <div className="family-photo-box">
+                  <p>Family Member Photo</p>
+                </div>
+
+                <div className="family-photo-box">
+                  <p>Family Member Photo</p>
+                </div>
+
+                <div className="family-info">
+                  <h3>FAMILY MEMBER DETAILS</h3>
+                  <DevoteeLine
+                    label="Name"
+                    value={person.family_name || "-"}
+                  />
+                  <DevoteeLine
+                    label="Relation"
+                    value={person.family_relation || "-"}
+                  />
+                  <DevoteeLine
+                    label="Mobile"
+                    value={person.family_mobile || "-"}
+                  />
+                </div>
+              </div>
+
+              <div className="signature-section">
+  <div className="signature-block">
+    <div className="signature-line" />
+    <p>Family Member's Signature</p>
+  </div>
+
+  <div className="thumb-impression-block">
+    <div className="thumb-box">
+      <p>Thumb Impression</p>
+      <p className="thumb-hi">अंगूठे का निशान</p>
+    </div>
+  </div>
+
+  <div className="signature-block">
+    <div className="signature-line" />
+    <p>Applicant Signature</p>
+  </div>
+</div>
+
+              <div className="form-footer">
+                <p>
+                  <strong>Date Of Form Fill Up :</strong> {formFillDate}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </section>
       {selectedAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
@@ -1359,20 +1682,20 @@ export default function AdminDashboard({
                     }
                   />
 
-                  <ActionButton
-                    label="Mark Absent"
-                    labelHi="अनुपस्थित"
-                    className="bg-red-100 text-red-700"
-                    disabled={isUpdatingAction}
-                    onClick={() =>
-                      handleSubmitAction({
-                        actionType: "attendance",
-                        title: "Final Meeting Absent",
-                        attendanceType: "Final Meeting",
-                        attendanceValue: "Absent",
-                      })
-                    }
-                  />
+<ActionButton
+  label="Pending"
+  labelHi="लंबित"
+  className="bg-red-100 text-red-700"
+  disabled={isUpdatingAction}
+  onClick={() =>
+    handleSubmitAction({
+      actionType: "attendance",
+      title: "Final Meeting Pending",
+      attendanceType: "Final Meeting",
+      attendanceValue: "Absent",
+    })
+  }
+/>
 
                   <ActionButton
                     label="Approve"
@@ -1627,6 +1950,16 @@ function getTomorrowDateString() {
 
   return `${year}-${month}-${day}`;
 }
+function addDaysToDateString(dateString: string, days: number) {
+  const date = parseLocalDate(dateString);
+  date.setDate(date.getDate() + days);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 function maskMobile(mobile: string) {
   if (!mobile || mobile.length < 4) return mobile;
@@ -1772,4 +2105,13 @@ function PrintHead({ children }: { children: ReactNode }) {
 
 function PrintCell({ children }: { children: ReactNode }) {
   return <td className="border border-black px-2 py-2">{children}</td>;
+}
+function DevoteeLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="devotee-line">
+      <span className="devotee-label">{label}</span>
+      <span className="devotee-colon">:</span>
+      <span className="devotee-value">{value}</span>
+    </div>
+  );
 }

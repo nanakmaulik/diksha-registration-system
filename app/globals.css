@@ -16,6 +16,7 @@ textarea,
 button {
   font-family: inherit;
 }
+
 @media print {
   body {
     background: white !important;
@@ -29,27 +30,347 @@ button {
     display: block !important;
   }
 
-  .print-area table {
+  .print-hidden {
+    display: none !important;
+  }
+
+  .print-area h1,
+  .print-area h2,
+  .print-area h3,
+  .print-area p,
+  .print-area span {
+    color: black !important;
+  }
+
+  .print-list-area table {
     width: 100% !important;
     border-collapse: collapse !important;
   }
 
-  .print-area th,
-  .print-area td {
+  .print-list-area th,
+  .print-list-area td {
     border: 1px solid black !important;
     padding: 6px !important;
     font-size: 10px !important;
     vertical-align: top !important;
   }
 
-  .print-area h1,
-  .print-area h2,
-  .print-area p {
+  .devotee-forms-area {
+    width: 100% !important;
+  }
+
+  .devotee-form-page {
+    width: 190mm;
+    min-height: auto;
+    height: auto;
+    margin: 0 auto;
+    padding: 6mm 8mm;
+    page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    overflow: hidden;
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 11.5px;
     color: black !important;
+    background: white !important;
+  }
+  
+  .devotee-form-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .devotee-form-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .devotee-form-title {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .devotee-form-title h1 {
+    font-size: 18px;
+    font-weight: 800;
+    text-decoration: underline;
+    margin: 0;
+  }
+
+  .devotee-form-title h2 {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 3px 0 0;
+  }
+
+  .devotee-form-main {
+    display: grid;
+    grid-template-columns: 1fr 34mm;
+    gap: 12mm;
+    align-items: start;
+  }
+
+  .devotee-form-details {
+    width: 100%;
+  }
+
+  .devotee-line {
+    display: grid;
+    grid-template-columns: 40mm 4mm 1fr;
+    gap: 2mm;
+    align-items: start;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  .devotee-label {
+    font-weight: 700;
+  }
+
+  .devotee-colon {
+    font-weight: 700;
+  }
+
+  .devotee-value {
+    font-weight: 700;
+    text-decoration: underline;
+    word-break: break-word;
+  }
+
+  .devotee-photo-box {
+    width: 32mm;
+    height: 38mm;
+    border: 1px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4mm;
+    font-size: 12px;
+  }
+
+  .declaration-section {
+    margin-top: 12px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .declaration-section h3 {
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: underline;
+    margin: 0 0 4px;
+  }
+
+  .declaration-section p {
+    margin: 4px 0;
+  }
+
+  .family-details-section {
+    display: grid;
+    grid-template-columns: 28mm 28mm 1fr;
+    gap: 8mm;
+    align-items: start;
+    margin-top: 12px;
+  }
+
+  .family-photo-box {
+    width: 28mm;
+    height: 34mm;
+    border: 1px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3mm;
+    font-size: 11px;
+  }
+
+  .family-info h3 {
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: underline;
+    margin: 0 0 6px;
+    text-align: center;
+  }
+
+  .signature-section {
+    display: grid;
+    grid-template-columns: 1fr 32mm 1fr;
+    gap: 14mm;
+    align-items: end;
+    margin-top: 12mm;
+    text-align: center;
+    font-size: 12px;
+  }
+  
+  .signature-block {
+    min-height: 18mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+  }
+  
+  .signature-line {
+    border-top: 1px solid black;
+    height: 1px;
+    margin-bottom: 4px;
+  }
+  
+  .thumb-impression-block {
+    display: flex;
+    justify-content: center;
+    align-items: end;
+  }
+  
+  .thumb-box {
+    width: 30mm;
+    height: 24mm;
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1mm;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+  }
+  
+  .thumb-box p {
+    margin: 0;
+  }
+  
+  .thumb-hi {
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  .form-footer {
+    margin-top: 10mm;
+    font-size: 13px;
+    font-weight: 700;
   }
 
   @page {
-    size: A4 landscape;
-    margin: 10mm;
+    size: A4 portrait;
+    margin: 6mm;
+  }
+}
+@media print {
+  body {
+    background: white !important;
+  }
+
+  /* Success page print compact */
+  .success-print-card {
+    width: 100% !important;
+    max-width: 145mm !important;
+    margin: 0 auto !important;
+    padding: 6mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .success-print-logo {
+    width: 18mm !important;
+    margin-bottom: 2mm !important;
+  }
+
+  .success-print-card h1 {
+    font-size: 16px !important;
+    margin: 2mm 0 1mm !important;
+  }
+
+  .success-print-card h2 {
+    font-size: 13px !important;
+    margin: 0 0 2mm !important;
+  }
+
+  .success-print-card p {
+    font-size: 10px !important;
+    margin: 1mm 0 !important;
+  }
+
+  .success-print-details {
+    margin-top: 4mm !important;
+  }
+
+  .success-print-details > div {
+    padding: 3mm !important;
+    margin-bottom: 2mm !important;
+  }
+
+  .success-print-actions {
+    display: none !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 6mm;
+  }
+}
+@media print {
+  .success-print-card {
+    width: 100% !important;
+    max-width: 145mm !important;
+    margin: 0 auto !important;
+    padding: 5mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .success-print-logo {
+    width: 16mm !important;
+    margin-bottom: 1mm !important;
+  }
+
+  .success-print-check {
+    width: 12mm !important;
+    height: 12mm !important;
+    font-size: 18px !important;
+    margin-top: 2mm !important;
+  }
+
+  .success-print-card h1 {
+    font-size: 15px !important;
+    margin: 2mm 0 1mm !important;
+  }
+
+  .success-print-card h2 {
+    font-size: 12px !important;
+    margin: 0 0 2mm !important;
+  }
+
+  .success-print-card p {
+    font-size: 9px !important;
+    margin: 1mm 0 !important;
+  }
+
+  .success-print-details {
+    margin-top: 4mm !important;
+  }
+
+  .success-print-details > div {
+    padding: 2.5mm !important;
+    margin-bottom: 0 !important;
+  }
+
+  .success-print-instructions {
+    margin-top: 4mm !important;
+    padding: 3mm !important;
+  }
+
+  .success-print-actions {
+    display: none !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 6mm;
   }
 }

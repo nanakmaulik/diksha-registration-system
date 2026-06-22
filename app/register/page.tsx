@@ -445,8 +445,7 @@ export default function RegisterPage() {
     window.scrollTo(0, 0);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSubmit() {
 
     if (isSubmitting) return;
 
@@ -608,7 +607,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form>
           {step === 1 && (
             <StepCard
               titleEn="Personal Details"
@@ -1099,10 +1098,11 @@ export default function RegisterPage() {
               </button>
             ) : (
               <button
-                type="submit"
-                disabled={isSubmitting}
-                className="rounded-2xl bg-orange-700 px-6 py-4 font-bold text-white disabled:opacity-60 md:flex-1"
-              >
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="rounded-2xl bg-orange-700 px-6 py-4 font-bold text-white disabled:opacity-60 md:flex-1"
+            >
                 {isSubmitting ? "Submitting..." : "Submit Registration"}
                 <span className="block text-sm font-normal">
                   {isSubmitting ? "जमा हो रहा है..." : "पंजीकरण जमा करें"}

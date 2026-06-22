@@ -23,8 +23,8 @@ function SuccessContent() {
   return (
     <main className="min-h-screen bg-[#fff8ed] px-4 py-8 text-[#2d2418]">
       <div className="mx-auto max-w-2xl">
-        <div className="rounded-3xl bg-white p-6 text-center shadow-sm md:p-10">
-          <div className="mx-auto w-32 md:w-40">
+        <div className="success-print-card rounded-3xl bg-white p-6 text-center shadow-sm md:p-10">
+          <div className="success-print-logo mx-auto w-32 md:w-40">
             <Image
               src="/logo.png"
               alt="Diksha Logo"
@@ -35,7 +35,7 @@ function SuccessContent() {
             />
           </div>
 
-          <div className="mx-auto mt-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl">
+          <div className="success-print-check mx-auto mt-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl">
             ✓
           </div>
 
@@ -55,23 +55,28 @@ function SuccessContent() {
             कृपया अपनी पंजीकरण जानकारी सुरक्षित रखें।
           </p>
 
-          <div className="mt-8 overflow-hidden rounded-2xl border border-orange-100 text-left">
+          <div className="success-print-details mt-8 overflow-hidden rounded-2xl border border-orange-100 text-left">
             <InfoRow label="Token / टोकन" value={token} />
-            <InfoRow label="Appointment Date / अपॉइंटमेंट तारीख" value={formatDate(date)} />
+            <InfoRow
+              label="Appointment Date / अपॉइंटमेंट तारीख"
+              value={formatDate(date)}
+            />
             <InfoRow label="Appointment Time / अपॉइंटमेंट समय" value={time} />
           </div>
 
-          <div className="mt-8 rounded-2xl bg-orange-50 p-5 text-left text-sm text-stone-700">
+          <div className="success-print-instructions mt-8 rounded-2xl bg-orange-50 p-5 text-left text-sm text-stone-700">
             <p className="font-bold">Important Instructions:</p>
             <p className="mt-2">
-              Please come on your selected date and time with your original ID proof.
+              Please come on your selected date and time with your original ID
+              proof.
             </p>
             <p className="mt-1">
-              कृपया चुनी हुई तारीख और समय पर अपना असली पहचान प्रमाण साथ लेकर आएं।
+              कृपया चुनी हुई तारीख और समय पर अपना असली पहचान प्रमाण साथ लेकर
+              आएं।
             </p>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 md:flex-row">
+          <div className="success-print-actions mt-8 flex flex-col gap-3 md:flex-row">
             <button
               type="button"
               onClick={() => window.print()}
