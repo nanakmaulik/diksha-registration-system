@@ -78,6 +78,8 @@ export default function RegisterPage() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSlots, setIsLoadingSlots] = useState(true);
+  const [isPincodeLoading, setIsPincodeLoading] = useState(false);
+const [pincodeMessage, setPincodeMessage] = useState("");
 
   const totalSteps = 6;
 
@@ -132,6 +134,61 @@ export default function RegisterPage() {
   const visibleSlots = slots.filter(
     (slot) => !selectedMonth || slot.slot_date.startsWith(selectedMonth)
   );
+  async function fetchAddressFromPincode(
+    pinCode: string,
+    countryValue = formData.country
+  ) {
+    const cleanedPin = pinCode.replace(/\D/g, "");
+  
+    if (countryValue !== "India") {
+      setPincodeMessage("");
+      return;
+    }
+  
+    if (cleanedPin.length !== 6) {
+      setPincodeMessage("");
+      return;
+    }
+  
+    try {
+      setIsPincodeLoading(true);
+      setPincodeMessage("Finding address from PIN code...");
+  
+      const response = await fetch(
+        `https://api.postalpincode.in/pincode/${cleanedPin}`
+      );
+  
+      const data = await response.json();
+      const firstResult = data?.[0];
+  
+      if (
+        firstResult?.Status !== "Success" ||
+        !firstResult?.PostOffice ||
+        firstResult.PostOffice.length === 0
+      ) {
+        setPincodeMessage("No address found for this PIN code.");
+        return;
+      }
+  
+      const postOffice = firstResult.PostOffice[0];
+  
+      setFormData((prev) => ({
+        ...prev,
+        city: postOffice.District || prev.city,
+        state: postOffice.State || prev.state,
+        country: "India",
+        pinCode: cleanedPin,
+      }));
+  
+      setPincodeMessage(
+        `Address found: ${postOffice.District}, ${postOffice.State}`
+      );
+    } catch (error) {
+      setPincodeMessage("Could not fetch address. Please enter manually.");
+    } finally {
+      setIsPincodeLoading(false);
+    }
+  }
 
   function handleChange(
     event: React.ChangeEvent<
@@ -165,7 +222,31 @@ export default function RegisterPage() {
 
       return;
     }
-
+    if (name === "country") {
+      setFormData((prev) => ({
+        ...prev,
+        country: value,
+      }));
+    
+      if (value !== "India") {
+        setPincodeMessage("");
+      } else {
+        fetchAddressFromPincode(formData.pinCode, value);
+      }
+    
+      return;
+    }
+    
+    if (name === "pinCode") {
+      setFormData((prev) => ({
+        ...prev,
+        pinCode: value,
+      }));
+    
+      fetchAddressFromPincode(value);
+    
+      return;
+    }
     if (name === "mobile") {
       setFormData((prev) => ({
         ...prev,
@@ -444,86 +525,81 @@ export default function RegisterPage() {
     setStep((prev) => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   }
-
   async function handleSubmit() {
-
     if (isSubmitting) return;
-
+  
     const finalValidation = validateStep(5);
-
+  
     if (!finalValidation.isValid) {
       alert(finalValidation.message);
       return;
     }
-
+  
     setIsSubmitting(true);
-
+  
     try {
       let aadhaarFileUrl = "";
       let aadhaarFileName = "";
-
+  
       if (formData.aadhaarFile) {
         const fileExt = formData.aadhaarFile.name.split(".").pop();
         const cleanMobile = formData.mobile.replace(/\D/g, "");
         const filePath = `aadhaar-${cleanMobile}-${Date.now()}.${fileExt}`;
-
+  
         const { error: uploadError } = await supabase.storage
           .from("aadhaar-documents")
           .upload(filePath, formData.aadhaarFile, {
             cacheControl: "3600",
             upsert: false,
           });
-
+  
         if (uploadError) {
           alert("Aadhaar / ID upload error: " + uploadError.message);
           setIsSubmitting(false);
           return;
         }
-
+  
         const { data: publicUrlData } = supabase.storage
           .from("aadhaar-documents")
           .getPublicUrl(filePath);
-
+  
         aadhaarFileUrl = publicUrlData.publicUrl;
         aadhaarFileName = formData.aadhaarFile.name;
       }
-
-      const { data, error } = await supabase.rpc(
-        "create_registration_with_slot",
-        {
-          p_slot_id: formData.selectedSlotId,
-          p_full_name: formData.fullName,
-          p_age: formData.age ? Number(formData.age) : null,
-          p_gender: formData.gender,
-          p_occupation: formData.occupation,
-          p_marital_status: formData.maritalStatus,
-          p_mobile: formData.mobile,
-          p_whatsapp: formData.whatsapp,
-          p_address: formData.address,
-          p_city: formData.city,
-          p_state: formData.state,
-          p_country: formData.country,
-          p_pin_code: formData.pinCode,
-          p_spouse_name:
-            formData.maritalStatus === "Married" ? formData.spouseName : "",
-          p_father_name:
-            formData.maritalStatus !== "Married" ? formData.fatherName : "",
-          p_mother_name:
-            formData.maritalStatus !== "Married" ? formData.motherName : "",
-          p_family_name: formData.familyName,
-          p_family_relation: formData.familyRelation,
-          p_family_mobile: formData.familyMobile,
-          p_id_type: formData.idType,
-          p_id_number: formData.idNumber,
-          p_aadhaar_file_url: aadhaarFileUrl,
-          p_aadhaar_file_name: aadhaarFileName,
-          p_remarks_by: formData.remarksBy.trim() || "Self",
-        }
-      );
-
+  
+      const { data, error } = await supabase.rpc("submit_registration_request", {
+        p_slot_id: formData.selectedSlotId,
+        p_full_name: formData.fullName,
+        p_age: formData.age ? Number(formData.age) : null,
+        p_gender: formData.gender,
+        p_occupation: formData.occupation,
+        p_marital_status: formData.maritalStatus,
+        p_mobile: formData.mobile,
+        p_whatsapp: formData.whatsapp,
+        p_address: formData.address,
+        p_city: formData.city,
+        p_state: formData.state,
+        p_country: formData.country,
+        p_pin_code: formData.pinCode,
+        p_spouse_name:
+          formData.maritalStatus === "Married" ? formData.spouseName : "",
+        p_father_name:
+          formData.maritalStatus !== "Married" ? formData.fatherName : "",
+        p_mother_name:
+          formData.maritalStatus !== "Married" ? formData.motherName : "",
+        p_family_name: formData.familyName,
+        p_family_relation: formData.familyRelation,
+        p_family_mobile: formData.familyMobile,
+        p_id_type: formData.idType,
+        p_id_number: formData.idNumber,
+        p_aadhaar_file_url: aadhaarFileUrl,
+        p_aadhaar_file_name: aadhaarFileName,
+        p_remarks_by: formData.remarksBy.trim() || "Self",
+      });
+  
       if (error) {
         const message = error.message.toLowerCase();
-
+  
         if (message.includes("slot_full")) {
           alert(
             "This date is now full. Please select another date.\nयह तारीख अब भर चुकी है। कृपया दूसरी तारीख चुनें।"
@@ -532,35 +608,27 @@ export default function RegisterPage() {
           setIsSubmitting(false);
           return;
         }
-
-        if (message.includes("duplicate")) {
-          alert(
-            "This mobile number is already registered.\nयह मोबाइल नंबर पहले से पंजीकृत है।"
-          );
-          setIsSubmitting(false);
-          return;
-        }
-
-        alert("Registration error: " + error.message);
+  
+        alert("Registration request error: " + error.message);
         setIsSubmitting(false);
         return;
       }
-
+  
       const result = Array.isArray(data) ? data[0] : data;
-
+  
       router.push(
-        `/success?token=${encodeURIComponent(
-          result?.token || ""
-        )}&date=${encodeURIComponent(
-          result?.slot_date || ""
-        )}&time=${encodeURIComponent(result?.slot_time || "")}`
+        `/success?mode=request&date=${encodeURIComponent(
+          result?.requested_meeting_date || selectedSlot?.slot_date || ""
+        )}&time=${encodeURIComponent(
+          result?.requested_meeting_time || selectedSlot?.slot_time || ""
+        )}`
       );
     } catch (error) {
       alert("Unexpected error. Please try again.");
+      console.error(error);
       setIsSubmitting(false);
     }
   }
-
   return (
     <main className="min-h-screen bg-[#fff8ed] px-4 py-6 text-[#2d2418] md:py-10">
       <div className="mx-auto max-w-5xl">
@@ -776,15 +844,24 @@ export default function RegisterPage() {
                 ]}
               />
 
-              <InputField
-                labelEn="Postal / ZIP Code"
-                labelHi="पोस्टल / ज़िप कोड"
-                name="pinCode"
-                value={formData.pinCode}
-                onChange={handleChange}
-                placeholder="143001, 10001, SW1A 1AA, etc."
-                required
-              />
+<div>
+  <InputField
+    labelEn="Postal / ZIP Code"
+    labelHi="पोस्टल / ज़िप कोड"
+    name="pinCode"
+    value={formData.pinCode}
+    onChange={handleChange}
+    placeholder="143001, 10001, SW1A 1AA, etc."
+    required
+  />
+
+  {formData.country === "India" &&
+    (isPincodeLoading || pincodeMessage) && (
+      <p className="mt-2 rounded-xl bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-800">
+        {isPincodeLoading ? "Fetching address..." : pincodeMessage}
+      </p>
+    )}
+</div>
             </StepCard>
           )}
 

@@ -83,6 +83,7 @@ export default async function AdminPage({
       address,
       city,
       state,
+      country,
       pin_code,
       spouse_name,
       father_name,
@@ -123,8 +124,18 @@ export default async function AdminPage({
   .from("candidate_activity_logs")
   .select("*")
   .order("created_at", { ascending: false });
+  const { data: registrationRequests, error: registrationRequestsError } =
+  await supabase
+    .from("registration_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-  if (registrationsError || slotsError || activityLogsError) {
+    if (
+      registrationsError ||
+      slotsError ||
+      activityLogsError ||
+      registrationRequestsError
+    ) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fff8ed] px-4">
         <div className="max-w-xl rounded-3xl bg-white p-8 text-center shadow-sm">
@@ -136,8 +147,9 @@ export default async function AdminPage({
           </p>
           <p className="mt-2 text-sm text-stone-500">
           {registrationsError?.message ||
-  slotsError?.message ||
-  activityLogsError?.message}
+slotsError?.message ||
+activityLogsError?.message ||
+registrationRequestsError?.message}
           </p>
         </div>
       </main>
@@ -167,6 +179,7 @@ export default async function AdminPage({
   registrations={cleanedRegistrations}
   slots={slots || []}
   activityLogs={activityLogs || []}
+  registrationRequests={registrationRequests || []}
 />
     </>
   );

@@ -70,15 +70,52 @@ type ActivityLog = {
   updated_by: string | null;
   created_at: string;
 };
+type RegistrationRequest = {
+  id: string;
+  full_name: string;
+  age: number | null;
+  gender: string | null;
+  occupation: string | null;
+  marital_status: string | null;
+  mobile: string;
+  whatsapp: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  pin_code: string | null;
+  spouse_name: string | null;
+  father_name: string | null;
+  mother_name: string | null;
+  family_name: string | null;
+  family_relation: string | null;
+  family_mobile: string | null;
+  id_type: string | null;
+  id_number: string | null;
+  remarks_by: string | null;
+  aadhaar_file_url: string | null;
+  aadhaar_file_name: string | null;
+  requested_slot_id: string | null;
+  requested_meeting_date: string | null;
+  requested_meeting_time: string | null;
+  request_status: string | null;
+  verified_by: string | null;
+  verified_at: string | null;
+  rejection_reason: string | null;
+  created_registration_id: string | null;
+  created_at: string;
+};
 
 export default function AdminDashboard({
   registrations,
   slots,
   activityLogs,
+  registrationRequests,
 }: {
   registrations: Registration[];
   slots: Slot[];
   activityLogs: ActivityLog[];
+  registrationRequests: RegistrationRequest[];
 }) {
   const [search, setSearch] = useState("");
   const [slotDate, setSlotDate] = useState("all");
@@ -90,6 +127,11 @@ export default function AdminDashboard({
   const [printMode, setPrintMode] = useState<"list" | "forms">("list");
   const [isBulkScheduling, setIsBulkScheduling] = useState(false);
 
+  const [requestUpdatedBy, setRequestUpdatedBy] = useState("Sadhak");
+const [rejectionReason, setRejectionReason] = useState("");
+const [processingRequestId, setProcessingRequestId] = useState<string | null>(
+  null
+);
   const [selectedAadhaar, setSelectedAadhaar] = useState<{
     url: string;
     name: string;
@@ -114,6 +156,11 @@ export default function AdminDashboard({
   const [isUpdatingAction, setIsUpdatingAction] = useState(false);
 
   const todayDate = getTodayDateString();
+  const pendingRequests = useMemo(() => {
+    return registrationRequests.filter(
+      (request) => request.request_status === "Pending Verification"
+    );
+  }, [registrationRequests]);
 
   async function handleSubmitAction(actionOverride?: {
     actionType: "status" | "attendance";
@@ -173,7 +220,89 @@ export default function AdminDashboard({
 
     window.location.reload();
   }
-
+  async function handleApproveRequest(request: RegistrationRequest) {
+    if (!requestUpdatedBy.trim()) {
+      alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
+      return;
+    }
+  
+    const confirmed = window.confirm(
+      `Accept this request and generate token for ${
+        request.full_name || "-"
+      }?\n\nक्या आप इस request को accept करके token generate करना चाहते हैं?`
+    );
+  
+    if (!confirmed) return;
+  
+    setProcessingRequestId(request.id);
+  
+    const { data, error } = await supabase.rpc("approve_registration_request", {
+      p_request_id: request.id,
+      p_verified_by: requestUpdatedBy.trim(),
+    });
+  
+    if (error) {
+      alert("Request approval error: " + error.message);
+      setProcessingRequestId(null);
+      return;
+    }
+  
+    const generatedToken = Array.isArray(data) ? data[0]?.token : "";
+  
+    alert(
+      `Request accepted successfully.\nToken generated: ${
+        generatedToken || "-"
+      }\n\nRequest accept हो गई।`
+    );
+  
+    setProcessingRequestId(null);
+    window.location.reload();
+  }
+  
+  async function handleRejectRequest(request: RegistrationRequest) {
+    if (!requestUpdatedBy.trim()) {
+      alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
+      return;
+    }
+  
+    const reason =
+      rejectionReason.trim() ||
+      window.prompt("Enter rejection reason / Reject reason लिखें") ||
+      "";
+  
+    if (!reason.trim()) {
+      alert("Please enter rejection reason.\nकृपया reject reason लिखें।");
+      return;
+    }
+  
+    const confirmed = window.confirm(
+      `Reject request for ${
+        request.full_name || "-"
+      }?\n\nक्या आप request reject करना चाहते हैं?`
+    );
+  
+    if (!confirmed) return;
+  
+    setProcessingRequestId(request.id);
+  
+    const { error } = await supabase.rpc("reject_registration_request", {
+      p_request_id: request.id,
+      p_rejected_by: requestUpdatedBy.trim(),
+      p_rejection_reason: reason.trim(),
+    });
+  
+    if (error) {
+      alert("Request rejection error: " + error.message);
+      setProcessingRequestId(null);
+      return;
+    }
+  
+    alert("Request rejected successfully.\nRequest reject हो गई।");
+  
+    setProcessingRequestId(null);
+    setRejectionReason("");
+    window.location.reload();
+  }
   async function handleScheduleDiksha() {
     if (!selectedAction) return;
 
@@ -192,6 +321,7 @@ export default function AdminDashboard({
       return;
     }
 
+    
     setIsUpdatingAction(true);
 
     const { error } = await supabase.rpc("schedule_candidate_diksha", {
@@ -216,6 +346,7 @@ export default function AdminDashboard({
 
     window.location.reload();
   }
+  
 
   async function handleBulkScheduleNextDayDiksha() {
     if (slotDate === "all") {
@@ -665,6 +796,7 @@ export default function AdminDashboard({
               </p>
             </div>
 
+
             <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
               <ReportCountCard
                 title="Scheduled Final Meetings"
@@ -756,6 +888,165 @@ export default function AdminDashboard({
             </div>
           </div>
         </section>
+        <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
+  <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h3 className="text-2xl font-extrabold">
+        Pending Verification Requests
+      </h3>
+      <h4 className="mt-1 text-xl font-bold text-orange-800">
+        लंबित सत्यापन अनुरोध
+      </h4>
+      <p className="mt-2 text-sm text-stone-600">
+        Accept a request to generate token and move it to final registrations.
+      </p>
+      <p className="text-sm text-stone-600">
+        Token केवल Sadhak verification के बाद generate होगा।
+      </p>
+    </div>
+
+    <div className="rounded-2xl bg-orange-100 px-5 py-3 text-center">
+      <p className="text-sm font-bold text-stone-600">Pending</p>
+      <p className="text-3xl font-extrabold text-orange-800">
+        {pendingRequests.length}
+      </p>
+    </div>
+  </div>
+
+  <div className="mb-5 grid gap-3 md:grid-cols-2">
+    <input
+      type="text"
+      value={requestUpdatedBy}
+      onChange={(event) => setRequestUpdatedBy(event.target.value)}
+      placeholder="Sadhak name"
+      className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+    />
+
+    <input
+      type="text"
+      value={rejectionReason}
+      onChange={(event) => setRejectionReason(event.target.value)}
+      placeholder="Reject reason, optional"
+      className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+    />
+  </div>
+
+  {pendingRequests.length === 0 ? (
+    <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
+      No pending requests found.
+      <span className="block text-sm font-normal">
+        कोई pending verification request नहीं है।
+      </span>
+    </div>
+  ) : (
+    <div className="grid gap-4">
+      {pendingRequests.map((request) => (
+        <div
+          key={request.id}
+          className="rounded-3xl border border-orange-100 bg-orange-50 p-5"
+        >
+          <div className="grid gap-4 md:grid-cols-[1.5fr_1fr_1fr_auto] md:items-start">
+            <div>
+              <p className="text-lg font-extrabold text-stone-900">
+                {request.full_name || "-"}
+              </p>
+              <p className="text-sm font-semibold text-stone-600">
+                {request.gender || "-"} · Age {request.age || "-"} ·{" "}
+                {request.marital_status || "-"}
+              </p>
+              <p className="mt-2 text-sm text-stone-600">
+                Mobile: {request.mobile || "-"}
+                {request.whatsapp ? ` · WhatsApp: ${request.whatsapp}` : ""}
+              </p>
+              <p className="mt-1 text-sm text-stone-600">
+                {request.city || "-"}, {request.state || "-"},{" "}
+                {request.country || "-"} - {request.pin_code || "-"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold text-stone-500">
+                Requested Meeting
+              </p>
+              <p className="font-bold text-orange-800">
+                {request.requested_meeting_date
+                  ? formatDate(request.requested_meeting_date)
+                  : "-"}
+              </p>
+              <p className="text-sm font-semibold text-stone-600">
+                {request.requested_meeting_time || "-"}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold text-stone-500">
+                Family Approval
+              </p>
+              <p className="text-sm font-semibold text-stone-700">
+                {request.marital_status === "Married"
+                  ? `Husband / Wife: ${request.spouse_name || "-"}`
+                  : `Father: ${request.father_name || "-"} / Mother: ${
+                      request.mother_name || "-"
+                    }`}
+              </p>
+              <p className="mt-1 text-xs text-stone-600">
+                Family: {request.family_name || "-"} (
+                {request.family_relation || "-"})
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => handleApproveRequest(request)}
+                disabled={processingRequestId === request.id}
+                className="rounded-2xl bg-green-700 px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
+              >
+                Accept & Generate Token
+                <span className="block text-xs font-normal">
+                  Accept करके token बनाएं
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleRejectRequest(request)}
+                disabled={processingRequestId === request.id}
+                className="rounded-2xl bg-red-100 px-5 py-3 text-sm font-bold text-red-700 disabled:opacity-60"
+              >
+                Reject
+                <span className="block text-xs font-normal">
+                  अनुरोध reject करें
+                </span>
+              </button>
+
+              {request.aadhaar_file_url && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedAadhaar({
+                      url: request.aadhaar_file_url || "",
+                      name: request.aadhaar_file_name || request.full_name,
+                    })
+                  }
+                  className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-orange-800"
+                >
+                  View ID
+                  <span className="block text-xs font-normal">ID देखें</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-2xl bg-white p-4 text-sm text-stone-700">
+            <p className="font-bold">Address:</p>
+            <p>{request.address || "-"}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</section>
 
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
