@@ -1029,20 +1029,18 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
               subtitleHi="आधार या कोई मान्य सरकारी पहचान प्रमाण अपलोड करें।"
             >
               <SelectField
-                labelEn="ID Type"
-                labelHi="पहचान प्रमाण का प्रकार"
-                name="idType"
-                value={formData.idType}
-                onChange={handleChange}
-                required
-                options={[
-                  ["aadhaar", "Aadhaar / आधार"],
-                  ["passport", "Passport / पासपोर्ट"],
-                  ["driving_license", "Driving License / ड्राइविंग लाइसेंस"],
-                  ["voter_id", "Voter ID / वोटर आईडी"],
-                  ["other", "Other Government ID / अन्य सरकारी पहचान"],
-                ]}
-              />
+  labelEn="ID Type"
+  labelHi="पहचान प्रमाण का प्रकार"
+  name="idType"
+  value={formData.idType}
+  onChange={handleChange}
+  required
+  options={[
+    ["aadhaar", "Aadhaar Card / आधार कार्ड"],
+    ["passport", "Passport / पासपोर्ट"],
+    ["other", "Other Government ID / अन्य सरकारी पहचान"],
+  ]}
+/>
 
               <InputField
                 labelEn="ID Number"
