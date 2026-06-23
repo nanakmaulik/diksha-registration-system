@@ -126,6 +126,7 @@ export default function AdminDashboard({
   const [dikshaDate, setDikshaDate] = useState("");
   const [dikshaTime, setDikshaTime] = useState("3:30 PM");
   const [finalMeetingSlotId, setFinalMeetingSlotId] = useState("");
+  const [finalMeetingMonth, setFinalMeetingMonth] = useState("");
 const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
   useState(false);
   const [printMode, setPrintMode] = useState<"list" | "forms">("list");
@@ -162,14 +163,31 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
   const [isUpdatingAction, setIsUpdatingAction] = useState(false);
 
   const todayDate = getTodayDateString();
+  const availableFinalMeetingSlots = slots.filter(
+    (slot) => slot.status !== "full" && slot.current_count < slot.capacity
+  );
+  
+  const finalMeetingMonths = Array.from(
+    new Set(availableFinalMeetingSlots.map((slot) => slot.slot_date.slice(0, 7)))
+  );
+  
+  const selectedFinalMeetingMonth =
+    finalMeetingMonth || finalMeetingMonths[0] || "";
+  
+  const finalMeetingMonthSlots = availableFinalMeetingSlots.filter((slot) =>
+    slot.slot_date.startsWith(selectedFinalMeetingMonth)
+  );
+  
+  const finalMeetingCalendarDays = getCalendarDaysForMonth(
+    selectedFinalMeetingMonth,
+    finalMeetingMonthSlots
+  );
   const pendingRequests = useMemo(() => {
     return registrationRequests.filter(
       (request) => request.request_status === "Pending Verification"
     );
   }, [registrationRequests]);
-  const selectedPendingRequests = pendingRequests.filter((request) =>
-    selectedRequestIds.includes(request.id)
-  );
+ 
 
   async function handleSubmitAction(actionOverride?: {
     actionType: "status" | "attendance";
@@ -1576,6 +1594,9 @@ titleHi="स्थगित"
                                 newStatus: person.candidate_status || person.status,
                               });
                               setFinalMeetingSlotId(person.slots?.slot_date ? person.slot_id || "" : "");
+                              setFinalMeetingMonth(
+                                person.slots?.slot_date ? person.slots.slot_date.slice(0, 7) : ""
+                              );
                               setDikshaDate(person.diksha_date || "");
                               setDikshaTime(person.diksha_time || "3:30 PM");
                             }}
@@ -2105,27 +2126,111 @@ titleHi="स्थगित"
 
   <div className="mt-4">
     <select
-      value={finalMeetingSlotId}
-      onChange={(event) => setFinalMeetingSlotId(event.target.value)}
-      className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
+      value={selectedFinalMeetingMonth}
+      onChange={(event) => {
+        setFinalMeetingMonth(event.target.value);
+        setFinalMeetingSlotId("");
+      }}
+      className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 font-bold outline-none focus:border-orange-600"
     >
-      <option value="">Select new meeting date / नई तारीख चुनें</option>
-
-      {slots
-        .filter((slot) => slot.status !== "full")
-        .map((slot) => (
-          <option key={slot.id} value={slot.id}>
-            {formatDate(slot.slot_date)} - {slot.slot_time} (
-            {slot.capacity - slot.current_count} seats left)
-          </option>
-        ))}
+      {finalMeetingMonths.map((month) => (
+        <option key={month} value={month}>
+          {formatMonthLabel(month)}
+        </option>
+      ))}
     </select>
   </div>
+
+  <div className="mt-4 overflow-hidden rounded-3xl border border-orange-100 bg-white">
+    <div className="grid grid-cols-7 bg-orange-100 text-center text-[11px] font-extrabold text-orange-900 md:text-xs">
+      {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+        <div
+          key={day}
+          className="border-r border-orange-200 px-1 py-2 last:border-r-0"
+        >
+          {day}
+        </div>
+      ))}
+    </div>
+
+    <div className="grid grid-cols-7">
+      {finalMeetingCalendarDays.map((calendarDay, index) => {
+        if (calendarDay.isEmpty) {
+          return (
+            <div
+              key={`empty-final-${index}`}
+              className="min-h-[62px] border-r border-t border-orange-100 bg-orange-50/40 last:border-r-0"
+            />
+          );
+        }
+
+        const slot = calendarDay.slot;
+        const seatsLeft = slot ? slot.capacity - slot.current_count : 0;
+        const isFull = !slot || seatsLeft <= 0 || slot.status === "full";
+        const isSelected = finalMeetingSlotId === slot?.id;
+
+        return (
+          <button
+            key={calendarDay.date}
+            type="button"
+            disabled={!slot || isFull}
+            onClick={() => {
+              if (!slot || isFull) return;
+              setFinalMeetingSlotId(slot.id);
+            }}
+            className={`min-h-[62px] border-r border-t border-orange-100 p-2 text-left transition last:border-r-0 ${
+              isSelected
+                ? "bg-orange-700 text-white"
+                : isFull
+                ? "cursor-not-allowed bg-stone-100 text-stone-400"
+                : "bg-white hover:bg-orange-50"
+            }`}
+          >
+            <div className="flex h-full flex-col justify-between gap-1">
+              <p className="text-base font-extrabold">{calendarDay.day}</p>
+
+              {slot ? (
+                <span
+                  className={`inline-flex w-fit rounded-full px-2 py-1 text-[9px] font-extrabold ${
+                    isSelected
+                      ? "bg-white text-orange-800"
+                      : isFull
+                      ? "bg-stone-200 text-stone-500"
+                      : "bg-green-100 text-green-700"
+                  }`}
+                >
+                  {isFull ? "Full" : `${seatsLeft} left`}
+                </span>
+              ) : (
+                <span className="text-[9px] font-bold text-stone-400">
+                  No slot
+                </span>
+              )}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+
+  {finalMeetingSlotId && (
+    <div className="mt-4 rounded-2xl bg-white p-3 text-sm font-bold text-orange-900">
+      Selected:{" "}
+      {slots.find((slot) => slot.id === finalMeetingSlotId)?.slot_date
+  ? formatDate(
+      slots.find((slot) => slot.id === finalMeetingSlotId)?.slot_date || ""
+    )
+  : "-"}
+      <span className="block text-xs font-semibold text-stone-600">
+        फाइनल मीटिंग की नई तारीख चुनी गई है
+      </span>
+    </div>
+  )}
 
   <button
     type="button"
     onClick={handleRescheduleFinalMeeting}
-    disabled={isReschedulingFinalMeeting}
+    disabled={isReschedulingFinalMeeting || !finalMeetingSlotId}
     className="mt-4 w-full rounded-2xl bg-orange-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
   >
     {isReschedulingFinalMeeting
@@ -2136,40 +2241,129 @@ titleHi="स्थगित"
     </span>
   </button>
 </div>
-              <div className="rounded-2xl bg-orange-50 p-4">
-  <h4 className="font-extrabold">Final Meeting Actions</h4>
-  <p className="text-sm text-stone-600">फाइनल मीटिंग कार्यवाही</p>
 
-  <div className="mt-4 grid gap-3 md:grid-cols-2">
-    <ActionButton
-      label="Pending"
-      labelHi="लंबित"
-      className="bg-red-100 text-red-700"
-      disabled={isUpdatingAction}
-      onClick={() =>
-        handleSubmitAction({
-          actionType: "attendance",
-          title: "Final Meeting Pending",
-          attendanceType: "Final Meeting",
-          attendanceValue: "Absent",
-        })
-      }
-    />
+  
+<div className="rounded-2xl bg-orange-50 p-4">
+  <h4 className="font-extrabold">Reschedule Final Meeting</h4>
+  <p className="text-sm text-stone-600">फाइनल मीटिंग तारीख बदलें</p>
 
-    <ActionButton
-      label="Deferred"
-      labelHi="स्थगित"
-      className="bg-stone-200 text-stone-700"
-      disabled={isUpdatingAction}
-      onClick={() =>
-        handleSubmitAction({
-          actionType: "status",
-          title: "Deferred",
-          newStatus: "Rejected",
-        })
-      }
-    />
+  <div className="mt-4">
+    <select
+      value={selectedFinalMeetingMonth}
+      onChange={(event) => {
+        setFinalMeetingMonth(event.target.value);
+        setFinalMeetingSlotId("");
+      }}
+      className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 font-bold outline-none focus:border-orange-600"
+    >
+      {finalMeetingMonths.map((month) => (
+        <option key={month} value={month}>
+          {formatMonthLabel(month)}
+        </option>
+      ))}
+    </select>
   </div>
+
+  <div className="mt-4 overflow-hidden rounded-3xl border border-orange-100 bg-white">
+    <div className="grid grid-cols-7 bg-orange-100 text-center text-[11px] font-extrabold text-orange-900 md:text-xs">
+      {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+        <div
+          key={day}
+          className="border-r border-orange-200 px-1 py-2 last:border-r-0"
+        >
+          {day}
+        </div>
+      ))}
+    </div>
+
+    <div className="grid grid-cols-7">
+      {finalMeetingCalendarDays.map((calendarDay, index) => {
+        if (calendarDay.isEmpty) {
+          return (
+            <div
+              key={`empty-final-${index}`}
+              className="min-h-[62px] border-r border-t border-orange-100 bg-orange-50/40 last:border-r-0"
+            />
+          );
+        }
+
+        const slot = calendarDay.slot;
+        const seatsLeft = slot ? slot.capacity - slot.current_count : 0;
+        const isFull = !slot || seatsLeft <= 0 || slot.status === "full";
+        const isSelected = finalMeetingSlotId === slot?.id;
+
+        return (
+          <button
+            key={calendarDay.date}
+            type="button"
+            disabled={!slot || isFull}
+            onClick={() => {
+              if (!slot || isFull) return;
+              setFinalMeetingSlotId(slot.id);
+            }}
+            className={`min-h-[62px] border-r border-t border-orange-100 p-2 text-left transition last:border-r-0 ${
+              isSelected
+                ? "bg-orange-700 text-white"
+                : isFull
+                ? "cursor-not-allowed bg-stone-100 text-stone-400"
+                : "bg-white hover:bg-orange-50"
+            }`}
+          >
+            <div className="flex h-full flex-col justify-between gap-1">
+              <p className="text-base font-extrabold">{calendarDay.day}</p>
+
+              {slot ? (
+                <span
+                  className={`inline-flex w-fit rounded-full px-2 py-1 text-[9px] font-extrabold ${
+                    isSelected
+                      ? "bg-white text-orange-800"
+                      : isFull
+                      ? "bg-stone-200 text-stone-500"
+                      : "bg-green-100 text-green-700"
+                  }`}
+                >
+                  {isFull ? "Full" : `${seatsLeft} left`}
+                </span>
+              ) : (
+                <span className="text-[9px] font-bold text-stone-400">
+                  No slot
+                </span>
+              )}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+
+  {finalMeetingSlotId && (
+    <div className="mt-4 rounded-2xl bg-white p-3 text-sm font-bold text-orange-900">
+      Selected:{" "}
+      {slots.find((slot) => slot.id === finalMeetingSlotId)?.slot_date
+        ? formatDate(
+            slots.find((slot) => slot.id === finalMeetingSlotId)?.slot_date ||
+              ""
+          )
+        : "-"}
+      <span className="block text-xs font-semibold text-stone-600">
+        फाइनल मीटिंग की नई तारीख चुनी गई है
+      </span>
+    </div>
+  )}
+
+  <button
+    type="button"
+    onClick={handleRescheduleFinalMeeting}
+    disabled={isReschedulingFinalMeeting || !finalMeetingSlotId}
+    className="mt-4 w-full rounded-2xl bg-orange-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
+  >
+    {isReschedulingFinalMeeting
+      ? "Rescheduling..."
+      : "Save Final Meeting Date"}
+    <span className="block text-xs font-normal">
+      फाइनल मीटिंग तारीख सेव करें
+    </span>
+  </button>
 </div>
 
               <div className="rounded-2xl bg-purple-50 p-4">
@@ -2267,6 +2461,7 @@ titleHi="स्थगित"
                   setDikshaDate("");
                   setDikshaTime("3:30 PM");
                   setFinalMeetingSlotId("");
+                  setFinalMeetingMonth("");
                 }}
                 disabled={isUpdatingAction}
                 className="w-full rounded-2xl border border-orange-300 px-5 py-3 font-bold text-orange-800 disabled:opacity-60"
@@ -2341,6 +2536,61 @@ function formatDate(dateString: string) {
 
   return date.toLocaleDateString("en-IN", {
     day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+function getCalendarDaysForMonth(monthValue: string, monthSlots: Slot[]) {
+  if (!monthValue) return [];
+
+  const [year, month] = monthValue.split("-").map(Number);
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+
+  const startPadding = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = lastDay.getDate();
+
+  const slotMap = new Map(monthSlots.map((slot) => [slot.slot_date, slot]));
+
+  const calendarDays: {
+    date: string;
+    day: number | null;
+    slot: Slot | null;
+    isEmpty: boolean;
+  }[] = [];
+
+  for (let i = 0; i < startPadding; i++) {
+    calendarDays.push({
+      date: "",
+      day: null,
+      slot: null,
+      isEmpty: true,
+    });
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = `${year}-${String(month).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+
+    calendarDays.push({
+      date,
+      day,
+      slot: slotMap.get(date) || null,
+      isEmpty: false,
+    });
+  }
+
+  return calendarDays;
+}
+
+function formatMonthLabel(monthValue: string) {
+  if (!monthValue) return "Select month";
+
+  const [year, month] = monthValue.split("-").map(Number);
+  const date = new Date(year, month - 1, 1);
+
+  return date.toLocaleDateString("en-IN", {
     month: "long",
     year: "numeric",
   });
