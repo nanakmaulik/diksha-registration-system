@@ -25,6 +25,8 @@ type RegistrationFormData = {
   familyName: string;
   familyRelation: string;
   familyMobile: string;
+  parentVideoProofStatus: string;
+  parentVideoProofReason: string;
   idType: string;
   idNumber: string;
   aadhaarFile: File | null;
@@ -61,7 +63,9 @@ const initialFormData: RegistrationFormData = {
   familyName: "",
   familyRelation: "",
   familyMobile: "",
-  idType: "aadhaar",
+parentVideoProofStatus: "",
+parentVideoProofReason: "",
+idType: "aadhaar",
   idNumber: "",
   aadhaarFile: null,
   selectedSlotId: "",
@@ -467,6 +471,24 @@ const [pincodeMessage, setPincodeMessage] = useState("");
             "Please enter a valid family member mobile number. If outside India, include country code.\nकृपया सही परिवार सदस्य मोबाइल नंबर भरें।",
         };
       }
+      if (!formData.parentVideoProofStatus.trim()) {
+        return {
+          isValid: false,
+          message:
+            "Please select parent video approval proof status.\nकृपया माता-पिता वीडियो सहमति प्रमाण की स्थिति चुनें।",
+        };
+      }
+      
+      if (
+        formData.parentVideoProofStatus !== "Both Parents" &&
+        !formData.parentVideoProofReason.trim()
+      ) {
+        return {
+          isValid: false,
+          message:
+            "Please enter reason/details for missing parent video proof.\nकृपया missing parent video proof का कारण लिखें।",
+        };
+      }
     }
 
     if (currentStep === 4) {
@@ -590,7 +612,9 @@ const [pincodeMessage, setPincodeMessage] = useState("");
         p_family_name: formData.familyName,
         p_family_relation: formData.familyRelation,
         p_family_mobile: formData.familyMobile,
-        p_id_type: formData.idType,
+p_parent_video_proof_status: formData.parentVideoProofStatus,
+p_parent_video_proof_reason: formData.parentVideoProofReason,
+p_id_type: formData.idType,
         p_id_number: formData.idNumber,
         p_aadhaar_file_url: aadhaarFileUrl,
         p_aadhaar_file_name: aadhaarFileName,
@@ -957,6 +981,43 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 placeholder="+91 9876543210 / +1 2125551234"
                 required
               />
+              <div className="rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
+  <p className="font-bold">
+    Parent Video Approval Proof
+  </p>
+  <p className="mt-1">
+    माता-पिता वीडियो सहमति प्रमाण
+  </p>
+</div>
+
+<SelectField
+  labelEn="Video Proof Present For"
+  labelHi="वीडियो प्रमाण किसका उपलब्ध है"
+  name="parentVideoProofStatus"
+  value={formData.parentVideoProofStatus}
+  onChange={handleChange}
+  required
+  options={[
+    ["", "Select video proof status"],
+    ["Both Parents", "Both Mother & Father / माता और पिता दोनों"],
+    ["Mother Only", "Mother Only / केवल माता"],
+    ["Father Only", "Father Only / केवल पिता"],
+    ["None", "No Video Proof / कोई वीडियो प्रमाण नहीं"],
+  ]}
+/>
+
+{formData.parentVideoProofStatus &&
+  formData.parentVideoProofStatus !== "Both Parents" && (
+    <TextareaField
+      labelEn="Missing Video Proof Reason"
+      labelHi="वीडियो प्रमाण न होने का कारण"
+      name="parentVideoProofReason"
+      value={formData.parentVideoProofReason}
+      onChange={handleChange}
+      placeholder="Example: Father is not available, mother video approval shown."
+      required
+    />
+  )}
             </StepCard>
           )}
 
@@ -1124,6 +1185,18 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                   label="Family Contact / परिवार संपर्क"
                   value={`${formData.familyName} (${formData.familyRelation}) - ${formData.familyMobile}`}
                 />
+                <ReviewRow
+  label="Parent Video Proof / माता-पिता वीडियो प्रमाण"
+  value={
+    formData.parentVideoProofStatus === "Both Parents"
+      ? "Both Mother & Father video proof present"
+      : `${formData.parentVideoProofStatus || "-"}${
+          formData.parentVideoProofReason
+            ? ` - ${formData.parentVideoProofReason}`
+            : ""
+        }`
+  }
+/>
                 <ReviewRow
                   label="ID Proof / पहचान प्रमाण"
                   value={`${formData.idType} - ${formData.idNumber}`}
