@@ -2060,69 +2060,40 @@ titleHi="स्थगित"
               </div>
 
               <div className="rounded-2xl bg-orange-50 p-4">
-                <h4 className="font-extrabold">Final Meeting Actions</h4>
-                <p className="text-sm text-stone-600">फाइनल मीटिंग कार्यवाही</p>
+  <h4 className="font-extrabold">Final Meeting Actions</h4>
+  <p className="text-sm text-stone-600">फाइनल मीटिंग कार्यवाही</p>
 
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <ActionButton
-                    label="Mark Present"
-                    labelHi="उपस्थित"
-                    className="bg-green-100 text-green-700"
-                    disabled={isUpdatingAction}
-                    onClick={() =>
-                      handleSubmitAction({
-                        actionType: "attendance",
-                        title: "Final Meeting Present",
-                        attendanceType: "Final Meeting",
-                        attendanceValue: "Present",
-                      })
-                    }
-                  />
+  <div className="mt-4 grid gap-3 md:grid-cols-2">
+    <ActionButton
+      label="Pending"
+      labelHi="लंबित"
+      className="bg-red-100 text-red-700"
+      disabled={isUpdatingAction}
+      onClick={() =>
+        handleSubmitAction({
+          actionType: "attendance",
+          title: "Final Meeting Pending",
+          attendanceType: "Final Meeting",
+          attendanceValue: "Absent",
+        })
+      }
+    />
 
-<ActionButton
-  label="Pending"
-  labelHi="लंबित"
-  className="bg-red-100 text-red-700"
-  disabled={isUpdatingAction}
-  onClick={() =>
-    handleSubmitAction({
-      actionType: "attendance",
-      title: "Final Meeting Pending",
-      attendanceType: "Final Meeting",
-      attendanceValue: "Absent",
-    })
-  }
-/>
-
-                  <ActionButton
-                    label="Approve"
-                    labelHi="स्वीकृत"
-                    className="bg-blue-100 text-blue-700"
-                    disabled={isUpdatingAction}
-                    onClick={() =>
-                      handleSubmitAction({
-                        actionType: "status",
-                        title: "Approved for Diksha",
-                        newStatus: "Approved",
-                      })
-                    }
-                  />
-
-<ActionButton
-  label="Deferred"
-  labelHi="स्थगित"
-  className="bg-stone-200 text-stone-700"
-  disabled={isUpdatingAction}
-  onClick={() =>
-    handleSubmitAction({
-      actionType: "status",
-      title: "Deferred",
-      newStatus: "Rejected",
-    })
-  }
-/>
-                </div>
-              </div>
+    <ActionButton
+      label="Deferred"
+      labelHi="स्थगित"
+      className="bg-stone-200 text-stone-700"
+      disabled={isUpdatingAction}
+      onClick={() =>
+        handleSubmitAction({
+          actionType: "status",
+          title: "Deferred",
+          newStatus: "Rejected",
+        })
+      }
+    />
+  </div>
+</div>
 
               <div className="rounded-2xl bg-purple-50 p-4">
                 <h4 className="font-extrabold">Diksha Actions</h4>
