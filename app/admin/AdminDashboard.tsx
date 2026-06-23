@@ -321,10 +321,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
       return;
     }
 
-    if (!dikshaTime.trim()) {
-      alert("Please enter Diksha time.\nकृपया दीक्षा समय भरें।");
-      return;
-    }
+    
 
     
     setIsUpdatingAction(true);
@@ -332,7 +329,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
     const { error } = await supabase.rpc("schedule_candidate_diksha", {
       p_registration_id: selectedAction.registrationId,
       p_diksha_date: dikshaDate,
-      p_diksha_time: dikshaTime.trim(),
+      p_diksha_time: "",
       p_notes: actionNotes.trim(),
       p_updated_by: updatedBy.trim(),
     });
@@ -431,7 +428,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
         slotDate
       )}.\n\nDefault Diksha Date: ${formatDate(
         addDaysToDateString(slotDate, 1)
-      )}\nDefault Time: 3:30 PM\n\nContinue?`
+      )}\nContinue?`
     );
   
     if (!confirmed) return;
@@ -440,7 +437,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
   
     const { data, error } = await supabase.rpc("bulk_schedule_next_day_diksha", {
       p_meeting_date: slotDate,
-      p_diksha_time: "3:30 PM",
+      p_diksha_time: "",
       p_updated_by: "Sadhak",
     });
   
@@ -1600,8 +1597,7 @@ titleHi="स्थगित"
                             {person.diksha_date && (
   <>
     <p>
-      Diksha Date: {formatDate(person.diksha_date)}
-      {person.diksha_time ? ` - ${person.diksha_time}` : ""}
+    Diksha Date: {formatDate(person.diksha_date)}
     </p>
 
     {person.slots?.slot_date &&
@@ -1711,11 +1707,7 @@ titleHi="स्थगित"
                   Diksha: {person.diksha_attendance || "Not Marked"}
                 </PrintCell>
                 <PrintCell>
-                  {person.diksha_date
-                    ? `${formatDate(person.diksha_date)} ${
-                        person.diksha_time || ""
-                      }`
-                    : "-"}
+                {person.diksha_date ? formatDate(person.diksha_date) : "-"}
                 </PrintCell>
                 <PrintCell>
                   {person.evaluator_notes || person.remarks_by || "-"}
@@ -2110,22 +2102,14 @@ titleHi="स्थगित"
                       {dikshaDate ? "दीक्षा तारीख बदलें" : "दीक्षा तारीख चुनें"}
                     </p>
 
-                    <div className="mt-4 grid gap-3 md:grid-cols-2">
-                      <input
-                        type="date"
-                        value={dikshaDate}
-                        onChange={(event) => setDikshaDate(event.target.value)}
-                        className="rounded-2xl border border-purple-200 px-4 py-3 outline-none focus:border-purple-600"
-                      />
-
-                      <input
-                        type="text"
-                        value={dikshaTime}
-                        onChange={(event) => setDikshaTime(event.target.value)}
-                        placeholder="3:30 PM"
-                        className="rounded-2xl border border-purple-200 px-4 py-3 outline-none focus:border-purple-600"
-                      />
-                    </div>
+                    <div className="mt-4">
+  <input
+    type="date"
+    value={dikshaDate}
+    onChange={(event) => setDikshaDate(event.target.value)}
+    className="w-full rounded-2xl border border-purple-200 px-4 py-3 outline-none focus:border-purple-600"
+  />
+</div>
 
                     <button
                       type="button"
@@ -2134,8 +2118,8 @@ titleHi="स्थगित"
                       className="mt-4 w-full rounded-2xl bg-purple-100 px-4 py-3 text-sm font-bold text-purple-700 disabled:opacity-60"
                     >
                       {dikshaDate
-                        ? "Save Rescheduled Diksha"
-                        : "Save Diksha Schedule"}
+  ? "Save Rescheduled Diksha Date"
+  : "Save Diksha Date"}
                       <span className="block text-xs font-normal">
                         दीक्षा शेड्यूल सेव करें
                       </span>
