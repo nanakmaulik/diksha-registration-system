@@ -132,6 +132,8 @@ const [rejectionReason, setRejectionReason] = useState("");
 const [processingRequestId, setProcessingRequestId] = useState<string | null>(
   null
 );
+const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([]);
+const [isDeletingRequests, setIsDeletingRequests] = useState(false);
   const [selectedAadhaar, setSelectedAadhaar] = useState<{
     url: string;
     name: string;
@@ -161,6 +163,9 @@ const [processingRequestId, setProcessingRequestId] = useState<string | null>(
       (request) => request.request_status === "Pending Verification"
     );
   }, [registrationRequests]);
+  const selectedPendingRequests = pendingRequests.filter((request) =>
+    selectedRequestIds.includes(request.id)
+  );
 
   async function handleSubmitAction(actionOverride?: {
     actionType: "status" | "attendance";
@@ -347,6 +352,60 @@ const [processingRequestId, setProcessingRequestId] = useState<string | null>(
     window.location.reload();
   }
   
+  function handleToggleRequestSelection(requestId: string) {
+    setSelectedRequestIds((prev) =>
+      prev.includes(requestId)
+        ? prev.filter((id) => id !== requestId)
+        : [...prev, requestId]
+    );
+  }
+  
+  function handleToggleAllPendingRequests() {
+    if (pendingRequests.length === 0) return;
+  
+    if (selectedRequestIds.length === pendingRequests.length) {
+      setSelectedRequestIds([]);
+      return;
+    }
+  
+    setSelectedRequestIds(pendingRequests.map((request) => request.id));
+  }
+  
+  async function handleDeleteSelectedRequests() {
+    if (selectedRequestIds.length === 0) {
+      alert("Please select requests to delete.\nकृपया delete करने के लिए requests select करें।");
+      return;
+    }
+  
+    const confirmed = window.confirm(
+      `Delete ${selectedRequestIds.length} selected pending request(s)?\n\nये सिर्फ Pending Verification requests delete करेगा.`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsDeletingRequests(true);
+  
+    const { data, error } = await supabase.rpc(
+      "delete_pending_registration_requests",
+      {
+        p_request_ids: selectedRequestIds,
+      }
+    );
+  
+    if (error) {
+      alert("Delete request error: " + error.message);
+      setIsDeletingRequests(false);
+      return;
+    }
+  
+    alert(
+      `Deleted successfully.\nDeleted requests: ${data || 0}\n\nSelected pending requests delete हो गई।`
+    );
+  
+    setSelectedRequestIds([]);
+    setIsDeletingRequests(false);
+    window.location.reload();
+  }
 
   async function handleBulkScheduleNextDayDiksha() {
     if (slotDate === "all") {
@@ -913,23 +972,60 @@ const [processingRequestId, setProcessingRequestId] = useState<string | null>(
     </div>
   </div>
 
-  <div className="mb-5 grid gap-3 md:grid-cols-2">
-    <input
-      type="text"
-      value={requestUpdatedBy}
-      onChange={(event) => setRequestUpdatedBy(event.target.value)}
-      placeholder="Sadhak name"
-      className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
-    />
+  <div className="mb-5 grid gap-3 md:grid-cols-[1fr_1fr_auto_auto]">
+  <input
+    type="text"
+    value={requestUpdatedBy}
+    onChange={(event) => setRequestUpdatedBy(event.target.value)}
+    placeholder="Sadhak name"
+    className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+  />
 
-    <input
-      type="text"
-      value={rejectionReason}
-      onChange={(event) => setRejectionReason(event.target.value)}
-      placeholder="Reject reason, optional"
-      className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
-    />
+  <input
+    type="text"
+    value={rejectionReason}
+    onChange={(event) => setRejectionReason(event.target.value)}
+    placeholder="Reject reason, optional"
+    className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+  />
+
+  <button
+    type="button"
+    onClick={handleToggleAllPendingRequests}
+    className="rounded-2xl border border-orange-300 px-4 py-3 text-sm font-bold text-orange-800"
+  >
+    {selectedRequestIds.length === pendingRequests.length &&
+    pendingRequests.length > 0
+      ? "Unselect All"
+      : "Select All"}
+    <span className="block text-xs font-normal">
+      सभी select करें
+    </span>
+  </button>
+
+  <button
+    type="button"
+    onClick={handleDeleteSelectedRequests}
+    disabled={selectedRequestIds.length === 0 || isDeletingRequests}
+    className="rounded-2xl bg-red-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+  >
+    {isDeletingRequests
+      ? "Deleting..."
+      : `Delete Selected (${selectedRequestIds.length})`}
+    <span className="block text-xs font-normal">
+      चुनी हुई requests delete करें
+    </span>
+  </button>
+</div>
+
+{selectedRequestIds.length > 0 && (
+  <div className="mb-5 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">
+    Selected pending requests: {selectedRequestIds.length}
+    <span className="block font-normal">
+      ये delete करने पर final registrations पर कोई असर नहीं पड़ेगा।
+    </span>
   </div>
+)}
 
   {pendingRequests.length === 0 ? (
     <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
@@ -945,11 +1041,21 @@ const [processingRequestId, setProcessingRequestId] = useState<string | null>(
           key={request.id}
           className="rounded-3xl border border-orange-100 bg-orange-50 p-5"
         >
-          <div className="grid gap-4 md:grid-cols-[1.5fr_1fr_1fr_auto] md:items-start">
-            <div>
-              <p className="text-lg font-extrabold text-stone-900">
-                {request.full_name || "-"}
-              </p>
+         <div className="grid gap-4 md:grid-cols-[auto_1.5fr_1fr_1fr_auto] md:items-start">
+  <div className="pt-1">
+    <input
+      type="checkbox"
+      checked={selectedRequestIds.includes(request.id)}
+      onChange={() => handleToggleRequestSelection(request.id)}
+      className="h-5 w-5 accent-orange-700"
+      aria-label={`Select request for ${request.full_name || "candidate"}`}
+    />
+  </div>
+
+  <div>
+    <p className="text-lg font-extrabold text-stone-900">
+      {request.full_name || "-"}
+    </p>
               <p className="text-sm font-semibold text-stone-600">
                 {request.gender || "-"} · Age {request.age || "-"} ·{" "}
                 {request.marital_status || "-"}
