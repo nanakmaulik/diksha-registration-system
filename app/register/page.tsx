@@ -735,15 +735,26 @@ p_id_type: formData.idType,
                 ]}
               />
 
-              <InputField
-                labelEn="Occupation"
-                labelHi="व्यवसाय"
-                name="occupation"
-                value={formData.occupation}
-                onChange={handleChange}
-                placeholder="Enter occupation"
-                required
-              />
+<SelectField
+  labelEn="Occupation"
+  labelHi="व्यवसाय"
+  name="occupation"
+  value={formData.occupation}
+  onChange={handleChange}
+  required
+  options={[
+    ["", "Select occupation / व्यवसाय चुनें"],
+    ["Student", "Student / विद्यार्थी"],
+    ["Housewife", "Housewife / गृहिणी"],
+    ["Service", "Service / नौकरी"],
+    ["Business", "Business / व्यापार"],
+    ["Farmer", "Farmer / किसान"],
+    ["Retired", "Retired / सेवानिवृत्त"],
+    ["Self Employed", "Self Employed / स्वरोजगार"],
+    ["Unemployed", "Unemployed / बेरोजगार"],
+    ["Other", "Other / अन्य"],
+  ]}
+/>
 
               <SelectField
                 labelEn="Marital Status"
