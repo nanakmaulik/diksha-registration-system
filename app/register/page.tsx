@@ -138,6 +138,7 @@ const [pincodeMessage, setPincodeMessage] = useState("");
   const visibleSlots = slots.filter(
     (slot) => !selectedMonth || slot.slot_date.startsWith(selectedMonth)
   );
+  const calendarDays = getCalendarDaysForMonth(selectedMonth, visibleSlots);
   async function fetchAddressFromPincode(
     pinCode: string,
     countryValue = formData.country
@@ -1077,50 +1078,100 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                     ])}
                   />
 
-                  <div className="grid gap-4 md:grid-cols-3">
-                    {visibleSlots.map((slot) => {
-                      const isFull =
-                        slot.current_count >= slot.capacity ||
-                        slot.status === "full";
-                      const isSelected = formData.selectedSlotId === slot.id;
-                      const seatsLeft = slot.capacity - slot.current_count;
+<div className="overflow-hidden rounded-3xl border border-orange-100 bg-white">
+  <div className="grid grid-cols-7 bg-orange-100 text-center text-xs font-extrabold text-orange-900 md:text-sm">
+    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+      <div
+        key={day}
+        className="border-r border-orange-200 px-2 py-3 last:border-r-0"
+      >
+        {day}
+      </div>
+    ))}
+  </div>
 
-                      return (
-                        <button
-                          key={slot.id}
-                          type="button"
-                          disabled={isFull}
-                          onClick={() => selectSlot(slot.id)}
-                          className={`rounded-2xl border p-5 text-left transition ${
-                            isSelected
-                              ? "border-orange-700 bg-orange-100"
-                              : "border-orange-100 bg-white"
-                          } ${
-                            isFull
-                              ? "cursor-not-allowed opacity-50"
-                              : "hover:border-orange-400"
-                          }`}
-                        >
-                          <p className="text-lg font-extrabold">
-                            {formatDate(slot.slot_date)}
-                          </p>
-                          <p className="mt-1 text-sm font-bold text-stone-600">
-                            {slot.slot_time}
-                          </p>
+  <div className="grid grid-cols-7">
+    {calendarDays.map((calendarDay, index) => {
+      if (calendarDay.isEmpty) {
+        return (
+          <div
+            key={`empty-${index}`}
+            className="min-h-[82px] border-r border-t border-orange-100 bg-orange-50/40 last:border-r-0 md:min-h-[110px]"
+          />
+        );
+      }
 
-                          <p
-                            className={`mt-4 inline-block rounded-full px-3 py-1 text-xs font-bold ${
-                              isFull
-                                ? "bg-red-100 text-red-700"
-                                : "bg-green-100 text-green-700"
-                            }`}
-                          >
-                            {isFull ? "Full / भरा हुआ" : `${seatsLeft} seats left`}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
+      const slot = calendarDay.slot;
+      const seatsLeft = slot ? slot.capacity - slot.current_count : 0;
+      const isFull = !slot || seatsLeft <= 0 || slot.status === "full";
+      const isSelected = formData.selectedSlotId === slot?.id;
+
+      return (
+        <button
+          key={calendarDay.date}
+          type="button"
+          disabled={!slot || isFull}
+          onClick={() => {
+            if (!slot || isFull) return;
+            selectSlot(slot.id);
+          }}
+          className={`min-h-[82px] border-r border-t border-orange-100 p-2 text-left transition last:border-r-0 md:min-h-[110px] md:p-3 ${
+            isSelected
+              ? "bg-orange-700 text-white"
+              : isFull
+              ? "cursor-not-allowed bg-stone-100 text-stone-400"
+              : "bg-white hover:bg-orange-50"
+          }`}
+        >
+          <div className="flex h-full flex-col justify-between gap-2">
+            <div>
+              <p className="text-lg font-extrabold md:text-2xl">
+                {calendarDay.day}
+              </p>
+
+              {slot && (
+                <p
+                  className={`mt-1 text-[10px] font-bold md:text-xs ${
+                    isSelected ? "text-orange-50" : "text-stone-600"
+                  }`}
+                >
+                  {slot.slot_time}
+                </p>
+              )}
+            </div>
+
+            {slot ? (
+              <span
+                className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-extrabold md:text-xs ${
+                  isSelected
+                    ? "bg-white text-orange-800"
+                    : isFull
+                    ? "bg-stone-200 text-stone-500"
+                    : "bg-green-100 text-green-700"
+                }`}
+              >
+                {isFull ? "Full" : `${seatsLeft} left`}
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold text-stone-400">
+                No slot
+              </span>
+            )}
+          </div>
+        </button>
+      );
+    })}
+  </div>
+</div>
+
+{selectedSlot && (
+  <div className="mt-4 rounded-2xl bg-orange-50 p-4 text-sm font-bold text-orange-900">
+    Selected Meeting Date: {formatDate(selectedSlot.slot_date)}
+    <span className="block font-semibold text-stone-700">
+      Time: {selectedSlot.slot_time}
+    </span>
+  </div>
+)}
                 </>
               )}
             </StepCard>
@@ -1455,6 +1506,49 @@ function formatDate(dateString: string) {
   });
 }
 
+function getCalendarDaysForMonth(monthValue: string, monthSlots: Slot[]) {
+  if (!monthValue) return [];
+
+  const [year, month] = monthValue.split("-").map(Number);
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0);
+
+  const startPadding = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = lastDay.getDate();
+
+  const slotMap = new Map(monthSlots.map((slot) => [slot.slot_date, slot]));
+
+  const calendarDays: {
+    date: string;
+    day: number | null;
+    slot: Slot | null;
+    isEmpty: boolean;
+  }[] = [];
+
+  for (let i = 0; i < startPadding; i++) {
+    calendarDays.push({
+      date: "",
+      day: null,
+      slot: null,
+      isEmpty: true,
+    });
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = `${year}-${String(month).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+
+    calendarDays.push({
+      date,
+      day,
+      slot: slotMap.get(date) || null,
+      isEmpty: false,
+    });
+  }
+
+  return calendarDays;
+}
 function formatMonth(dateString: string) {
   const date = parseLocalDate(dateString);
 
