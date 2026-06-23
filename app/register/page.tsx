@@ -1217,7 +1217,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 name="remarksBy"
                 value={formData.remarksBy}
                 onChange={handleChange}
-                placeholder="Self / Sadhak name / remarks"
+                placeholder="Remarks"
               />
             </StepCard>
           )}
