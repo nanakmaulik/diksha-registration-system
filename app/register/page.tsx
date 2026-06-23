@@ -908,16 +908,16 @@ const [pincodeMessage, setPincodeMessage] = useState("");
 
               <div className="rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
                 <p className="font-bold">
-                  Emergency / accompanying family member details
+                Present Family Representative Details
                 </p>
                 <p className="mt-1">
-                  आपातकालीन / साथ आने वाले परिवार सदस्य की जानकारी
+                उपस्थित पारिवारिक प्रतिनिधि की जानकारी
                 </p>
               </div>
 
               <InputField
-                labelEn="Family Member Name"
-                labelHi="परिवार के सदस्य का नाम"
+                labelEn="Present Family Representative Name"
+labelHi="उपस्थित पारिवारिक प्रतिनिधि का नाम"
                 name="familyName"
                 value={formData.familyName}
                 onChange={handleChange}
@@ -926,8 +926,8 @@ const [pincodeMessage, setPincodeMessage] = useState("");
               />
 
               <SelectField
-                labelEn="Family Member Relation"
-                labelHi="परिवार के सदस्य से संबंध"
+                labelEn="Present Family Representative Relation"
+labelHi="उपस्थित पारिवारिक प्रतिनिधि से संबंध"
                 name="familyRelation"
                 value={formData.familyRelation}
                 onChange={handleChange}
@@ -948,8 +948,8 @@ const [pincodeMessage, setPincodeMessage] = useState("");
               />
 
               <InputField
-                labelEn="Family Member Mobile"
-                labelHi="परिवार के सदस्य का मोबाइल नंबर"
+               labelEn="Present Family Representative Mobile"
+labelHi="उपस्थित पारिवारिक प्रतिनिधि का मोबाइल नंबर"
                 name="familyMobile"
                 type="tel"
                 value={formData.familyMobile}
