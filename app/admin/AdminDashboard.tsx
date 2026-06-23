@@ -8,6 +8,7 @@ import { useMemo, useState, type ReactNode } from "react";
 type Registration = {
   id: string;
   token: string;
+  slot_id: string | null;
   full_name: string;
   age: number | null;
   gender: string | null;
@@ -124,6 +125,9 @@ export default function AdminDashboard({
   const [reportFilter, setReportFilter] = useState("all");
   const [dikshaDate, setDikshaDate] = useState("");
   const [dikshaTime, setDikshaTime] = useState("3:30 PM");
+  const [finalMeetingSlotId, setFinalMeetingSlotId] = useState("");
+const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
+  useState(false);
   const [printMode, setPrintMode] = useState<"list" | "forms">("list");
   const [isBulkScheduling, setIsBulkScheduling] = useState(false);
 
@@ -306,6 +310,53 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
   
     setProcessingRequestId(null);
     setRejectionReason("");
+    window.location.reload();
+  }
+  async function handleRescheduleFinalMeeting() {
+    if (!selectedAction) return;
+  
+    if (!updatedBy.trim()) {
+      alert("Please enter updated by name.\nकृपया अपडेट करने वाले का नाम भरें।");
+      return;
+    }
+  
+    if (!finalMeetingSlotId) {
+      alert("Please select new Final Meeting date.\nकृपया नई Final Meeting date चुनें।");
+      return;
+    }
+  
+    const selectedSlot = slots.find((slot) => slot.id === finalMeetingSlotId);
+  
+    const confirmed = window.confirm(
+      `Reschedule Final Meeting for ${selectedAction.candidateName}?\n\nNew Date: ${
+        selectedSlot ? formatDate(selectedSlot.slot_date) : "-"
+      }\nTime: ${selectedSlot?.slot_time || "-"}`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsReschedulingFinalMeeting(true);
+  
+    const { error } = await supabase.rpc("reschedule_final_meeting", {
+      p_registration_id: selectedAction.registrationId,
+      p_new_slot_id: finalMeetingSlotId,
+      p_notes: actionNotes.trim(),
+      p_updated_by: updatedBy.trim(),
+    });
+  
+    if (error) {
+      alert("Final Meeting reschedule error: " + error.message);
+      setIsReschedulingFinalMeeting(false);
+      return;
+    }
+  
+    alert("Final Meeting rescheduled successfully.\nFinal Meeting date update हो गई।");
+  
+    setIsReschedulingFinalMeeting(false);
+    setSelectedAction(null);
+    setActionNotes("");
+    setFinalMeetingSlotId("");
+  
     window.location.reload();
   }
   async function handleScheduleDiksha() {
@@ -1519,13 +1570,12 @@ titleHi="स्थगित"
                             onClick={() => {
                               setSelectedAction({
                                 registrationId: person.id,
-                                candidateName:
-                                  person.full_name || person.token,
+                                candidateName: person.full_name || person.token,
                                 actionType: "status",
                                 title: "Manage Candidate",
-                                newStatus:
-                                  person.candidate_status || person.status,
+                                newStatus: person.candidate_status || person.status,
                               });
+                              setFinalMeetingSlotId(person.slots?.slot_date ? person.slot_id || "" : "");
                               setDikshaDate(person.diksha_date || "");
                               setDikshaTime(person.diksha_time || "3:30 PM");
                             }}
@@ -2049,7 +2099,43 @@ titleHi="स्थगित"
                   placeholder="Enter notes or remarks"
                 />
               </div>
+              <div className="rounded-2xl bg-orange-50 p-4">
+  <h4 className="font-extrabold">Reschedule Final Meeting</h4>
+  <p className="text-sm text-stone-600">फाइनल मीटिंग तारीख बदलें</p>
 
+  <div className="mt-4">
+    <select
+      value={finalMeetingSlotId}
+      onChange={(event) => setFinalMeetingSlotId(event.target.value)}
+      className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
+    >
+      <option value="">Select new meeting date / नई तारीख चुनें</option>
+
+      {slots
+        .filter((slot) => slot.status !== "full")
+        .map((slot) => (
+          <option key={slot.id} value={slot.id}>
+            {formatDate(slot.slot_date)} - {slot.slot_time} (
+            {slot.capacity - slot.current_count} seats left)
+          </option>
+        ))}
+    </select>
+  </div>
+
+  <button
+    type="button"
+    onClick={handleRescheduleFinalMeeting}
+    disabled={isReschedulingFinalMeeting}
+    className="mt-4 w-full rounded-2xl bg-orange-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
+  >
+    {isReschedulingFinalMeeting
+      ? "Rescheduling..."
+      : "Save Final Meeting Date"}
+    <span className="block text-xs font-normal">
+      फाइनल मीटिंग तारीख सेव करें
+    </span>
+  </button>
+</div>
               <div className="rounded-2xl bg-orange-50 p-4">
   <h4 className="font-extrabold">Final Meeting Actions</h4>
   <p className="text-sm text-stone-600">फाइनल मीटिंग कार्यवाही</p>
@@ -2180,6 +2266,7 @@ titleHi="स्थगित"
                   setActionNotes("");
                   setDikshaDate("");
                   setDikshaTime("3:30 PM");
+                  setFinalMeetingSlotId("");
                 }}
                 disabled={isUpdatingAction}
                 className="w-full rounded-2xl border border-orange-300 px-5 py-3 font-bold text-orange-800 disabled:opacity-60"
