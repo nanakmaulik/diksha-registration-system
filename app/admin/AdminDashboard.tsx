@@ -1061,10 +1061,9 @@ titleHi="स्थगित"
                 Mobile: {request.mobile || "-"}
                 {request.whatsapp ? ` · WhatsApp: ${request.whatsapp}` : ""}
               </p>
-              <p className="mt-1 text-sm text-stone-600">
-                {request.city || "-"}, {request.state || "-"},{" "}
-                {request.country || "-"} - {request.pin_code || "-"}
-              </p>
+              <p className="mt-2 rounded-xl bg-white px-3 py-2 text-sm font-bold text-orange-900">
+  ID Proof: {formatIdType(request.id_type)} - {request.id_number || "-"}
+</p>
             </div>
 
             <div>
@@ -2317,7 +2316,15 @@ function maskMobile(mobile: string) {
   if (!mobile || mobile.length < 4) return mobile;
   return `${mobile.slice(0, 2)}xxxxxx${mobile.slice(-2)}`;
 }
+function formatIdType(idType: string | null) {
+  if (!idType) return "ID";
 
+  if (idType === "aadhaar") return "Aadhaar Card";
+  if (idType === "passport") return "Passport";
+  if (idType === "other") return "Other Government ID";
+
+  return idType;
+}
 function csvEscape(value: string) {
   const cleanedValue = value.replace(/\n/g, " ").replace(/\r/g, " ");
 
