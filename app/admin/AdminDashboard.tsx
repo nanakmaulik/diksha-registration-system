@@ -272,18 +272,18 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
   
     const reason =
       rejectionReason.trim() ||
-      window.prompt("Enter rejection reason / Reject reason लिखें") ||
+      window.prompt("Enter deferred reason / Deferred reason लिखें") ||
       "";
   
     if (!reason.trim()) {
-      alert("Please enter rejection reason.\nकृपया reject reason लिखें।");
+      alert("Please enter deferred reason.\nकृपया deferred reason लिखें।");
       return;
     }
   
     const confirmed = window.confirm(
-      `Reject request for ${
-        request.full_name || "-"
-      }?\n\nक्या आप request reject करना चाहते हैं?`
+      `Defer request for ${
+  request.full_name || "-"
+}?\n\nक्या आप request स्थगित करना चाहते हैं?`
     );
   
     if (!confirmed) return;
@@ -302,7 +302,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
       return;
     }
   
-    alert("Request rejected successfully.\nRequest reject हो गई।");
+    alert("Request deferred successfully.\nRequest स्थगित हो गई।");
   
     setProcessingRequestId(null);
     setRejectionReason("");
@@ -882,8 +882,8 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
               />
 
               <ReportCountCard
-                title="Rejected"
-                titleHi="अस्वीकृत"
+                title="Deferred"
+titleHi="स्थगित"
                 value={reportCounts.rejected}
                 active={reportFilter === "rejected"}
                 onClick={() => setReportFilter("rejected")}
@@ -985,7 +985,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
     type="text"
     value={rejectionReason}
     onChange={(event) => setRejectionReason(event.target.value)}
-    placeholder="Reject reason, optional"
+    placeholder="Deferred reason, optional"
     className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
   />
 
@@ -1120,9 +1120,9 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
                 disabled={processingRequestId === request.id}
                 className="rounded-2xl bg-red-100 px-5 py-3 text-sm font-bold text-red-700 disabled:opacity-60"
               >
-                Reject
+                Deferred
                 <span className="block text-xs font-normal">
-                  अनुरोध reject करें
+                  अनुरोध Deferred करें
                 </span>
               </button>
 
@@ -1345,7 +1345,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
 
               <ReportButton
                 active={reportFilter === "rejected"}
-                label="Rejected"
+                label="Deferred"
                 onClick={() => setReportFilter("rejected")}
               />
 
@@ -2108,19 +2108,19 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
                     }
                   />
 
-                  <ActionButton
-                    label="Reject"
-                    labelHi="अस्वीकृत"
-                    className="bg-stone-200 text-stone-700"
-                    disabled={isUpdatingAction}
-                    onClick={() =>
-                      handleSubmitAction({
-                        actionType: "status",
-                        title: "Rejected",
-                        newStatus: "Rejected",
-                      })
-                    }
-                  />
+<ActionButton
+  label="Deferred"
+  labelHi="स्थगित"
+  className="bg-stone-200 text-stone-700"
+  disabled={isUpdatingAction}
+  onClick={() =>
+    handleSubmitAction({
+      actionType: "status",
+      title: "Deferred",
+      newStatus: "Rejected",
+    })
+  }
+/>
                 </div>
               </div>
 
