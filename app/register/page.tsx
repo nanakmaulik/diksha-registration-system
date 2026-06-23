@@ -479,16 +479,7 @@ const [pincodeMessage, setPincodeMessage] = useState("");
         };
       }
       
-      if (
-        formData.parentVideoProofStatus !== "Both Parents" &&
-        !formData.parentVideoProofReason.trim()
-      ) {
-        return {
-          isValid: false,
-          message:
-            "Please enter reason/details for missing parent video proof.\nकृपया missing parent video proof का कारण लिखें।",
-        };
-      }
+     
     }
 
     if (currentStep === 4) {
@@ -613,7 +604,7 @@ const [pincodeMessage, setPincodeMessage] = useState("");
         p_family_relation: formData.familyRelation,
         p_family_mobile: formData.familyMobile,
 p_parent_video_proof_status: formData.parentVideoProofStatus,
-p_parent_video_proof_reason: formData.parentVideoProofReason,
+p_parent_video_proof_reason: "",
 p_id_type: formData.idType,
         p_id_number: formData.idNumber,
         p_aadhaar_file_url: aadhaarFileUrl,
@@ -1006,18 +997,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
   ]}
 />
 
-{formData.parentVideoProofStatus &&
-  formData.parentVideoProofStatus !== "Both Parents" && (
-    <TextareaField
-      labelEn="Missing Video Proof Reason"
-      labelHi="वीडियो प्रमाण न होने का कारण"
-      name="parentVideoProofReason"
-      value={formData.parentVideoProofReason}
-      onChange={handleChange}
-      placeholder="Example: Father is not available, mother video approval shown."
-      required
-    />
-  )}
+
             </StepCard>
           )}
 
@@ -1183,17 +1163,9 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                   label="Family Contact / परिवार संपर्क"
                   value={`${formData.familyName} (${formData.familyRelation}) - ${formData.familyMobile}`}
                 />
-                <ReviewRow
+               <ReviewRow
   label="Parent Video Proof / माता-पिता वीडियो प्रमाण"
-  value={
-    formData.parentVideoProofStatus === "Both Parents"
-      ? "Both Mother & Father video proof present"
-      : `${formData.parentVideoProofStatus || "-"}${
-          formData.parentVideoProofReason
-            ? ` - ${formData.parentVideoProofReason}`
-            : ""
-        }`
-  }
+  value={formData.parentVideoProofStatus || "-"}
 />
                 <ReviewRow
                   label="ID Proof / पहचान प्रमाण"
