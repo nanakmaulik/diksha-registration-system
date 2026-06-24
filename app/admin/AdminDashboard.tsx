@@ -161,6 +161,10 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
   const [actionNotes, setActionNotes] = useState("");
   const [updatedBy, setUpdatedBy] = useState("Sadhak");
   const [isUpdatingAction, setIsUpdatingAction] = useState(false);
+  const [tokenSuccess, setTokenSuccess] = useState<{
+    token: string;
+    name: string;
+  } | null>(null);
 
   const todayDate = getTodayDateString();
   const availableFinalMeetingSlots = slots.filter(
@@ -276,14 +280,12 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
   
     const generatedToken = Array.isArray(data) ? data[0]?.token : "";
   
-    alert(
-      `Request accepted successfully.\nToken generated: ${
-        generatedToken || "-"
-      }\n\nRequest accept हो गई।`
-    );
-  
+    setTokenSuccess({
+      token: generatedToken || "-",
+      name: request.full_name || "-",
+    });
+    
     setProcessingRequestId(null);
-    window.location.reload();
   }
   
   async function handleRejectRequest(request: RegistrationRequest) {
@@ -2404,6 +2406,63 @@ titleHi="स्थगित"
         </div>
       )}
 
+{tokenSuccess && (
+  <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
+    <div className="w-full max-w-xl rounded-3xl bg-white p-6 text-center shadow-2xl md:p-8">
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl font-extrabold text-green-700">
+        ✓
+      </div>
+
+      <h3 className="mt-5 text-3xl font-extrabold text-green-700">
+        Token Generated Successfully
+      </h3>
+
+      <p className="mt-2 text-xl font-bold text-orange-800">
+        टोकन सफलतापूर्वक बन गया
+      </p>
+
+      <p className="mt-5 text-sm font-semibold text-stone-600">
+        Candidate / उम्मीदवार
+      </p>
+
+      <p className="mt-1 text-2xl font-extrabold text-stone-900">
+        {tokenSuccess.name}
+      </p>
+
+      <div className="mt-6 rounded-3xl border-2 border-orange-300 bg-orange-50 p-6">
+        <p className="text-sm font-bold uppercase tracking-wide text-orange-800">
+          Token Number / टोकन नंबर
+        </p>
+
+        <p className="mt-3 text-6xl font-black text-orange-900 md:text-7xl">
+          {tokenSuccess.token}
+        </p>
+      </div>
+
+      <p className="mt-5 text-sm font-semibold text-stone-600">
+        Please note this token number and share it with the candidate.
+      </p>
+
+      <p className="text-sm font-semibold text-stone-600">
+        कृपया यह token number उम्मीदवार को बता दें।
+      </p>
+
+      <button
+        type="button"
+        onClick={() => {
+          setTokenSuccess(null);
+          window.location.reload();
+        }}
+        className="mt-7 w-full rounded-2xl bg-orange-700 px-5 py-4 text-lg font-extrabold text-white"
+      >
+        Back to Admin Dashboard
+        <span className="block text-sm font-normal">
+          वापस admin dashboard पर जाएं
+        </span>
+      </button>
+    </div>
+  </div>
+)}
       {selectedAadhaar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-xl">
