@@ -984,14 +984,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 placeholder="+91 9876543210 / +1 2125551234"
                 required
               />
-              <div className="rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
-  <p className="font-bold">
-    Parent Video Approval Proof
-  </p>
-  <p className="mt-1">
-    माता-पिता वीडियो सहमति प्रमाण
-  </p>
-</div>
+              
 
 <SelectField
   labelEn="Video Proof Present For"
