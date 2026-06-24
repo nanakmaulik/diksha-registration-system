@@ -18,8 +18,13 @@ function SuccessContent() {
 
   const mode = searchParams.get("mode") || "";
   const token = searchParams.get("token") || "-";
+  const requestId = searchParams.get("requestId") || "";
   const date = searchParams.get("date") || "-";
   const time = searchParams.get("time") || "-";
+
+  const requestReference = requestId
+    ? `RQ-${requestId.slice(-6).toUpperCase()}`
+    : "-";
 
   const isRequestMode = mode === "request";
 
@@ -43,16 +48,12 @@ function SuccessContent() {
           </div>
 
           <h1 className="mt-6 text-3xl font-extrabold text-green-700">
-            {isRequestMode
-              ? "Registration Request Received"
-              : "Registration Successful"}
-          </h1>
+  {isRequestMode ? "Registration Request Received" : "Registration Successful"}
+</h1>
 
-          <h2 className="mt-2 text-2xl font-bold text-orange-800">
-            {isRequestMode
-              ? "पंजीकरण अनुरोध प्राप्त हुआ"
-              : "पंजीकरण सफल हुआ"}
-          </h2>
+<h2 className="mt-2 text-2xl font-bold text-orange-800">
+  {isRequestMode ? "पंजीकरण अनुरोध प्राप्त हुआ" : "पंजीकरण सफल हुआ"}
+</h2>
 
           <p className="mt-4 text-stone-600">
             {isRequestMode
@@ -67,32 +68,54 @@ function SuccessContent() {
           </p>
 
           <div className="success-print-details mt-8 overflow-hidden rounded-2xl border border-orange-100 text-left">
-            {!isRequestMode && <InfoRow label="Token / टोकन" value={token} />}
+  {isRequestMode ? (
+    <>
+      <InfoRow label="Request Reference / अनुरोध संख्या" value={requestReference} />
+      <InfoRow
+        label="Token Status / टोकन स्थिति"
+        value="Token will be allotted after Sadhak verification"
+      />
+    </>
+  ) : (
+    <InfoRow label="Token / टोकन" value={token} />
+  )}
 
-            {isRequestMode && (
-              <InfoRow
-                label="Token Status / टोकन स्थिति"
-                value="Token will be allotted after Sadhak verification"
-              />
-            )}
-
-            <InfoRow
-              label="Meeting Date / मीटिंग तारीख"
-              value={formatDate(date)}
-            />
-
-            <InfoRow label="Meeting Time / मीटिंग समय" value={time} />
-          </div>
+  <InfoRow
+    label="Meeting Date / मीटिंग तारीख"
+    value={formatDate(date)}
+  />
+  <InfoRow label="Meeting Time / मीटिंग समय" value={time} />
+</div>
 
           <div className="success-print-instructions mt-8 rounded-2xl bg-orange-50 p-5 text-left text-sm text-stone-700">
             <p className="font-bold">Important Instructions:</p>
 
             {isRequestMode ? (
               <>
-                <p className="mt-2">
-                  Please visit the Token Confirmation Desk. Your token will be
-                  allotted only after verification by a Sadhak.
-                </p>
+               {isRequestMode ? (
+  <>
+    <p className="mt-2">
+      Your token is not generated yet. Please visit the Token Confirmation Desk
+      on your selected meeting date.
+    </p>
+    <p className="mt-1">
+      आपका टोकन अभी जारी नहीं हुआ है। कृपया चुनी हुई मीटिंग तारीख पर Token
+      Confirmation Desk पर जाएं।
+    </p>
+    <p className="mt-2 font-bold text-orange-900">
+      Please keep your Request Reference safe: {requestReference}
+    </p>
+  </>
+) : (
+  <>
+    <p className="mt-2">
+      Please come on your selected date and time with your original ID proof.
+    </p>
+    <p className="mt-1">
+      कृपया चुनी हुई तारीख और समय पर अपना असली पहचान प्रमाण साथ लेकर आएं।
+    </p>
+  </>
+)}
                 <p className="mt-1">
                   कृपया टोकन कन्फर्मेशन डेस्क पर जाएं। Sadhak द्वारा सत्यापन के
                   बाद ही आपका टोकन दिया जाएगा।

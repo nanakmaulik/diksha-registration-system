@@ -632,13 +632,23 @@ p_id_type: formData.idType,
   
       const result = Array.isArray(data) ? data[0] : data;
   
-      router.push(
-        `/success?mode=request&date=${encodeURIComponent(
-          result?.requested_meeting_date || selectedSlot?.slot_date || ""
-        )}&time=${encodeURIComponent(
-          result?.requested_meeting_time || selectedSlot?.slot_time || ""
-        )}`
-      );
+      const requestId = Array.isArray(data)
+      ? data[0]?.request_id
+      : data?.request_id;
+    
+    const requestedMeetingDate = Array.isArray(data)
+      ? data[0]?.requested_meeting_date
+      : data?.requested_meeting_date;
+    
+    const requestedMeetingTime = Array.isArray(data)
+      ? data[0]?.requested_meeting_time
+      : data?.requested_meeting_time;
+    
+    router.push(
+      `/success?mode=request&requestId=${requestId || ""}&date=${
+        requestedMeetingDate || selectedSlot?.slot_date || ""
+      }&time=${requestedMeetingTime || selectedSlot?.slot_time || ""}`
+    );
     } catch (error) {
       alert("Unexpected error. Please try again.");
       console.error(error);

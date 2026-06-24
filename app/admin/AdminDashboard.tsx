@@ -1122,6 +1122,9 @@ titleHi="स्थगित"
     <p className="text-2xl font-extrabold text-stone-900">
       {request.full_name || "-"}
     </p>
+    <p className="mt-1 inline-flex rounded-full bg-orange-100 px-3 py-1 text-xs font-extrabold text-orange-900">
+  Ref: RQ-{request.id.slice(-6).toUpperCase()}
+</p>
 
     <div className="mt-2 flex flex-wrap gap-2">
       <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-900">
