@@ -151,6 +151,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
   const [selectedAction, setSelectedAction] = useState<{
     registrationId: string;
     candidateName: string;
+    workflow: "final_meeting" | "diksha";
     actionType: "status" | "attendance";
     title: string;
     newStatus?: string;
@@ -1442,7 +1443,7 @@ titleHi="स्थगित"
 
               <ReportButton
                 active={reportFilter === "scheduled_final_meetings"}
-                label="Scheduled Final Meetings"
+                label="Final Meeting List"
                 onClick={() => setReportFilter("scheduled_final_meetings")}
               />
 
@@ -1466,7 +1467,7 @@ titleHi="स्थगित"
 
               <ReportButton
                 active={reportFilter === "scheduled_diksha"}
-                label="Scheduled Diksha"
+                label="Diksha List"
                 onClick={() => setReportFilter("scheduled_diksha")}
               />
 
@@ -1639,6 +1640,7 @@ titleHi="स्थगित"
                               setSelectedAction({
                                 registrationId: person.id,
                                 candidateName: person.full_name || person.token,
+                                workflow: isDikshaCandidate(person) ? "diksha" : "final_meeting",
                                 actionType: "status",
                                 title: "Manage Candidate",
                                 newStatus: person.candidate_status || person.status,
@@ -1650,10 +1652,10 @@ titleHi="स्थगित"
                             }}
                             className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
                           >
-                            Manage
+                            {isDikshaCandidate(person) ? "Manage Diksha" : "Manage Meeting"}
                             <span className="block text-[10px] font-normal">
-                              अपडेट करें
-                            </span>
+  {isDikshaCandidate(person) ? "दीक्षा अपडेट करें" : "मीटिंग अपडेट करें"}
+</span>
                           </button>
 
                           <button
@@ -2139,7 +2141,11 @@ titleHi="स्थगित"
       {selectedAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
-            <h3 className="text-2xl font-extrabold">Manage Candidate</h3>
+          <h3 className="text-2xl font-extrabold">
+  {selectedAction.workflow === "diksha"
+    ? "Manage Diksha Candidate"
+    : "Manage Final Meeting Candidate"}
+</h3>
             <p className="mt-1 text-sm text-stone-600">
               Candidate: {selectedAction.candidateName}
             </p>
@@ -2168,6 +2174,7 @@ titleHi="स्थगित"
                   placeholder="Enter notes or remarks"
                 />
               </div>
+              {selectedAction.workflow === "final_meeting" && (
               <div className="rounded-2xl bg-orange-50 p-4">
   <h4 className="font-extrabold">Reschedule Final Meeting</h4>
   <p className="text-sm text-stone-600">फाइनल मीटिंग तारीख बदलें</p>
@@ -2289,10 +2296,11 @@ titleHi="स्थगित"
     </span>
   </button>
 </div>
+)}
 
   
 
-
+{selectedAction.workflow === "diksha" && (
               <div className="rounded-2xl bg-purple-50 p-4">
                 <h4 className="font-extrabold">Diksha Actions</h4>
                 <p className="text-sm text-stone-600">दीक्षा कार्यवाही</p>
@@ -2377,7 +2385,9 @@ titleHi="स्थगित"
                   />
                 </div>
               </div>
+              )}
             </div>
+            
 
             <div className="mt-6">
               <button
@@ -2645,6 +2655,25 @@ function formatIdType(idType: string | null) {
   if (idType === "other") return "Other Government ID";
 
   return idType;
+}
+function isFinalMeetingCandidate(person: Registration) {
+  const status = person.candidate_status || person.status || "";
+
+  return (
+    status === "Scheduled for Final Meeting" ||
+    status === "Pending" ||
+    status === "Rejected"
+  );
+}
+
+function isDikshaCandidate(person: Registration) {
+  const status = person.candidate_status || person.status || "";
+
+  return (
+    status === "Approved" ||
+    status === "Scheduled for Diksha" ||
+    status === "Diksha Completed"
+  );
 }
 function csvEscape(value: string) {
   const cleanedValue = value.replace(/\n/g, " ").replace(/\r/g, " ");
