@@ -793,6 +793,15 @@ p_id_type: formData.idType,
               subtitleHi="भारत और विदेश दोनों के पते स्वीकार हैं।"
             >
               <InputField
+    labelEn="Postal / ZIP Code"
+    labelHi="पोस्टल / ज़िप कोड"
+    name="pinCode"
+    value={formData.pinCode}
+    onChange={handleChange}
+    placeholder="143001, 10001, SW1A 1AA, etc."
+    required
+  />
+              <InputField
                 labelEn="Mobile Number"
                 labelHi="मोबाइल नंबर"
                 name="mobile"
@@ -883,15 +892,7 @@ p_id_type: formData.idType,
               />
 
 <div>
-  <InputField
-    labelEn="Postal / ZIP Code"
-    labelHi="पोस्टल / ज़िप कोड"
-    name="pinCode"
-    value={formData.pinCode}
-    onChange={handleChange}
-    placeholder="143001, 10001, SW1A 1AA, etc."
-    required
-  />
+  
 
   {formData.country === "India" &&
     (isPincodeLoading || pincodeMessage) && (
