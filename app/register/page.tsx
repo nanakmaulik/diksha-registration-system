@@ -779,6 +779,7 @@ p_id_type: formData.idType,
                   ["Married", "Married / विवाहित"],
                   ["Widowed", "Widowed / विधवा / विधुर"],
                   ["Divorced", "Divorced / तलाकशुदा"],
+                  ["Virakt", "Virakt / विरक्त"],
                 ]}
               />
             </StepCard>
