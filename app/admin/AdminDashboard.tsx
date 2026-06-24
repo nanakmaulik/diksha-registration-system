@@ -1107,7 +1107,7 @@ titleHi="स्थगित"
           key={request.id}
           className="rounded-3xl border border-orange-100 bg-orange-50 p-5"
         >
-         <div className="grid gap-4 md:grid-cols-[auto_1.5fr_1fr_1fr_auto] md:items-start">
+        <div className="grid gap-4 md:grid-cols-[auto_1.6fr_1fr_1fr_auto] md:items-start">
   <div className="pt-1">
     <input
       type="checkbox"
@@ -1119,95 +1119,144 @@ titleHi="स्थगित"
   </div>
 
   <div>
-    <p className="text-lg font-extrabold text-stone-900">
+    <p className="text-2xl font-extrabold text-stone-900">
       {request.full_name || "-"}
     </p>
-              <p className="text-sm font-semibold text-stone-600">
-                {request.gender || "-"} · Age {request.age || "-"} ·{" "}
-                {request.marital_status || "-"}
-              </p>
-              <p className="mt-2 text-sm text-stone-600">
-                Mobile: {request.mobile || "-"}
-                {request.whatsapp ? ` · WhatsApp: ${request.whatsapp}` : ""}
-              </p>
-              <p className="mt-2 rounded-xl bg-white px-3 py-2 text-sm font-bold text-orange-900">
-  ID Proof: {formatIdType(request.id_type)} - {request.id_number || "-"}
-</p>
-            </div>
 
-            <div>
-              <p className="text-xs font-bold text-stone-500">
-                Requested Meeting
-              </p>
-              <p className="font-bold text-orange-800">
-                {request.requested_meeting_date
-                  ? formatDate(request.requested_meeting_date)
-                  : "-"}
-              </p>
-              <p className="text-sm font-semibold text-stone-600">
-                {request.requested_meeting_time || "-"}
-              </p>
-            </div>
+    <div className="mt-2 flex flex-wrap gap-2">
+      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-900">
+        {request.gender || "-"}
+      </span>
+      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-900">
+        Age {request.age || "-"}
+      </span>
+      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-900">
+        {request.marital_status || "-"}
+      </span>
+    </div>
 
-            <div>
-              <p className="text-xs font-bold text-stone-500">
-                Family Approval
-              </p>
-              <p className="text-sm font-semibold text-stone-700">
-                {request.marital_status === "Married"
-                  ? `Husband / Wife: ${request.spouse_name || "-"}`
-                  : `Father: ${request.father_name || "-"} / Mother: ${
-                      request.mother_name || "-"
-                    }`}
-              </p>
-              <p className="mt-1 text-xs text-stone-600">
-                Family: {request.family_name || "-"} (
-                {request.family_relation || "-"})
-              </p>
-            </div>
+    <div className="mt-3 grid gap-2">
+      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-stone-800 shadow-sm">
+        Mobile: {request.mobile || "-"}
+        {request.whatsapp ? (
+          <span className="block text-sm font-semibold text-stone-600">
+            WhatsApp: {request.whatsapp}
+          </span>
+        ) : null}
+      </div>
 
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => handleApproveRequest(request)}
-                disabled={processingRequestId === request.id}
-                className="rounded-2xl bg-green-700 px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
-              >
-                Accept & Generate Token
-                <span className="block text-xs font-normal">
-                  Accept करके token बनाएं
-                </span>
-              </button>
+      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-orange-900 shadow-sm">
+        ID Proof: {formatIdType(request.id_type)} - {request.id_number || "-"}
+      </div>
 
-              <button
-                type="button"
-                onClick={() => handleRejectRequest(request)}
-                disabled={processingRequestId === request.id}
-                className="rounded-2xl bg-red-100 px-5 py-3 text-sm font-bold text-red-700 disabled:opacity-60"
-              >
-                Deferred
-                <span className="block text-xs font-normal">
-                  अनुरोध Deferred करें
-                </span>
-              </button>
+      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-stone-800 shadow-sm">
+        Present Family Representative: {request.family_name || "-"}
+        <span className="block text-sm font-semibold text-stone-600">
+          Relation: {request.family_relation || "-"}
+        </span>
+      </div>
+    </div>
+  </div>
 
-              {request.aadhaar_file_url && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelectedAadhaar({
-                      url: request.aadhaar_file_url || "",
-                      name: request.aadhaar_file_name || request.full_name,
-                    })
-                  }
-                  className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-orange-800"
-                >
-                  View ID
-                  <span className="block text-xs font-normal">ID देखें</span>
-                </button>
-              )}
-            </div>
-          </div>
+  <div className="space-y-3">
+    <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+        Requested Meeting
+      </p>
+      <p className="mt-1 text-xl font-extrabold text-orange-800">
+        {request.requested_meeting_date
+          ? formatDate(request.requested_meeting_date)
+          : "-"}
+      </p>
+      <p className="text-base font-bold text-stone-700">
+        {request.requested_meeting_time || "-"}
+      </p>
+    </div>
+
+    <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+        Location
+      </p>
+      <p className="mt-1 text-sm font-bold text-stone-800">
+        {request.city || "-"}, {request.state || "-"}
+      </p>
+      <p className="text-sm text-stone-600">
+        {request.country || "-"} {request.pin_code ? `- ${request.pin_code}` : ""}
+      </p>
+    </div>
+  </div>
+
+  <div className="space-y-3">
+    <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+        Family Approval
+      </p>
+      <p className="mt-1 text-base font-extrabold text-stone-800">
+        {request.marital_status === "Married"
+          ? `Husband / Wife: ${request.spouse_name || "-"}`
+          : `Father: ${request.father_name || "-"} / Mother: ${
+              request.mother_name || "-"
+            }`}
+      </p>
+    </div>
+
+    <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+        Quick Address
+      </p>
+      <p className="mt-1 text-sm font-semibold text-stone-700">
+        {request.address || "-"}
+      </p>
+    </div>
+  </div>
+
+  <div className="flex flex-col gap-2">
+    <button
+      type="button"
+      onClick={() => handleApproveRequest(request)}
+      disabled={processingRequestId === request.id}
+      className="rounded-2xl bg-green-700 px-5 py-3 text-sm font-bold text-white disabled:opacity-60"
+    >
+      Accept & Generate Token
+      <span className="block text-xs font-normal">
+        Accept करके token बनाएं
+      </span>
+    </button>
+
+    <button
+      type="button"
+      onClick={() => handleRejectRequest(request)}
+      disabled={processingRequestId === request.id}
+      className="rounded-2xl bg-red-100 px-5 py-3 text-sm font-bold text-red-700 disabled:opacity-60"
+    >
+      Deferred
+      <span className="block text-xs font-normal">
+        अनुरोध Deferred करें
+      </span>
+    </button>
+
+    {request.aadhaar_file_url && (
+      <button
+        type="button"
+        onClick={() =>
+          setSelectedAadhaar({
+            url: request.aadhaar_file_url || "",
+            name: request.aadhaar_file_name || request.full_name,
+          })
+        }
+        className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-orange-800"
+      >
+        View ID
+        <span className="block text-xs font-normal">ID देखें</span>
+      </button>
+    )}
+  </div>
+</div>
+
+<div className="mt-4 rounded-2xl bg-white p-4 text-sm text-stone-700">
+  <p className="font-bold">Full Address:</p>
+  <p>{request.address || "-"}</p>
+</div>
 
           <div className="mt-4 rounded-2xl bg-white p-4 text-sm text-stone-700">
             <p className="font-bold">Address:</p>
