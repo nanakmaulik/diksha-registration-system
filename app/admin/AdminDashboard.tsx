@@ -168,7 +168,10 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
 
   const todayDate = getTodayDateString();
   const availableFinalMeetingSlots = slots.filter(
-    (slot) => slot.status !== "full" && slot.current_count < slot.capacity
+    (slot) =>
+      slot.status !== "full" &&
+      slot.current_count < slot.capacity &&
+      slot.slot_date >= todayDate
   );
   
   const finalMeetingMonths = Array.from(
@@ -688,7 +691,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
 
   const upcomingSlots = slots
     .filter((slot) => slot.status !== "full" && slot.slot_date >= tomorrowDate)
-    .slice(0, showAllSlots ? slots.length : 6);
+    .slice(0, showAllSlots ? 30 : 6);
 
   const selectedDateLabel =
     slotDate === "all" ? "All Slots" : formatDate(slotDate);
@@ -1295,79 +1298,72 @@ titleHi="स्थगित"
               onClick={() => setShowAllSlots((prev) => !prev)}
               className="rounded-2xl border border-orange-300 px-5 py-3 font-bold text-orange-800"
             >
-              {showAllSlots ? "Show Less" : "View All Slots"}
+              {showAllSlots ? "Show Less" : "View Next 30"}
               <span className="block text-sm font-normal">
-                {showAllSlots ? "कम दिखाएं" : "सभी स्लॉट देखें"}
+              {showAllSlots ? "कम दिखाएं" : "अगली 30 तारीखें देखें"}
               </span>
             </button>
           </div>
 
           {upcomingSlots.length === 0 ? (
-            <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
-              No available slots found.
-              <span className="block text-sm font-normal">
-                कोई उपलब्ध स्लॉट नहीं मिला।
-              </span>
+  <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
+    No available slots found.
+    <span className="block text-sm font-normal">
+      कोई उपलब्ध स्लॉट नहीं मिला।
+    </span>
+  </div>
+) : (
+  <div className="overflow-hidden rounded-3xl border border-orange-100 bg-white">
+    <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr] bg-orange-100 px-4 py-3 text-sm font-extrabold text-orange-900">
+      <p>Date</p>
+      <p>Time</p>
+      <p>Filled</p>
+      <p>Left</p>
+      <p>Status</p>
+    </div>
+
+    <div className="max-h-[420px] overflow-y-auto">
+      {upcomingSlots.map((slot) => {
+        const seatsLeft = slot.capacity - slot.current_count;
+        const isSelected = slotDate === slot.slot_date;
+
+        return (
+          <button
+            key={slot.id}
+            type="button"
+            onClick={() => setSlotDate(slot.slot_date)}
+            className={`grid w-full grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr] items-center border-t border-orange-100 px-4 py-3 text-left text-sm transition hover:bg-orange-50 ${
+              isSelected ? "bg-orange-50" : "bg-white"
+            }`}
+          >
+            <div>
+              <p className="font-extrabold text-stone-900">
+                {formatDate(slot.slot_date)}
+              </p>
+              {isSelected && (
+                <p className="text-xs font-bold text-orange-800">
+                  Selected / चुना हुआ
+                </p>
+              )}
             </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              {upcomingSlots.map((slot) => {
-                const seatsLeft = slot.capacity - slot.current_count;
-                const progress =
-                  slot.capacity > 0
-                    ? (slot.current_count / slot.capacity) * 100
-                    : 0;
 
-                return (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    onClick={() => setSlotDate(slot.slot_date)}
-                    className={`rounded-2xl border p-5 text-left transition hover:border-orange-400 ${
-                      slotDate === slot.slot_date
-                        ? "border-orange-500 bg-orange-100"
-                        : "border-orange-100 bg-orange-50"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-lg font-extrabold">
-                          {formatDate(slot.slot_date)}
-                        </p>
-                        <p className="text-sm font-semibold text-stone-600">
-                          {slot.slot_time}
-                        </p>
-                      </div>
+            <p className="font-bold text-stone-700">{slot.slot_time}</p>
 
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-                        Open
-                      </span>
-                    </div>
+            <p className="font-bold text-stone-700">
+              {slot.current_count}/{slot.capacity}
+            </p>
 
-                    <div className="mt-5">
-                      <div className="mb-2 flex justify-between text-sm font-bold">
-                        <span>
-                          {slot.current_count}/{slot.capacity}
-                        </span>
-                        <span>{seatsLeft} seats left</span>
-                      </div>
+            <p className="font-bold text-orange-800">{seatsLeft}</p>
 
-                      <div className="h-3 overflow-hidden rounded-full bg-white">
-                        <div
-                          className="h-full rounded-full bg-orange-700"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    <p className="mt-3 text-xs font-semibold text-orange-800">
-                      Click to filter registrations / पंजीकरण देखने के लिए क्लिक करें
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+            <span className="w-fit rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+              Open
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+)}
         </section>
 
         <section className="rounded-3xl bg-white p-5 shadow-sm md:p-6">
@@ -1648,9 +1644,7 @@ titleHi="स्थगित"
                                 newStatus: person.candidate_status || person.status,
                               });
                               setFinalMeetingSlotId(person.slots?.slot_date ? person.slot_id || "" : "");
-                              setFinalMeetingMonth(
-                                person.slots?.slot_date ? person.slots.slot_date.slice(0, 7) : ""
-                              );
+                              setFinalMeetingMonth("");
                               setDikshaDate(person.diksha_date || "");
                               setDikshaTime(person.diksha_time || "3:30 PM");
                             }}
