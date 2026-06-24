@@ -1107,11 +1107,11 @@ titleHi="स्थगित"
       </span>
     </div>
   ) : (
-    <div className="grid gap-4">
-      {pendingRequests.map((request) => (
+    <div className="max-h-[650px] space-y-4 overflow-y-auto rounded-3xl border border-orange-100 bg-white p-4 pr-3">
+  {pendingRequests.map((request) => (
         <div
           key={request.id}
-          className="rounded-3xl border border-orange-100 bg-orange-50 p-5"
+          className="rounded-3xl border border-orange-100 bg-orange-50 p-5 shadow-sm"
         >
         <div className="grid gap-4 md:grid-cols-[auto_1.6fr_1fr_1fr_auto] md:items-start">
   <div className="pt-1">
@@ -1262,10 +1262,7 @@ titleHi="स्थगित"
   </div>
 </div>
 
-<div className="mt-4 rounded-2xl bg-white p-4 text-sm text-stone-700">
-  <p className="font-bold">Full Address:</p>
-  <p>{request.address || "-"}</p>
-</div>
+
 
           <div className="mt-4 rounded-2xl bg-white p-4 text-sm text-stone-700">
             <p className="font-bold">Address:</p>
