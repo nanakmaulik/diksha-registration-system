@@ -981,7 +981,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                   ["Sister", "Sister / बहन"],
                   ["Son", "Son / पुत्र"],
                   ["Daughter", "Daughter / पुत्री"],
-                  ["Friend", "Friend / मित्र"],
+                  
                   ["Other", "Other / अन्य"],
                 ]}
               />
