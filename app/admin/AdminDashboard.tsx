@@ -131,7 +131,10 @@ const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
   useState(false);
   const [printMode, setPrintMode] = useState<"list" | "forms">("list");
   const [isBulkScheduling, setIsBulkScheduling] = useState(false);
-
+  const [attendanceDate, setAttendanceDate] = useState(getTodayDateString());
+  const [selectedAttendanceIds, setSelectedAttendanceIds] = useState<string[]>([]);
+  const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
+  const [attendanceUpdatedBy, setAttendanceUpdatedBy] = useState("Sadhak");
   const [requestUpdatedBy, setRequestUpdatedBy] = useState("Sadhak");
 const [rejectionReason, setRejectionReason] = useState("");
 const [processingRequestId, setProcessingRequestId] = useState<string | null>(
@@ -478,7 +481,100 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
     setIsDeletingRequests(false);
     window.location.reload();
   }
-
+  function handleToggleAttendanceSelection(registrationId: string) {
+    setSelectedAttendanceIds((prev) =>
+      prev.includes(registrationId)
+        ? prev.filter((id) => id !== registrationId)
+        : [...prev, registrationId]
+    );
+  }
+  
+  function handleToggleAllAttendance() {
+    const notPresentIds = finalMeetingAttendanceList
+      .filter((person) => person.final_meeting_attendance !== "Present")
+      .map((person) => person.id);
+  
+    if (notPresentIds.length === 0) return;
+  
+    const allSelected = notPresentIds.every((id) =>
+      selectedAttendanceIds.includes(id)
+    );
+  
+    if (allSelected) {
+      setSelectedAttendanceIds([]);
+      return;
+    }
+  
+    setSelectedAttendanceIds(notPresentIds);
+  }
+  
+  async function handleMarkSingleAttendancePresent(person: Registration) {
+    if (!attendanceUpdatedBy.trim()) {
+      alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
+      return;
+    }
+  
+    const confirmed = window.confirm(
+      `Mark ${person.full_name || person.token} as Present?\n\nक्या आप attendance Present mark करना चाहते हैं?`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsMarkingAttendance(true);
+  
+    const { error } = await supabase.rpc("mark_final_meeting_present", {
+      p_registration_id: person.id,
+      p_updated_by: attendanceUpdatedBy.trim(),
+      p_notes: "Marked from attendance list",
+    });
+  
+    if (error) {
+      alert("Attendance update error: " + error.message);
+      setIsMarkingAttendance(false);
+      return;
+    }
+  
+    setIsMarkingAttendance(false);
+    window.location.reload();
+  }
+  
+  async function handleMarkSelectedAttendancePresent() {
+    if (selectedAttendanceIds.length === 0) {
+      alert("Please select candidates first.\nकृपया पहले candidates select करें।");
+      return;
+    }
+  
+    if (!attendanceUpdatedBy.trim()) {
+      alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
+      return;
+    }
+  
+    const confirmed = window.confirm(
+      `Mark ${selectedAttendanceIds.length} selected candidate(s) as Present?\n\nSelected candidates की attendance Present mark होगी और status Approved हो जाएगा.`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsMarkingAttendance(true);
+  
+    for (const registrationId of selectedAttendanceIds) {
+      const { error } = await supabase.rpc("mark_final_meeting_present", {
+        p_registration_id: registrationId,
+        p_updated_by: attendanceUpdatedBy.trim(),
+        p_notes: "Marked from bulk attendance list",
+      });
+  
+      if (error) {
+        alert("Attendance update error: " + error.message);
+        setIsMarkingAttendance(false);
+        return;
+      }
+    }
+  
+    setSelectedAttendanceIds([]);
+    setIsMarkingAttendance(false);
+    window.location.reload();
+  }
   async function handleBulkScheduleNextDayDiksha() {
     if (slotDate === "all") {
       alert(
@@ -689,6 +785,22 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
   );
 
   const tomorrowDate = getTomorrowDateString();
+  const finalMeetingAttendanceList = useMemo(() => {
+    return registrations.filter((person) => {
+      const meetingDate = person.slots?.slot_date || person.final_meeting_date;
+      const statusValue = person.candidate_status || person.status || "";
+  
+      return (
+        meetingDate === attendanceDate &&
+        (
+          statusValue === "Scheduled for Final Meeting" ||
+          statusValue === "Pending" ||
+          statusValue === "Rejected" ||
+          statusValue === "Approved"
+        )
+      );
+    });
+  }, [registrations, attendanceDate]);
 
   const upcomingSlots = slots
     .filter((slot) => slot.status !== "full" && slot.slot_date >= tomorrowDate)
@@ -1019,6 +1131,169 @@ titleHi="स्थगित"
             </div>
           </div>
         </section>
+        <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
+  <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h3 className="text-2xl font-extrabold">
+        Final Meeting Attendance
+      </h3>
+      <h4 className="mt-1 text-xl font-bold text-orange-800">
+        फाइनल मीटिंग उपस्थिति
+      </h4>
+      <p className="mt-2 text-sm text-stone-600">
+        Select a meeting date and mark candidates present as they arrive.
+      </p>
+      <p className="text-sm text-stone-600">
+        मीटिंग तारीख चुनें और आने वाले candidates को Present mark करें।
+      </p>
+    </div>
+
+    <div className="rounded-2xl bg-green-100 px-5 py-3 text-center">
+      <p className="text-sm font-bold text-green-800">Present</p>
+      <p className="text-3xl font-extrabold text-green-800">
+        {
+          finalMeetingAttendanceList.filter(
+            (person) => person.final_meeting_attendance === "Present"
+          ).length
+        }
+        /{finalMeetingAttendanceList.length}
+      </p>
+    </div>
+  </div>
+
+  <div className="mb-5 grid gap-3 md:grid-cols-[220px_1fr_auto_auto]">
+    <select
+      value={attendanceDate}
+      onChange={(event) => {
+        setAttendanceDate(event.target.value);
+        setSelectedAttendanceIds([]);
+      }}
+      className="rounded-2xl border border-orange-200 bg-white px-4 py-3 font-bold outline-none focus:border-orange-600"
+    >
+      {slots.map((slot) => (
+        <option key={slot.id} value={slot.slot_date}>
+          {formatDate(slot.slot_date)}
+        </option>
+      ))}
+    </select>
+
+    <input
+      type="text"
+      value={attendanceUpdatedBy}
+      onChange={(event) => setAttendanceUpdatedBy(event.target.value)}
+      placeholder="Sadhak name"
+      className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+    />
+
+    <button
+      type="button"
+      onClick={handleToggleAllAttendance}
+      className="rounded-2xl border border-orange-300 px-4 py-3 text-sm font-bold text-orange-800"
+    >
+      Select All Pending
+      <span className="block text-xs font-normal">
+        pending सभी चुनें
+      </span>
+    </button>
+
+    <button
+      type="button"
+      onClick={handleMarkSelectedAttendancePresent}
+      disabled={selectedAttendanceIds.length === 0 || isMarkingAttendance}
+      className="rounded-2xl bg-green-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+    >
+      {isMarkingAttendance
+        ? "Marking..."
+        : `Mark Present (${selectedAttendanceIds.length})`}
+      <span className="block text-xs font-normal">
+        Present mark करें
+      </span>
+    </button>
+  </div>
+
+  {finalMeetingAttendanceList.length === 0 ? (
+    <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
+      No candidates found for this meeting date.
+      <span className="block text-sm font-normal">
+        इस तारीख के लिए कोई candidate नहीं मिला।
+      </span>
+    </div>
+  ) : (
+    <div className="max-h-[520px] overflow-y-auto rounded-3xl border border-orange-100 bg-white">
+      <div className="grid grid-cols-[50px_1.4fr_1fr_1fr_1fr_auto] bg-orange-100 px-4 py-3 text-sm font-extrabold text-orange-900">
+        <p></p>
+        <p>Name</p>
+        <p>Token</p>
+        <p>Mobile</p>
+        <p>Attendance</p>
+        <p>Action</p>
+      </div>
+
+      {finalMeetingAttendanceList.map((person) => {
+        const isPresent = person.final_meeting_attendance === "Present";
+
+        return (
+          <div
+            key={person.id}
+            className={`grid grid-cols-[50px_1.4fr_1fr_1fr_1fr_auto] items-center border-t border-orange-100 px-4 py-3 text-sm ${
+              isPresent ? "bg-green-50" : "bg-white"
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={
+                isPresent || selectedAttendanceIds.includes(person.id)
+              }
+              disabled={isPresent}
+              onChange={() => handleToggleAttendanceSelection(person.id)}
+              className="h-5 w-5 accent-green-700 disabled:opacity-50"
+            />
+
+            <div>
+              <p className="font-extrabold text-stone-900">
+                {person.full_name || "-"}
+              </p>
+              <p className="text-xs font-semibold text-stone-500">
+                {person.gender || "-"} · Age {person.age || "-"} ·{" "}
+                {person.marital_status || "-"}
+              </p>
+            </div>
+
+            <p className="font-extrabold text-orange-900">
+              {person.token || "-"}
+            </p>
+
+            <p className="font-bold text-stone-700">
+              {showFullMobile ? person.mobile : maskMobile(person.mobile)}
+            </p>
+
+            <span
+              className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${
+                isPresent
+                  ? "bg-green-100 text-green-700"
+                  : "bg-orange-100 text-orange-800"
+              }`}
+            >
+              {isPresent ? "Present" : "Not Marked"}
+            </span>
+
+            <button
+              type="button"
+              disabled={isPresent || isMarkingAttendance}
+              onClick={() => handleMarkSingleAttendancePresent(person)}
+              className="rounded-2xl bg-green-700 px-4 py-2 text-xs font-bold text-white disabled:bg-stone-200 disabled:text-stone-500"
+            >
+              {isPresent ? "Done" : "Mark Present"}
+              <span className="block text-[10px] font-normal">
+                {isPresent ? "हो गया" : "उपस्थित"}
+              </span>
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</section>
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
   <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <div>
