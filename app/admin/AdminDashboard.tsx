@@ -550,7 +550,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
     }
   
     const confirmed = window.confirm(
-      `Mark ${selectedAttendanceIds.length} selected candidate(s) as Present?\n\nSelected candidates की attendance Present mark होगी और status Approved हो जाएगा.`
+      `Mark ${selectedAttendanceIds.length} selected candidate(s) as Present?\n\nSelected candidates की attendance Present mark होगी और status Final Meeting Attended हो जाएगा.`
     );
   
     if (!confirmed) return;
@@ -660,6 +660,9 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
       if (reportFilter === "approved") {
         matchesReport = statusValue === "Approved";
       }
+      if (reportFilter === "final_meeting_attended") {
+        matchesReport = statusValue === "Final Meeting Attended";
+      }
 
       if (reportFilter === "rejected") {
         matchesReport = statusValue === "Rejected";
@@ -716,6 +719,10 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
     const approved = registrations.filter(
       (person) => (person.candidate_status || person.status) === "Approved"
     ).length;
+    const finalMeetingAttended = registrations.filter(
+      (person) =>
+        (person.candidate_status || person.status) === "Final Meeting Attended"
+    ).length;
 
     const rejected = registrations.filter(
       (person) => (person.candidate_status || person.status) === "Rejected"
@@ -764,6 +771,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
       scheduledFinalMeetings,
       pending,
       approved,
+      finalMeetingAttended,
       rejected,
       scheduledDiksha,
       dikshaCompleted,
@@ -796,7 +804,7 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
           statusValue === "Scheduled for Final Meeting" ||
           statusValue === "Pending" ||
           statusValue === "Rejected" ||
-          statusValue === "Approved"
+          statusValue === "Final Meeting Attended"
         )
       );
     });
@@ -1064,7 +1072,13 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
                 active={reportFilter === "approved"}
                 onClick={() => setReportFilter("approved")}
               />
-
+<ReportCountCard
+  title="Final Meeting Attended"
+  titleHi="फाइनल मीटिंग उपस्थित"
+  value={reportCounts.finalMeetingAttended}
+  active={reportFilter === "final_meeting_attended"}
+  onClick={() => setReportFilter("final_meeting_attended")}
+/>
               <ReportCountCard
                 title="Deferred"
 titleHi="स्थगित"
@@ -1730,7 +1744,11 @@ titleHi="स्थगित"
                 label="Approved"
                 onClick={() => setReportFilter("approved")}
               />
-
+<ReportButton
+  active={reportFilter === "final_meeting_attended"}
+  label="Final Meeting Attended"
+  onClick={() => setReportFilter("final_meeting_attended")}
+/>
               <ReportButton
                 active={reportFilter === "rejected"}
                 label="Deferred"
@@ -2571,7 +2589,57 @@ titleHi="स्थगित"
 )}
 
   
+{selectedAction.workflow === "final_meeting" && (
+  <div className="rounded-2xl bg-orange-50 p-4">
+    <h4 className="font-extrabold">Final Meeting Actions</h4>
+    <p className="text-sm text-stone-600">फाइनल मीटिंग कार्यवाही</p>
 
+    <div className="mt-4 grid gap-3 md:grid-cols-2">
+      <ActionButton
+        label="Pending"
+        labelHi="लंबित"
+        className="bg-red-100 text-red-700"
+        disabled={isUpdatingAction}
+        onClick={() =>
+          handleSubmitAction({
+            actionType: "attendance",
+            title: "Final Meeting Pending",
+            attendanceType: "Final Meeting",
+            attendanceValue: "Absent",
+          })
+        }
+      />
+
+      <ActionButton
+        label="Deferred"
+        labelHi="स्थगित"
+        className="bg-stone-200 text-stone-700"
+        disabled={isUpdatingAction}
+        onClick={() =>
+          handleSubmitAction({
+            actionType: "status",
+            title: "Deferred",
+            newStatus: "Rejected",
+          })
+        }
+      />
+
+      <ActionButton
+        label="Approve for Diksha"
+        labelHi="दीक्षा के लिए स्वीकृत"
+        className="bg-blue-100 text-blue-700 md:col-span-2"
+        disabled={isUpdatingAction}
+        onClick={() =>
+          handleSubmitAction({
+            actionType: "status",
+            title: "Approved for Diksha",
+            newStatus: "Approved",
+          })
+        }
+      />
+    </div>
+  </div>
+)}
 {selectedAction.workflow === "diksha" && (
               <div className="rounded-2xl bg-purple-50 p-4">
                 <h4 className="font-extrabold">Diksha Actions</h4>
@@ -2934,7 +3002,8 @@ function isFinalMeetingCandidate(person: Registration) {
   return (
     status === "Scheduled for Final Meeting" ||
     status === "Pending" ||
-    status === "Rejected"
+    status === "Rejected" ||
+    status === "Final Meeting Attended"
   );
 }
 
