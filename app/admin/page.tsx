@@ -115,7 +115,8 @@ export default async function AdminPage({
       )
     `
     )
-    .order("created_at", { ascending: false });
+    .order("final_meeting_date", { ascending: true })
+.order("created_at", { ascending: true });
 
   const { data: slots, error: slotsError } = await supabase
     .from("slots")

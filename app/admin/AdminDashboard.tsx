@@ -142,6 +142,7 @@ const [processingRequestId, setProcessingRequestId] = useState<string | null>(
 );
 const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([]);
 const [isDeletingRequests, setIsDeletingRequests] = useState(false);
+const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
   const [selectedAadhaar, setSelectedAadhaar] = useState<{
     url: string;
     name: string;
@@ -294,7 +295,68 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
     
     setProcessingRequestId(null);
   }
+  async function handleBulkApproveRequests(groupType: "Couple" | "Family") {
+    if (selectedRequestIds.length < 2) {
+      alert("Please select at least 2 requests.\nकृपया कम से कम 2 requests select करें।");
+      return;
+    }
   
+    if (groupType === "Couple" && selectedRequestIds.length !== 2) {
+      alert("Couple token requires exactly 2 selected requests.\nCouple token के लिए exactly 2 requests select करें।");
+      return;
+    }
+  
+    if (!requestUpdatedBy.trim()) {
+      alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
+      return;
+    }
+  
+    const selectedRequests = pendingRequests.filter((request) =>
+      selectedRequestIds.includes(request.id)
+    );
+  
+    const uniqueSlotIds = Array.from(
+      new Set(selectedRequests.map((request) => request.requested_slot_id))
+    );
+  
+    if (uniqueSlotIds.length > 1) {
+      alert(
+        "Selected requests must have the same meeting date.\nSelected requests की meeting date same होनी चाहिए।"
+      );
+      return;
+    }
+  
+    const confirmed = window.confirm(
+      `Generate one shared ${groupType} token for ${selectedRequestIds.length} selected request(s)?\n\nSab selected candidates ko same token milega, but forms separate rahenge.`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsBulkApprovingRequests(true);
+  
+    const { data, error } = await supabase.rpc("approve_registration_request_group", {
+      p_request_ids: selectedRequestIds,
+      p_verified_by: requestUpdatedBy.trim(),
+      p_group_type: groupType,
+    });
+  
+    if (error) {
+      alert("Group approval error: " + error.message);
+      setIsBulkApprovingRequests(false);
+      return;
+    }
+  
+    const generatedToken = Array.isArray(data) ? data[0]?.token : "";
+  
+    setTokenSuccess({
+      token: generatedToken || "-",
+      name: `${groupType} Token - ${selectedRequestIds.length} candidates`,
+    });
+  
+    setSelectedRequestIds([]);
+    setIsBulkApprovingRequests(false);
+  }
+
   async function handleRejectRequest(request: RegistrationRequest) {
     if (!requestUpdatedBy.trim()) {
       alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
@@ -514,12 +576,6 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
       return;
     }
   
-    const confirmed = window.confirm(
-      `Mark ${person.full_name || person.token} as Present?\n\nक्या आप attendance Present mark करना चाहते हैं?`
-    );
-  
-    if (!confirmed) return;
-  
     setIsMarkingAttendance(true);
   
     const { error } = await supabase.rpc("mark_final_meeting_present", {
@@ -537,7 +593,35 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
     setIsMarkingAttendance(false);
     window.location.reload();
   }
+  async function handleUndoSingleAttendancePresent(person: Registration) {
+    if (!attendanceUpdatedBy.trim()) {
+      alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
+      return;
+    }
   
+    const confirmed = window.confirm(
+      `Undo attendance for ${person.full_name || person.token}?\n\nAttendance वापस Not Marked हो जाएगी.`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsMarkingAttendance(true);
+  
+    const { error } = await supabase.rpc("undo_final_meeting_present", {
+      p_registration_id: person.id,
+      p_updated_by: attendanceUpdatedBy.trim(),
+      p_notes: "Undo from attendance list",
+    });
+  
+    if (error) {
+      alert("Undo attendance error: " + error.message);
+      setIsMarkingAttendance(false);
+      return;
+    }
+  
+    setIsMarkingAttendance(false);
+    window.location.reload();
+  }
   async function handleMarkSelectedAttendancePresent() {
     if (selectedAttendanceIds.length === 0) {
       alert("Please select candidates first.\nकृपया पहले candidates select करें।");
@@ -702,8 +786,9 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
       }
 
       return matchesSearch && matchesSlot && matchesReport;
-    });
-  }, [registrations, search, slotDate, reportFilter, todayDate]);
+})
+.sort(sortByMeetingDateAndToken);
+}, [registrations, search, slotDate, reportFilter, todayDate]);
 
   const reportCounts = useMemo(() => {
     const scheduledFinalMeetings = registrations.filter(
@@ -807,11 +892,13 @@ const [isDeletingRequests, setIsDeletingRequests] = useState(false);
           statusValue === "Final Meeting Attended"
         )
       );
-    });
-  }, [registrations, attendanceDate]);
+    })
+    .sort(sortByMeetingDateAndToken);
+    }, [registrations, attendanceDate]);
 
-  const upcomingSlots = slots
+    const upcomingSlots = slots
     .filter((slot) => slot.status !== "full" && slot.slot_date >= tomorrowDate)
+    .sort((a, b) => a.slot_date.localeCompare(b.slot_date))
     .slice(0, showAllSlots ? 30 : 6);
 
   const selectedDateLabel =
@@ -1291,17 +1378,31 @@ titleHi="स्थगित"
               {isPresent ? "Present" : "Not Marked"}
             </span>
 
-            <button
-              type="button"
-              disabled={isPresent || isMarkingAttendance}
-              onClick={() => handleMarkSingleAttendancePresent(person)}
-              className="rounded-2xl bg-green-700 px-4 py-2 text-xs font-bold text-white disabled:bg-stone-200 disabled:text-stone-500"
-            >
-              {isPresent ? "Done" : "Mark Present"}
-              <span className="block text-[10px] font-normal">
-                {isPresent ? "हो गया" : "उपस्थित"}
-              </span>
-            </button>
+            {isPresent ? (
+  <button
+    type="button"
+    disabled={isMarkingAttendance}
+    onClick={() => handleUndoSingleAttendancePresent(person)}
+    className="rounded-2xl bg-red-100 px-4 py-2 text-xs font-bold text-red-700 disabled:opacity-50"
+  >
+    Undo
+    <span className="block text-[10px] font-normal">
+      वापस करें
+    </span>
+  </button>
+) : (
+  <button
+    type="button"
+    disabled={isMarkingAttendance}
+    onClick={() => handleMarkSingleAttendancePresent(person)}
+    className="rounded-2xl bg-green-700 px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+  >
+    Mark Present
+    <span className="block text-[10px] font-normal">
+      उपस्थित
+    </span>
+  </button>
+)}
           </div>
         );
       })}
@@ -1333,7 +1434,7 @@ titleHi="स्थगित"
     </div>
   </div>
 
-  <div className="mb-5 grid gap-3 md:grid-cols-[1fr_1fr_auto_auto]">
+  <div className="mb-5 grid gap-3 md:grid-cols-[1fr_1fr_auto_auto_auto_auto]">
   <input
     type="text"
     value={requestUpdatedBy}
@@ -1370,6 +1471,33 @@ titleHi="स्थगित"
     disabled={selectedRequestIds.length === 0 || isDeletingRequests}
     className="rounded-2xl bg-red-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
   >
+    <button
+  type="button"
+  onClick={() => handleBulkApproveRequests("Couple")}
+  disabled={
+    selectedRequestIds.length !== 2 || isBulkApprovingRequests
+  }
+  className="rounded-2xl bg-blue-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+>
+  {isBulkApprovingRequests ? "Generating..." : "Accept as Couple"}
+  <span className="block text-xs font-normal">
+    Couple token बनाएं
+  </span>
+</button>
+
+<button
+  type="button"
+  onClick={() => handleBulkApproveRequests("Family")}
+  disabled={
+    selectedRequestIds.length < 2 || isBulkApprovingRequests
+  }
+  className="rounded-2xl bg-purple-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+>
+  {isBulkApprovingRequests ? "Generating..." : "Accept as Family"}
+  <span className="block text-xs font-normal">
+    Family token बनाएं
+  </span>
+</button>
     {isDeletingRequests
       ? "Deleting..."
       : `Delete Selected (${selectedRequestIds.length})`}
@@ -1382,6 +1510,9 @@ titleHi="स्थगित"
 {selectedRequestIds.length > 0 && (
   <div className="mb-5 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">
     Selected pending requests: {selectedRequestIds.length}
+    <span className="block font-normal">
+  2 selected होने पर Couple token बना सकते हैं। 2 या उससे ज्यादा selected होने पर Family token बना सकते हैं।
+</span>
     <span className="block font-normal">
       ये delete करने पर final registrations पर कोई असर नहीं पड़ेगा।
     </span>
@@ -1417,24 +1548,24 @@ titleHi="स्थगित"
     <p className="text-2xl font-extrabold text-stone-900">
       {request.full_name || "-"}
     </p>
-    <p className="mt-1 inline-flex rounded-full bg-orange-100 px-3 py-1 text-xs font-extrabold text-orange-900">
+    <p className="mt-1 inline-flex rounded-full bg-orange-100 px-3 py-1 text-xs font-extrabold uppercase text-orange-900">
   Ref: RQ-{request.id.slice(-6).toUpperCase()}
 </p>
 
     <div className="mt-2 flex flex-wrap gap-2">
-      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-900">
-        {request.gender || "-"}
-      </span>
-      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-900">
-        Age {request.age || "-"}
-      </span>
-      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-900">
-        {request.marital_status || "-"}
-      </span>
+    <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase text-orange-900">
+  {request.gender || "-"}
+</span>
+<span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase text-orange-900">
+  Age {request.age || "-"}
+</span>
+<span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold uppercase text-orange-900">
+  {request.marital_status || "-"}
+</span>
     </div>
 
     <div className="mt-3 grid gap-2">
-      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-stone-800 shadow-sm">
+    <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold uppercase text-stone-800 shadow-sm">
         Mobile: {request.mobile || "-"}
         {request.whatsapp ? (
           <span className="block text-sm font-semibold text-stone-600">
@@ -1443,11 +1574,11 @@ titleHi="स्थगित"
         ) : null}
       </div>
 
-      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-orange-900 shadow-sm">
+      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold uppercase text-orange-900 shadow-sm">
         ID Proof: {formatIdType(request.id_type)} - {request.id_number || "-"}
       </div>
 
-      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold text-stone-800 shadow-sm">
+      <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold uppercase text-stone-800 shadow-sm">
         Present Family Representative: {request.family_name || "-"}
         <span className="block text-sm font-semibold text-stone-600">
           Relation: {request.family_relation || "-"}
@@ -1457,21 +1588,19 @@ titleHi="स्थगित"
   </div>
 
   <div className="space-y-3">
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
-      <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
-        Requested Meeting
-      </p>
-      <p className="mt-1 text-xl font-extrabold text-orange-800">
-        {request.requested_meeting_date
-          ? formatDate(request.requested_meeting_date)
-          : "-"}
-      </p>
-      <p className="text-base font-bold text-stone-700">
-        {request.requested_meeting_time || "-"}
-      </p>
-    </div>
+  <div className="rounded-2xl bg-white p-4 uppercase shadow-sm">
+  <p className="text-xs font-bold text-stone-500">Requested Meeting</p>
+  <p className="font-bold text-orange-800">
+    {request.requested_meeting_date
+      ? formatDate(request.requested_meeting_date)
+      : "-"}
+  </p>
+  <p className="text-sm font-semibold text-stone-600">
+    {request.requested_meeting_time || "-"}
+  </p>
+</div>
 
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
+<div className="rounded-2xl bg-white p-4 uppercase shadow-sm">
       <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
         Location
       </p>
@@ -1485,7 +1614,7 @@ titleHi="स्थगित"
   </div>
 
   <div className="space-y-3">
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
+  <div className="rounded-2xl bg-white p-4 uppercase shadow-sm">
       <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
         Family Approval
       </p>
@@ -1498,7 +1627,7 @@ titleHi="स्थगित"
       </p>
     </div>
 
-    <div className="rounded-2xl bg-white p-4 shadow-sm">
+    <div className="rounded-2xl bg-white p-4 uppercase shadow-sm">
       <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
         Quick Address
       </p>
@@ -1553,7 +1682,7 @@ titleHi="स्थगित"
 
 
 
-          <div className="mt-4 rounded-2xl bg-white p-4 text-sm text-stone-700">
+<div className="mt-4 rounded-2xl bg-white p-4 text-sm uppercase text-stone-700">
             <p className="font-bold">Address:</p>
             <p>{request.address || "-"}</p>
           </div>
@@ -2269,8 +2398,10 @@ titleHi="स्थगित"
             ? formatDate(person.diksha_date)
             : "____ / ____ / ______";
 
-          const formFillDate = person.created_at
-            ? formatDateTime(person.created_at)
+            const meetingDate = person.slots?.slot_date
+            ? formatDate(person.slots.slot_date)
+            : person.final_meeting_date
+            ? formatDate(person.final_meeting_date)
             : "-";
 
           const guardianLabel =
@@ -2407,11 +2538,16 @@ titleHi="स्थगित"
   </div>
 
   <div className="thumb-impression-block">
-    <div className="thumb-box">
-      <p>Thumb Impression</p>
-      <p className="thumb-hi">अंगूठे का निशान</p>
-    </div>
+  <div className="thumb-box">
+    <p>Left Thumb</p>
+    <p className="thumb-hi">बायां अंगूठा</p>
   </div>
+
+  <div className="thumb-box">
+    <p>Right Thumb</p>
+    <p className="thumb-hi">दायां अंगूठा</p>
+  </div>
+</div>
 
   <div className="signature-block">
     <div className="signature-line" />
@@ -2421,7 +2557,7 @@ titleHi="स्थगित"
 
               <div className="form-footer">
                 <p>
-                  <strong>Date Of Form Fill Up :</strong> {formFillDate}
+                <strong>Meeting Date / मीटिंग तारीख :</strong> {meetingDate}
                 </p>
               </div>
             </div>
@@ -3015,6 +3151,50 @@ function isDikshaCandidate(person: Registration) {
     status === "Scheduled for Diksha" ||
     status === "Diksha Completed"
   );
+}
+function getTokenParts(token: string | null) {
+  const safeToken = token || "";
+
+  const prefixMatch = safeToken.match(/^[A-Za-z]+/);
+  const numberMatch = safeToken.match(/\d+$/);
+
+  return {
+    prefix: prefixMatch ? prefixMatch[0].toUpperCase() : "",
+    number: numberMatch ? Number(numberMatch[0]) : 0,
+  };
+}
+
+function sortByMeetingDateAndToken(a: Registration, b: Registration) {
+  const dateA = a.slots?.slot_date || a.final_meeting_date || "";
+  const dateB = b.slots?.slot_date || b.final_meeting_date || "";
+
+  if (dateA !== dateB) {
+    return dateA.localeCompare(dateB);
+  }
+
+  const tokenA = getTokenParts(a.token);
+  const tokenB = getTokenParts(b.token);
+
+  const prefixOrder: Record<string, number> = {
+    M: 1,
+    F: 2,
+    DK: 3,
+    CP: 4,
+    FAM: 5,
+  };
+
+  const orderA = prefixOrder[tokenA.prefix] || 99;
+  const orderB = prefixOrder[tokenB.prefix] || 99;
+
+  if (orderA !== orderB) {
+    return orderA - orderB;
+  }
+
+  if (tokenA.number !== tokenB.number) {
+    return tokenA.number - tokenB.number;
+  }
+
+  return (a.full_name || "").localeCompare(b.full_name || "");
 }
 function csvEscape(value: string) {
   const cleanedValue = value.replace(/\n/g, " ").replace(/\r/g, " ");

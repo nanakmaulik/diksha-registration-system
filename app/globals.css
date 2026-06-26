@@ -60,22 +60,202 @@ button {
   }
 
   .devotee-form-page {
-    width: 190mm;
-    min-height: auto;
-    height: auto;
-    margin: 0 auto;
-    padding: 6mm 8mm;
+    width: 100%;
+    min-height: 275mm;
+padding: 6mm 8mm;
     page-break-after: always;
-    break-after: page;
-    page-break-inside: avoid;
-    break-inside: avoid;
-    overflow: hidden;
-    font-family: "Times New Roman", Times, serif !important;
-    font-size: 11.5px;
-    color: black !important;
-    background: white !important;
+    background: white;
+    color: black;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  .devotee-form-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10mm;
+    font-size: 11px;
+    margin-bottom: 3mm;
   }
   
+  .devotee-form-top p {
+    margin: 0 0 1mm;
+  }
+  
+  .devotee-form-title {
+    text-align: center;
+    border: 1px solid black;
+    padding: 2.5mm;
+    margin-bottom: 4mm;
+  }
+  
+  .devotee-form-title h1 {
+    font-size: 15px;
+    margin: 0;
+    font-weight: 800;
+  }
+  
+  .devotee-form-title h2 {
+    font-size: 12px;
+    margin: 1mm 0 0;
+    font-weight: 700;
+  }
+  
+  .devotee-form-main {
+    display: grid;
+    grid-template-columns: 1fr 34mm;
+    gap: 6mm;
+    align-items: start;
+  }
+  
+  .devotee-form-details {
+    display: grid;
+    gap: 1.2mm;
+  }
+  
+  .devotee-line {
+    display: grid;
+    grid-template-columns: 34mm 4mm 1fr;
+    gap: 1mm;
+    align-items: start;
+    min-height: 4.5mm;
+  }
+  
+  .devotee-label {
+    font-weight: 700;
+  }
+  
+  .devotee-colon {
+    font-weight: 700;
+  }
+  
+  .devotee-value {
+    border-bottom: 1px dotted #555;
+    min-height: 4mm;
+  }
+  
+  .devotee-photo-box {
+    width: 34mm;
+    height: 42mm;
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  
+  .declaration-section {
+    margin-top: 4mm;
+    border: 1px solid black;
+    padding: 3mm;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+  
+  .declaration-section h3 {
+    margin: 0 0 2mm;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  
+  .declaration-section p {
+    margin: 0 0 2mm;
+  }
+  
+  .family-details-section {
+    display: grid;
+    grid-template-columns: 28mm 28mm 1fr;
+    gap: 4mm;
+    margin-top: 4mm;
+    align-items: start;
+  }
+  
+  .family-photo-box {
+    width: 28mm;
+    height: 32mm;
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  
+  .family-info {
+    font-size: 10px;
+  }
+  
+  .family-info h3 {
+    margin: 0 0 2mm;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  
+  .signature-section {
+    display: grid;
+    grid-template-columns: 1fr 60mm 1fr;
+    gap: 6mm;
+    align-items: end;
+    margin-top: 7mm;
+    text-align: center;
+    font-size: 10px;
+  }
+  
+  .signature-block {
+    min-height: 14mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+  }
+  
+  .signature-line {
+    border-top: 1px solid black;
+    height: 1px;
+    margin-bottom: 3px;
+  }
+  
+  .thumb-impression-block {
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    gap: 3mm;
+  }
+  
+  .thumb-box {
+    width: 27mm;
+    height: 20mm;
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1mm;
+    font-size: 8px;
+    font-weight: 700;
+    text-align: center;
+  }
+  
+  .thumb-box p {
+    margin: 0;
+  }
+  
+  .thumb-hi {
+    font-size: 8px;
+    font-weight: 600;
+  }
+  
+  .form-footer {
+    margin-top: 4mm;
+    font-size: 10px;
+  }
+  
+  .form-footer p {
+    margin: 0;
+  }
   .devotee-form-page:last-child {
     page-break-after: auto !important;
     break-after: auto !important;
@@ -200,8 +380,8 @@ button {
 
   .signature-section {
     display: grid;
-    grid-template-columns: 1fr 32mm 1fr;
-    gap: 14mm;
+    grid-template-columns: 1fr 68mm 1fr;
+    gap: 8mm;
     align-items: end;
     margin-top: 12mm;
     text-align: center;
@@ -225,6 +405,7 @@ button {
     display: flex;
     justify-content: center;
     align-items: end;
+    gap: 4mm;
   }
   
   .thumb-box {
@@ -236,7 +417,7 @@ button {
     align-items: center;
     justify-content: center;
     gap: 1mm;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     text-align: center;
   }
@@ -258,7 +439,7 @@ button {
 
   @page {
     size: A4 portrait;
-    margin: 6mm;
+    margin: 5mm;
   }
 }
 @media print {

@@ -84,6 +84,14 @@ export default function RegisterPage() {
   const [isLoadingSlots, setIsLoadingSlots] = useState(true);
   const [isPincodeLoading, setIsPincodeLoading] = useState(false);
 const [pincodeMessage, setPincodeMessage] = useState("");
+const isMarriedMale =
+  formData.maritalStatus === "Married" && formData.gender === "Male";
+
+const isMarriedFemale =
+  formData.maritalStatus === "Married" && formData.gender === "Female";
+
+const needsFatherMother =
+  formData.maritalStatus !== "Married";
 
   const totalSteps = 6;
 
@@ -415,22 +423,28 @@ const [pincodeMessage, setPincodeMessage] = useState("");
     }
 
     if (currentStep === 3) {
-      if (formData.maritalStatus === "Married") {
-        if (!formData.spouseName.trim()) {
-          return {
-            isValid: false,
-            message:
-  "Please enter husband / wife name.\nकृपया पति / पत्नी का नाम भरें।",
-          };
-        }
-      } else {
+      if (isMarriedFemale && !formData.spouseName.trim()) {
+        return {
+          isValid: false,
+          message: "Please enter husband name.\nकृपया पति का नाम भरें।",
+        };
+      }
+    
+      if (isMarriedMale && !formData.fatherName.trim()) {
+        return {
+          isValid: false,
+          message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
+        };
+      }
+    
+      if (needsFatherMother) {
         if (!formData.fatherName.trim()) {
           return {
             isValid: false,
             message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
           };
         }
-
+    
         if (!formData.motherName.trim()) {
           return {
             isValid: false,
@@ -595,12 +609,10 @@ const [pincodeMessage, setPincodeMessage] = useState("");
         p_state: formData.state,
         p_country: formData.country,
         p_pin_code: formData.pinCode,
-        p_spouse_name:
-          formData.maritalStatus === "Married" ? formData.spouseName : "",
+        p_spouse_name: isMarriedFemale ? formData.spouseName : "",
         p_father_name:
-          formData.maritalStatus !== "Married" ? formData.fatherName : "",
-        p_mother_name:
-          formData.maritalStatus !== "Married" ? formData.motherName : "",
+          isMarriedMale || needsFatherMother ? formData.fatherName : "",
+        p_mother_name: needsFatherMother ? formData.motherName : "",
         p_family_name: formData.familyName,
         p_family_relation: formData.familyRelation,
         p_family_mobile: formData.familyMobile,
@@ -760,6 +772,7 @@ p_id_type: formData.idType,
     ["Business", "Business / व्यापार"],
     ["Farmer", "Farmer / किसान"],
     ["Retired", "Retired / सेवानिवृत्त"],
+    ["Virakt", "Virakt / विरक्त"],
     ["Self Employed", "Self Employed / स्वरोजगार"],
     ["Unemployed", "Unemployed / बेरोजगार"],
     ["Other", "Other / अन्य"],
@@ -911,39 +924,53 @@ p_id_type: formData.idType,
               subtitleEn="Please provide family approval details based on marital status."
               subtitleHi="कृपया वैवाहिक स्थिति के अनुसार परिवार की स्वीकृति जानकारी भरें।"
             >
-              {formData.maritalStatus === "Married" ? (
-                <InputField
-                  labelEn="Husband / Wife Name"
-                  labelHi="पति / पत्नी का नाम"
-                  name="spouseName"
-                  value={formData.spouseName}
-                  onChange={handleChange}
-                  placeholder="Enter husband / wife name"
-                  required
-                />
-              ) : (
-                <>
-                  <InputField
-                    labelEn="Father's Name"
-                    labelHi="पिता का नाम"
-                    name="fatherName"
-                    value={formData.fatherName}
-                    onChange={handleChange}
-                    placeholder="Enter father's name"
-                    required
-                  />
+           {isMarriedFemale && (
+  <InputField
+    labelEn="Husband Name"
+    labelHi="पति का नाम"
+    name="spouseName"
+    value={formData.spouseName}
+    onChange={handleChange}
+    placeholder="Enter husband name"
+    required
+  />
+)}
 
-                  <InputField
-                    labelEn="Mother's Name"
-                    labelHi="माता का नाम"
-                    name="motherName"
-                    value={formData.motherName}
-                    onChange={handleChange}
-                    placeholder="Enter mother's name"
-                    required
-                  />
-                </>
-              )}
+{isMarriedMale && (
+  <InputField
+    labelEn="Father's Name"
+    labelHi="पिता का नाम"
+    name="fatherName"
+    value={formData.fatherName}
+    onChange={handleChange}
+    placeholder="Enter father's name"
+    required
+  />
+)}
+
+{needsFatherMother && (
+  <>
+    <InputField
+      labelEn="Father's Name"
+      labelHi="पिता का नाम"
+      name="fatherName"
+      value={formData.fatherName}
+      onChange={handleChange}
+      placeholder="Enter father's name"
+      required
+    />
+
+    <InputField
+      labelEn="Mother's Name"
+      labelHi="माता का नाम"
+      name="motherName"
+      value={formData.motherName}
+      onChange={handleChange}
+      placeholder="Enter mother's name"
+      required
+    />
+  </>
+)}
 
               <div className="rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
                 <p className="font-bold">
@@ -981,7 +1008,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                   ["Sister", "Sister / बहन"],
                   ["Son", "Son / पुत्र"],
                   ["Daughter", "Daughter / पुत्री"],
-                  
+                  ["Father and Mother", "Father and Mother / माता और पिता"],
                   ["Other", "Other / अन्य"],
                 ]}
               />
@@ -1218,14 +1245,18 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                   label="Address / पता"
                   value={`${formData.address}, ${formData.city}, ${formData.state}, ${formData.country} - ${formData.pinCode}`}
                 />
-                <ReviewRow
-                  label="Family Approval / परिवार स्वीकृति"
-                  value={
-                    formData.maritalStatus === "Married"
-                      ? `Husband / Wife: ${formData.spouseName}`
-                      : `Father: ${formData.fatherName}, Mother: ${formData.motherName}`
-                  }
-                />
+               <ReviewRow
+  label="Family Approval / परिवार स्वीकृति"
+  value={
+    isMarriedFemale
+      ? `Husband: ${formData.spouseName || "-"}`
+      : isMarriedMale
+      ? `Father: ${formData.fatherName || "-"}`
+      : `Father: ${formData.fatherName || "-"}, Mother: ${
+          formData.motherName || "-"
+        }`
+  }
+/>
                 <ReviewRow
                   label="Family Contact / परिवार संपर्क"
                   value={`${formData.familyName} (${formData.familyRelation}) - ${formData.familyMobile}`}
