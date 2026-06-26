@@ -1434,7 +1434,7 @@ titleHi="स्थगित"
     </div>
   </div>
 
-  <div className="mb-5 grid gap-3 md:grid-cols-[1fr_1fr_auto_auto_auto_auto]">
+  <div className="mb-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto_auto_auto_auto]">
   <input
     type="text"
     value={requestUpdatedBy}
@@ -1460,9 +1460,27 @@ titleHi="स्थगित"
     pendingRequests.length > 0
       ? "Unselect All"
       : "Select All"}
-    <span className="block text-xs font-normal">
-      सभी select करें
-    </span>
+    <span className="block text-xs font-normal">सभी select करें</span>
+  </button>
+
+  <button
+    type="button"
+    onClick={() => handleBulkApproveRequests("Couple")}
+    disabled={selectedRequestIds.length !== 2 || isBulkApprovingRequests}
+    className="rounded-2xl bg-blue-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+  >
+    {isBulkApprovingRequests ? "Generating..." : "Accept as Couple"}
+    <span className="block text-xs font-normal">Couple token बनाएं</span>
+  </button>
+
+  <button
+    type="button"
+    onClick={() => handleBulkApproveRequests("Family")}
+    disabled={selectedRequestIds.length < 2 || isBulkApprovingRequests}
+    className="rounded-2xl bg-purple-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+  >
+    {isBulkApprovingRequests ? "Generating..." : "Accept as Family"}
+    <span className="block text-xs font-normal">Family token बनाएं</span>
   </button>
 
   <button
@@ -1471,33 +1489,6 @@ titleHi="स्थगित"
     disabled={selectedRequestIds.length === 0 || isDeletingRequests}
     className="rounded-2xl bg-red-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
   >
-    <button
-  type="button"
-  onClick={() => handleBulkApproveRequests("Couple")}
-  disabled={
-    selectedRequestIds.length !== 2 || isBulkApprovingRequests
-  }
-  className="rounded-2xl bg-blue-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
->
-  {isBulkApprovingRequests ? "Generating..." : "Accept as Couple"}
-  <span className="block text-xs font-normal">
-    Couple token बनाएं
-  </span>
-</button>
-
-<button
-  type="button"
-  onClick={() => handleBulkApproveRequests("Family")}
-  disabled={
-    selectedRequestIds.length < 2 || isBulkApprovingRequests
-  }
-  className="rounded-2xl bg-purple-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
->
-  {isBulkApprovingRequests ? "Generating..." : "Accept as Family"}
-  <span className="block text-xs font-normal">
-    Family token बनाएं
-  </span>
-</button>
     {isDeletingRequests
       ? "Deleting..."
       : `Delete Selected (${selectedRequestIds.length})`}
@@ -1514,7 +1505,7 @@ titleHi="स्थगित"
   2 selected होने पर Couple token बना सकते हैं। 2 या उससे ज्यादा selected होने पर Family token बना सकते हैं।
 </span>
     <span className="block font-normal">
-      ये delete करने पर final registrations पर कोई असर नहीं पड़ेगा।
+    Same token मिलेगा, लेकिन हर candidate का form अलग print होगा।
     </span>
   </div>
 )}
