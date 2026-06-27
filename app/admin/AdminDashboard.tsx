@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 
 type Registration = {
   id: string;
@@ -999,6 +999,31 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
 
   const selectedDateTime =
     filteredRegistrations[0]?.slots?.slot_time || "3:30 PM";
+
+    const groupedPrintRegistrations = useMemo(() => {
+      const male = filteredRegistrations.filter((person) =>
+        (person.token || "").toUpperCase().startsWith("M")
+      );
+    
+      const female = filteredRegistrations.filter((person) =>
+        (person.token || "").toUpperCase().startsWith("F")
+      );
+    
+      const couple = filteredRegistrations.filter((person) =>
+        (person.token || "").toUpperCase().startsWith("CP")
+      );
+    
+      const family = filteredRegistrations.filter((person) =>
+        (person.token || "").toUpperCase().startsWith("FAM")
+      );
+    
+      return [
+        { title: "MALE", titleHi: "पुरुष", records: male },
+        { title: "FEMALE", titleHi: "महिला", records: female },
+        { title: "COUPLE", titleHi: "जोड़ा", records: couple },
+        { title: "FAMILY", titleHi: "परिवार", records: family },
+      ].filter((group) => group.records.length > 0);
+    }, [filteredRegistrations]);
 
     function handlePrintSelectedDate() {
       if (slotDate === "all") {
@@ -2409,34 +2434,47 @@ titleHi="स्थगित"
           </thead>
 
           <tbody>
-          {filteredRegistrations.map((person, index) => {
-  const familyApproval =
-    person.marital_status === "Married" && person.gender === "Male"
-      ? `Father: ${person.father_name || "-"}`
-      : person.marital_status === "Married"
-      ? `Husband: ${person.spouse_name || "-"}`
-      : `Father: ${person.father_name || "-"} / Mother: ${
-          person.mother_name || "-"
-        }`;
+  {groupedPrintRegistrations.map((group) => (
+    <Fragment key={group.title}>
+      <tr key={`${group.title}-heading`}>
+        <td
+          colSpan={8}
+          className="border border-black bg-stone-100 px-2 py-2 text-center text-sm font-extrabold"
+        >
+          {group.title} / {group.titleHi}
+        </td>
+      </tr>
 
-  return (
-    <tr key={person.id}>
-      <PrintCell>{index + 1}</PrintCell>
-      <PrintCell>
-        <strong>{person.token || "-"}</strong>
-      </PrintCell>
-      <PrintCell>
-        <strong>{person.full_name || "-"}</strong>
-      </PrintCell>
-      <PrintCell>{person.age || "-"}</PrintCell>
-      <PrintCell>{person.gender || "-"}</PrintCell>
-      <PrintCell>{person.mobile || "-"}</PrintCell>
-      <PrintCell>{person.city || "-"}</PrintCell>
-      <PrintCell>{familyApproval}</PrintCell>
-    </tr>
-  );
-})}
-          </tbody>
+      {group.records.map((person, index) => {
+        const familyApproval =
+          person.marital_status === "Married" && person.gender === "Male"
+            ? `Father: ${person.father_name || "-"}`
+            : person.marital_status === "Married"
+            ? `Husband: ${person.spouse_name || "-"}`
+            : `Father: ${person.father_name || "-"} / Mother: ${
+                person.mother_name || "-"
+              }`;
+
+        return (
+          <tr key={person.id}>
+            <PrintCell>{index + 1}</PrintCell>
+            <PrintCell>
+              <strong>{person.token || "-"}</strong>
+            </PrintCell>
+            <PrintCell>
+              <strong>{person.full_name || "-"}</strong>
+            </PrintCell>
+            <PrintCell>{person.age || "-"}</PrintCell>
+            <PrintCell>{person.gender || "-"}</PrintCell>
+            <PrintCell>{person.mobile || "-"}</PrintCell>
+            <PrintCell>{person.city || "-"}</PrintCell>
+            <PrintCell>{familyApproval}</PrintCell>
+          </tr>
+        );
+      })}
+    </Fragment>
+  ))}
+</tbody>
         </table>
 
        
