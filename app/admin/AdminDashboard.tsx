@@ -122,6 +122,9 @@ export default function AdminDashboard({
   const [slotDate, setSlotDate] = useState("all");
   const [showFullMobile, setShowFullMobile] = useState(false);
   const [showAllSlots, setShowAllSlots] = useState(false);
+  const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
+const [editingSlotCapacity, setEditingSlotCapacity] = useState("");
+const [isUpdatingSlotCapacity, setIsUpdatingSlotCapacity] = useState(false);
   const [reportFilter, setReportFilter] = useState("all");
   const [dikshaDate, setDikshaDate] = useState("");
   const [dikshaTime, setDikshaTime] = useState("3:30 PM");
@@ -659,6 +662,42 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
     setIsMarkingAttendance(false);
     window.location.reload();
   }
+  async function handleUpdateSlotCapacity(slot: Slot) {
+    const newCapacity = Number(editingSlotCapacity);
+  
+    if (!Number.isInteger(newCapacity) || newCapacity <= 0) {
+      alert("Please enter a valid capacity.\nकृपया सही capacity भरें।");
+      return;
+    }
+  
+    if (newCapacity < slot.current_count) {
+      alert(
+        `Capacity filled count se kam nahi ho sakti.\nAlready filled: ${slot.current_count}`
+      );
+      return;
+    }
+  
+    setIsUpdatingSlotCapacity(true);
+  
+    const { error } = await supabase.rpc("update_slot_capacity", {
+      p_slot_id: slot.id,
+      p_new_capacity: newCapacity,
+      p_updated_by: "Admin",
+    });
+  
+    if (error) {
+      alert("Slot capacity update error: " + error.message);
+      setIsUpdatingSlotCapacity(false);
+      return;
+    }
+  
+    setEditingSlotId(null);
+    setEditingSlotCapacity("");
+    setIsUpdatingSlotCapacity(false);
+  
+    window.location.reload();
+  }
+
   async function handleBulkScheduleNextDayDiksha() {
     if (slotDate === "all") {
       alert(
@@ -1721,12 +1760,13 @@ titleHi="स्थगित"
   </div>
 ) : (
   <div className="overflow-hidden rounded-3xl border border-orange-100 bg-white">
-    <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr] bg-orange-100 px-4 py-3 text-sm font-extrabold text-orange-900">
-      <p>Date</p>
-      <p>Time</p>
-      <p>Filled</p>
-      <p>Left</p>
-      <p>Status</p>
+    <div className="grid grid-cols-[1.2fr_0.7fr_0.7fr_0.7fr_0.7fr_1fr] bg-orange-100 px-4 py-3 text-sm font-extrabold text-orange-900">
+    <p>Date</p>
+<p>Time</p>
+<p>Filled</p>
+<p>Left</p>
+<p>Status</p>
+<p>Capacity</p>
     </div>
 
     <div className="max-h-[420px] overflow-y-auto">
@@ -1735,24 +1775,26 @@ titleHi="स्थगित"
         const isSelected = slotDate === slot.slot_date;
 
         return (
-          <button
-            key={slot.id}
-            type="button"
-            onClick={() => setSlotDate(slot.slot_date)}
-            className={`grid w-full grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr] items-center border-t border-orange-100 px-4 py-3 text-left text-sm transition hover:bg-orange-50 ${
+          <div
+          key={slot.id}
+          className={`grid w-full grid-cols-[1.2fr_0.7fr_0.7fr_0.7fr_0.7fr_1fr] items-center border-t border-orange-100 px-4 py-3 text-left text-sm transition hover:bg-orange-50 ${
               isSelected ? "bg-orange-50" : "bg-white"
             }`}
           >
-            <div>
-              <p className="font-extrabold text-stone-900">
-                {formatDate(slot.slot_date)}
-              </p>
+           <button
+  type="button"
+  onClick={() => setSlotDate(slot.slot_date)}
+  className="text-left"
+>
+  <p className="font-extrabold text-stone-900">
+    {formatDate(slot.slot_date)}
+  </p>
               {isSelected && (
                 <p className="text-xs font-bold text-orange-800">
                   Selected / चुना हुआ
                 </p>
               )}
-            </div>
+            </button>
 
             <p className="font-bold text-stone-700">{slot.slot_time}</p>
 
@@ -1765,7 +1807,57 @@ titleHi="स्थगित"
             <span className="w-fit rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
               Open
             </span>
-          </button>
+            <div className="flex items-center gap-2">
+  {editingSlotId === slot.id ? (
+    <>
+      <input
+        type="number"
+        min={slot.current_count}
+        value={editingSlotCapacity}
+        onChange={(event) => setEditingSlotCapacity(event.target.value)}
+        className="w-20 rounded-xl border border-orange-200 px-3 py-2 text-sm font-bold outline-none focus:border-orange-600"
+      />
+
+      <button
+        type="button"
+        onClick={() => handleUpdateSlotCapacity(slot)}
+        disabled={isUpdatingSlotCapacity}
+        className="rounded-xl bg-green-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+      >
+        Save
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setEditingSlotId(null);
+          setEditingSlotCapacity("");
+        }}
+        className="rounded-xl bg-stone-100 px-3 py-2 text-xs font-bold text-stone-700"
+      >
+        Cancel
+      </button>
+    </>
+  ) : (
+    <>
+      <span className="font-extrabold text-stone-800">
+        {slot.capacity}
+      </span>
+
+      <button
+        type="button"
+        onClick={() => {
+          setEditingSlotId(slot.id);
+          setEditingSlotCapacity(String(slot.capacity));
+        }}
+        className="rounded-xl bg-orange-100 px-3 py-2 text-xs font-bold text-orange-800"
+      >
+        Edit
+      </button>
+    </>
+  )}
+</div>
+            </div>
         );
       })}
     </div>
