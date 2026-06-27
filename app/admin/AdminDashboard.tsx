@@ -1080,8 +1080,8 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
         person.full_name || "-",
         person.age || "-",
         person.gender || "-",
-        person.mobile || "-",
-        person.whatsapp || "-",
+        csvTextValue(person.mobile),
+csvTextValue(person.whatsapp),
         person.city || "-",
         person.state || "-",
         person.slots?.slot_date ? formatDate(person.slots.slot_date) : "-",
@@ -3386,6 +3386,16 @@ function sortByMeetingDateAndToken(a: Registration, b: Registration) {
 
   return (a.full_name || "").localeCompare(b.full_name || "");
 }
+function csvTextValue(value: string | null | undefined) {
+  const cleanValue = String(value || "-").trim();
+
+  if (!cleanValue || cleanValue === "-") {
+    return "-";
+  }
+
+  return `="${cleanValue}"`;
+}
+
 function csvEscape(value: string) {
   const cleanedValue = value.replace(/\n/g, " ").replace(/\r/g, " ");
 
