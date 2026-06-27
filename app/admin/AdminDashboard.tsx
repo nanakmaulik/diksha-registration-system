@@ -913,6 +913,7 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
   );
 
   const tomorrowDate = getTomorrowDateString();
+  const threeMonthsLaterDate = getDateAfterMonths(3);
   const finalMeetingAttendanceList = useMemo(() => {
     return registrations.filter((person) => {
       const meetingDate = person.slots?.slot_date || person.final_meeting_date;
@@ -932,9 +933,13 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
     }, [registrations, attendanceDate]);
 
     const upcomingSlots = slots
-    .filter((slot) => slot.slot_date >= tomorrowDate)
+    .filter(
+      (slot) =>
+        slot.slot_date >= tomorrowDate &&
+        slot.slot_date <= threeMonthsLaterDate
+    )
     .sort((a, b) => a.slot_date.localeCompare(b.slot_date))
-    .slice(0, showAllSlots ? 30 : 6);
+    .slice(0, showAllSlots ? 100 : 8);
 
   const selectedDateLabel =
     slotDate === "all" ? "All Slots" : formatDate(slotDate);
@@ -1728,10 +1733,10 @@ titleHi="स्थगित"
               आने वाली मीटिंग तारीखें
               </h4>
               <p className="mt-2 text-sm text-stone-600">
-                Showing only available upcoming slots.
+              Showing upcoming slots for the next 3 months.
               </p>
               <p className="text-sm text-stone-600">
-                केवल आने वाले उपलब्ध स्लॉट दिखाए जा रहे हैं।
+              अगले 3 महीनों की मीटिंग तारीखें दिखाई जा रही हैं।
               </p>
             </div>
 
@@ -1740,9 +1745,9 @@ titleHi="स्थगित"
               onClick={() => setShowAllSlots((prev) => !prev)}
               className="rounded-2xl border border-orange-300 px-5 py-3 font-bold text-orange-800"
             >
-              {showAllSlots ? "Show Less" : "View Next 30"}
+             {showAllSlots ? "Show Less" : "View Next 3 Months"}
               <span className="block text-sm font-normal">
-              {showAllSlots ? "कम दिखाएं" : "अगली 30 तारीखें देखें"}
+              {showAllSlots ? "कम दिखाएं" : "अगले 3 महीने देखें"}
               </span>
             </button>
           </div>
@@ -3167,6 +3172,16 @@ function getTomorrowDateString() {
   const year = tomorrow.getFullYear();
   const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
   const day = String(tomorrow.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+function getDateAfterMonths(months: number) {
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
