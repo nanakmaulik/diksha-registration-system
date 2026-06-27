@@ -61,14 +61,18 @@ button {
 
   .devotee-form-page {
     width: 100%;
-    min-height: 275mm;
-padding: 6mm 8mm;
+    height: 277mm;
+    padding: 5mm 8mm;
     page-break-after: always;
+    break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
     background: white;
     color: black;
     font-family: Arial, sans-serif;
-    font-size: 11px;
-    line-height: 1.25;
+    font-size: 9.5px;
+    line-height: 1.15;
+    overflow: hidden;
   }
   .devotee-form-top {
     display: flex;
@@ -147,18 +151,22 @@ padding: 6mm 8mm;
   }
   
   .declaration-section {
-    margin-top: 4mm;
+    margin-top: 2.5mm;
     border: 1px solid black;
-    padding: 3mm;
-    font-size: 10px;
-    line-height: 1.25;
+    padding: 2mm;
+    font-size: 8.5px;
+    line-height: 1.12;
   }
   
   .declaration-section h3 {
-    margin: 0 0 2mm;
+    margin: 0 0 1mm;
     text-align: center;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 800;
+  }
+  
+  .declaration-section p {
+    margin: 0 0 1.2mm;
   }
   
   .declaration-section p {
@@ -167,21 +175,21 @@ padding: 6mm 8mm;
   
   .family-details-section {
     display: grid;
-    grid-template-columns: 28mm 28mm 1fr;
-    gap: 4mm;
-    margin-top: 4mm;
+    grid-template-columns: 24mm 24mm 1fr;
+    gap: 3mm;
+    margin-top: 2.5mm;
     align-items: start;
   }
   
   .family-photo-box {
-    width: 28mm;
-    height: 32mm;
+    width: 24mm;
+    height: 26mm;
     border: 1px solid black;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
   }
   
@@ -197,16 +205,16 @@ padding: 6mm 8mm;
   
   .signature-section {
     display: grid;
-    grid-template-columns: 1fr 60mm 1fr;
-    gap: 6mm;
+    grid-template-columns: 1fr 56mm 1fr;
+    gap: 5mm;
     align-items: end;
-    margin-top: 7mm;
+    margin-top: 4mm;
     text-align: center;
-    font-size: 10px;
+    font-size: 8.5px;
   }
   
   .signature-block {
-    min-height: 14mm;
+    min-height: 10mm;
     display: flex;
     flex-direction: column;
     justify-content: end;
@@ -226,15 +234,15 @@ padding: 6mm 8mm;
   }
   
   .thumb-box {
-    width: 27mm;
-    height: 20mm;
+    width: 25mm;
+    height: 17mm;
     border: 1px solid black;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1mm;
-    font-size: 8px;
+    gap: 0.5mm;
+    font-size: 7.5px;
     font-weight: 700;
     text-align: center;
   }
@@ -249,8 +257,8 @@ padding: 6mm 8mm;
   }
   
   .form-footer {
-    margin-top: 4mm;
-    font-size: 10px;
+    margin-top: 2mm;
+    font-size: 8.5px;
   }
   
   .form-footer p {
@@ -264,73 +272,69 @@ padding: 6mm 8mm;
   .devotee-form-top {
     display: flex;
     justify-content: space-between;
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 8px;
+    gap: 8mm;
+    font-size: 8.5px;
+    margin-bottom: 2mm;
   }
-
+  
+  .devotee-form-top p {
+    margin: 0 0 0.5mm;
+  }
+  
   .devotee-form-title {
     text-align: center;
-    margin-bottom: 16px;
+    border: 1px solid black;
+    padding: 1.5mm;
+    margin-bottom: 2.5mm;
   }
-
+  
   .devotee-form-title h1 {
-    font-size: 18px;
-    font-weight: 800;
-    text-decoration: underline;
+    font-size: 12px;
     margin: 0;
+    font-weight: 800;
   }
-
+  
   .devotee-form-title h2 {
-    font-size: 13px;
+    font-size: 9.5px;
+    margin: 0.5mm 0 0;
     font-weight: 700;
-    margin: 3px 0 0;
   }
-
+  
   .devotee-form-main {
     display: grid;
-    grid-template-columns: 1fr 34mm;
-    gap: 12mm;
+    grid-template-columns: 1fr 30mm;
+    gap: 5mm;
     align-items: start;
   }
-
+  
   .devotee-form-details {
-    width: 100%;
+    display: grid;
+    gap: 0.7mm;
   }
-
+  
   .devotee-line {
     display: grid;
-    grid-template-columns: 40mm 4mm 1fr;
-    gap: 2mm;
+    grid-template-columns: 30mm 3mm 1fr;
+    gap: 1mm;
     align-items: start;
-    margin-bottom: 6px;
-    font-size: 14px;
+    min-height: 3.5mm;
   }
-
-  .devotee-label {
-    font-weight: 700;
-  }
-
-  .devotee-colon {
-    font-weight: 700;
-  }
-
+  
   .devotee-value {
-    font-weight: 700;
-    text-decoration: underline;
-    word-break: break-word;
+    border-bottom: 1px dotted #555;
+    min-height: 3.2mm;
   }
-
+  
   .devotee-photo-box {
-    width: 32mm;
-    height: 38mm;
-    border: 1px solid #444;
+    width: 30mm;
+    height: 36mm;
+    border: 1px solid black;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 4mm;
-    font-size: 12px;
+    font-size: 8px;
+    font-weight: 700;
   }
 
   .declaration-section {
@@ -439,7 +443,7 @@ padding: 6mm 8mm;
 
   @page {
     size: A4 portrait;
-    margin: 5mm;
+    margin: 4mm;
   }
 }
 @media print {
