@@ -17,7 +17,16 @@ button {
   font-family: inherit;
 }
 
+/* =========================
+   PRINT STYLES
+========================= */
+
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 5mm;
+  }
+
   body {
     background: white !important;
   }
@@ -42,18 +51,41 @@ button {
     color: black !important;
   }
 
+  /* =========================
+     SELECTED DATE PRINT LIST
+  ========================= */
+
   .print-list-area table {
     width: 100% !important;
     border-collapse: collapse !important;
+    font-size: 9px !important;
   }
 
   .print-list-area th,
   .print-list-area td {
     border: 1px solid black !important;
-    padding: 6px !important;
-    font-size: 10px !important;
-    vertical-align: top !important;
+    padding: 3px 4px !important;
+    line-height: 1.15 !important;
+    vertical-align: middle !important;
   }
+
+  .print-list-area h1 {
+    font-size: 16px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .print-list-area h2 {
+    font-size: 13px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .print-list-area p {
+    margin: 2px 0 !important;
+  }
+
+  /* =========================
+     DEVOTEE FORM PRINT
+  ========================= */
 
   .devotee-forms-area {
     width: 100% !important;
@@ -62,7 +94,7 @@ button {
   .devotee-form-page {
     width: 100%;
     height: 277mm;
-    padding: 8mm 10mm;
+    padding: 10mm 12mm;
     page-break-after: always;
     break-after: page;
     page-break-inside: avoid;
@@ -70,223 +102,11 @@ button {
     background: white;
     color: black;
     font-family: Arial, sans-serif;
-    font-size: 11px;
+    font-size: 11.5px;
     line-height: 1.25;
     overflow: hidden;
   }
-  .devotee-form-top {
-    display: flex;
-    justify-content: space-between;
-    gap: 10mm;
-    font-size: 10px;
-    margin-bottom: 3mm;
-  }
-  
-  .devotee-form-top p {
-    margin: 0 0 1mm;
-  }
-  .devotee-form-title {
-    text-align: center;
-    border: 1px solid black;
-    padding: 2.5mm;
-    margin-bottom: 4mm;
-  }
-  
-  .devotee-form-title h1 {
-    font-size: 14px;
-    margin: 0;
-    font-weight: 800;
-  }
-  
-  .devotee-form-title h2 {
-    font-size: 11px;
-    margin: 1mm 0 0;
-    font-weight: 700;
-  }
-  
-  .devotee-form-main {
-    display: grid;
-    grid-template-columns: 1fr 34mm;
-    gap: 7mm;
-    align-items: start;
-  }
-  
-  .devotee-form-details {
-    display: grid;
-    gap: 1.1mm;
-  }
-  
-  .devotee-line {
-    display: grid;
-    grid-template-columns: 32mm 4mm 1fr;
-    gap: 1mm;
-    align-items: start;
-    min-height: 4.4mm;
-  }
-  
-  .devotee-label {
-    font-weight: 700;
-  }
-  
-  .devotee-colon {
-    font-weight: 700;
-  }
-  
-  .devotee-value {
-    border-bottom: none;
-    min-height: 4mm;
-    font-weight: 700;
-  }
-  
-  .devotee-photo-box {
-    width: 34mm;
-    height: 42mm;
-    border: 1px solid black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 9px;
-    font-weight: 700;
-  }
-  
-  .declaration-section {
-    margin-top: 4mm;
-    border: none;
-    padding: 0;
-    font-size: 9.5px;
-    line-height: 1.22;
-  }
-  
-  .declaration-section h3 {
-    margin: 0 0 2mm;
-    text-align: left;
-    font-size: 11px;
-    font-weight: 800;
-    text-decoration: underline;
-  }
-  
-  .declaration-section p {
-    margin: 0 0 2mm;
-  }
-  .declaration-section p {
-    margin: 0 0 2mm;
-  }
-  
-  .devotee-form-details .devotee-value {
-    text-transform: uppercase;
-  }
-  .family-info .devotee-line {
-    min-height: 4mm;
-  }
-  
-  .family-info .devotee-value {
-    border-bottom: none !important;
-    background-image: none !important;
-    text-transform: uppercase;
-  }
-  .devotee-form-details .devotee-value {
-    text-transform: uppercase;
-  }
-  
-  .family-info .devotee-value {
-    border-bottom: none !important;
-    background-image: none !important;
-    text-decoration: none !important;
-    text-transform: uppercase;
-  }
-  .family-details-section {
-    display: grid;
-    grid-template-columns: 28mm 28mm 1fr;
-    gap: 4mm;
-    margin-top: 4mm;
-    align-items: start;
-  }
-  
-  .family-photo-box {
-    width: 28mm;
-    height: 32mm;
-    border: 1px solid black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 8.5px;
-    font-weight: 700;
-  }
-  
-  .family-info {
-    font-size: 10px;
-  }
-  
-  .family-info h3 {
-    margin: 0 0 2mm;
-    font-size: 11px;
-    font-weight: 800;
-    text-align: center;
-  }
-  
-  .signature-section {
-    display: grid;
-    grid-template-columns: 1fr 62mm 1fr;
-    gap: 7mm;
-    align-items: end;
-    margin-top: 9mm;
-    text-align: center;
-    font-size: 9px;
-  }
-  
-  .signature-block {
-    min-height: 16mm;
-    display: flex;
-    flex-direction: column;
-    justify-content: end;
-  }
-  
-  .signature-line {
-    border-top: 1px solid black;
-    height: 1px;
-    margin-bottom: 3px;
-  }
-  
-  .thumb-impression-block {
-    display: flex;
-    justify-content: center;
-    align-items: end;
-    gap: 4mm;
-  }
-  
-  .thumb-box {
-    width: 28mm;
-    height: 20mm;
-    border: 1px solid black;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1mm;
-    font-size: 8px;
-    font-weight: 700;
-    text-align: center;
-  }
-  
-  .thumb-box p {
-    margin: 0;
-  }
-  
-  .thumb-hi {
-    font-size: 8px;
-    font-weight: 600;
-  }  
-  .form-footer {
-    margin-top: 6mm;
-    font-size: 9.5px;
-    font-weight: 700;
-  }
-  
-  .form-footer p {
-    margin: 0;
-  }
+
   .devotee-form-page:last-child {
     page-break-after: auto !important;
     break-after: auto !important;
@@ -295,115 +115,154 @@ button {
   .devotee-form-top {
     display: flex;
     justify-content: space-between;
-    gap: 8mm;
-    font-size: 8.5px;
-    margin-bottom: 2mm;
+    gap: 12mm;
+    font-size: 9.5px;
+    margin-bottom: 4mm;
   }
-  
+
   .devotee-form-top p {
-    margin: 0 0 0.5mm;
+    margin: 0 0 0.8mm;
   }
-  
+
   .devotee-form-title {
     text-align: center;
     border: 1px solid black;
-    padding: 1.5mm;
-    margin-bottom: 2.5mm;
+    padding: 2.5mm;
+    margin-bottom: 4mm;
   }
-  
+
   .devotee-form-title h1 {
-    font-size: 12px;
+    font-size: 14.5px;
     margin: 0;
+    font-weight: 900;
+  }
+
+  .devotee-form-title h2 {
+    font-size: 10.5px;
+    margin: 0.8mm 0 0;
     font-weight: 800;
   }
-  
-  .devotee-form-title h2 {
-    font-size: 9.5px;
-    margin: 0.5mm 0 0;
-    font-weight: 700;
-  }
-  
+
   .devotee-form-main {
     display: grid;
-    grid-template-columns: 1fr 30mm;
-    gap: 5mm;
+    grid-template-columns: 1fr 35mm;
+    gap: 8mm;
     align-items: start;
   }
-  
+
   .devotee-form-details {
     display: grid;
-    gap: 0.7mm;
+    gap: 1.45mm;
   }
-  
+
   .devotee-line {
     display: grid;
-    grid-template-columns: 30mm 3mm 1fr;
+    grid-template-columns: 34mm 4mm 1fr;
     gap: 1mm;
     align-items: start;
-    min-height: 3.5mm;
+    min-height: 4.8mm;
   }
-  
+
+  .devotee-label {
+    font-weight: 800;
+  }
+
+  .devotee-colon {
+    font-weight: 800;
+  }
+
   .devotee-value {
-    border-bottom: 1px dotted #555;
-    min-height: 3.2mm;
+    border-bottom: none !important;
+    background-image: none !important;
+    text-decoration: none !important;
+    min-height: 4.8mm;
+    font-weight: 800;
+    text-transform: uppercase;
   }
-  
+
   .devotee-photo-box {
-    width: 30mm;
+    width: 35mm;
+    height: 44mm;
+    border: 1px solid black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  /* Declaration without boundary box */
+
+  .declaration-section {
+    margin-top: 4.5mm;
+    border: none !important;
+    padding: 0;
+    font-size: 10px;
+    line-height: 1.33;
+  }
+
+  .declaration-section h3 {
+    margin: 0 0 2mm;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 900;
+    text-decoration: underline;
+  }
+
+  .declaration-section p {
+    margin: 0 0 2mm;
+  }
+
+  /* Family member section */
+
+  .family-details-section {
+    display: grid;
+    grid-template-columns: 31mm 31mm 1fr;
+    gap: 6mm;
+    margin-top: 5mm;
+    align-items: start;
+  }
+
+  .family-photo-box {
+    width: 31mm;
     height: 36mm;
     border: 1px solid black;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: 8px;
-    font-weight: 700;
-  }
-
-  .declaration-section {
-    margin-top: 12px;
-    font-size: 11px;
-    line-height: 1.45;
-  }
-
-  .declaration-section h3 {
-    font-size: 13px;
-    font-weight: 800;
-    text-decoration: underline;
-    margin: 0 0 4px;
-  }
-
-  .declaration-section p {
-    margin: 4px 0;
-  }
-
-  .family-details-section {
-    display: grid;
-    grid-template-columns: 28mm 28mm 1fr;
-    gap: 8mm;
-    align-items: start;
-    margin-top: 12px;
-  }
-
-  .family-photo-box {
-    width: 28mm;
-    height: 34mm;
-    border: 1px solid #444;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
     padding: 3mm;
-    font-size: 11px;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .family-info {
+    font-size: 10.5px;
+    padding-top: 1mm;
   }
 
   .family-info h3 {
+    margin: 0 0 3mm;
     font-size: 14px;
-    font-weight: 800;
-    text-decoration: underline;
-    margin: 0 0 6px;
+    font-weight: 900;
     text-align: center;
+    text-decoration: underline;
   }
+
+  .family-info .devotee-line {
+    grid-template-columns: 26mm 4mm 1fr;
+    min-height: 4.8mm;
+  }
+
+  .family-info .devotee-value {
+    border-bottom: none !important;
+    background-image: none !important;
+    text-decoration: none !important;
+    text-transform: uppercase;
+  }
+
+  /* Signature + thumb area */
 
   .signature-section {
     display: grid;
@@ -412,117 +271,66 @@ button {
     align-items: end;
     margin-top: 12mm;
     text-align: center;
-    font-size: 12px;
+    font-size: 10px;
   }
-  
+
   .signature-block {
-    min-height: 18mm;
+    min-height: 17mm;
     display: flex;
     flex-direction: column;
     justify-content: end;
   }
-  
+
   .signature-line {
     border-top: 1px solid black;
     height: 1px;
     margin-bottom: 4px;
   }
-  
+
   .thumb-impression-block {
     display: flex;
     justify-content: center;
     align-items: end;
     gap: 4mm;
   }
-  
+
   .thumb-box {
     width: 30mm;
-    height: 24mm;
+    height: 23mm;
     border: 1px solid black;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 1mm;
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 8.5px;
+    font-weight: 800;
     text-align: center;
   }
-  
+
   .thumb-box p {
     margin: 0;
   }
-  
-  .thumb-hi {
-    font-size: 9px;
-    font-weight: 600;
-  }
 
-  .form-footer {
-    margin-top: 10mm;
-    font-size: 13px;
+  .thumb-hi {
+    font-size: 8px;
     font-weight: 700;
   }
 
-  @page {
-    size: A4 portrait;
-    margin: 4mm;
-  }
-}
-@media print {
-  body {
-    background: white !important;
+  .form-footer {
+    margin-top: 9mm;
+    font-size: 11px;
+    font-weight: 800;
   }
 
-  /* Success page print compact */
-  .success-print-card {
-    width: 100% !important;
-    max-width: 145mm !important;
-    margin: 0 auto !important;
-    padding: 6mm !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
+  .form-footer p {
+    margin: 0;
   }
 
-  .success-print-logo {
-    width: 18mm !important;
-    margin-bottom: 2mm !important;
-  }
+  /* =========================
+     SUCCESS PAGE PRINT
+  ========================= */
 
-  .success-print-card h1 {
-    font-size: 16px !important;
-    margin: 2mm 0 1mm !important;
-  }
-
-  .success-print-card h2 {
-    font-size: 13px !important;
-    margin: 0 0 2mm !important;
-  }
-
-  .success-print-card p {
-    font-size: 10px !important;
-    margin: 1mm 0 !important;
-  }
-
-  .success-print-details {
-    margin-top: 4mm !important;
-  }
-
-  .success-print-details > div {
-    padding: 3mm !important;
-    margin-bottom: 2mm !important;
-  }
-
-  .success-print-actions {
-    display: none !important;
-  }
-
-  @page {
-    size: A4 portrait;
-    margin: 6mm;
-  }
-}
-@media print {
   .success-print-card {
     width: 100% !important;
     max-width: 145mm !important;
@@ -576,33 +384,4 @@ button {
   .success-print-actions {
     display: none !important;
   }
-
-  @page {
-    size: A4 portrait;
-    margin: 6mm;
-  }
-}
-.print-list-area table {
-  font-size: 9px;
-}
-
-.print-list-area th,
-.print-list-area td {
-  padding: 3px 4px;
-  line-height: 1.15;
-  vertical-align: middle;
-}
-
-.print-list-area h1 {
-  font-size: 16px;
-  margin-bottom: 2px;
-}
-
-.print-list-area h2 {
-  font-size: 13px;
-  margin-bottom: 4px;
-}
-
-.print-list-area p {
-  margin: 2px 0;
 }
