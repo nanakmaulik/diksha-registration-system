@@ -662,18 +662,17 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
   async function handleUpdateSlotCapacity(slot: Slot) {
     const newCapacity = Number(editingSlotCapacity);
   
-    if (!Number.isInteger(newCapacity) || newCapacity <= 0) {
+    if (!Number.isInteger(newCapacity) || newCapacity < 0) {
       alert("Please enter a valid capacity.\nकृपया सही capacity भरें।");
       return;
     }
   
     if (newCapacity < slot.current_count) {
       alert(
-        `Capacity filled count se kam nahi ho sakti.\nAlready filled: ${slot.current_count}`
+        `Capacity already filled count se kam nahi ho sakti.\nAlready filled: ${slot.current_count}\n\nAgar slot close karna hai aur filled 0 hai, capacity 0 kar sakte ho. Agar filled ${slot.current_count} hai, minimum capacity ${slot.current_count} rakhni padegi.`
       );
       return;
     }
-  
     setIsUpdatingSlotCapacity(true);
   
     const { error } = await supabase.rpc("update_slot_capacity", {
@@ -1821,7 +1820,7 @@ titleHi="स्थगित"
     <>
       <input
         type="number"
-        min={slot.current_count}
+        min={0}
         value={editingSlotCapacity}
         onChange={(event) => setEditingSlotCapacity(event.target.value)}
         className="w-20 rounded-xl border border-orange-200 px-3 py-2 text-sm font-bold outline-none focus:border-orange-600"
