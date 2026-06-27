@@ -555,3 +555,27 @@ padding: 6mm 8mm;
     margin: 6mm;
   }
 }
+.print-list-area table {
+  font-size: 9px;
+}
+
+.print-list-area th,
+.print-list-area td {
+  padding: 3px 4px;
+  line-height: 1.15;
+  vertical-align: middle;
+}
+
+.print-list-area h1 {
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+
+.print-list-area h2 {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.print-list-area p {
+  margin: 2px 0;
+}

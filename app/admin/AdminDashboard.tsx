@@ -2272,85 +2272,49 @@ titleHi="स्थगित"
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
-              <PrintHead>Sr.</PrintHead>
-              <PrintHead>Token</PrintHead>
-              <PrintHead>Name</PrintHead>
-              <PrintHead>Age</PrintHead>
-              <PrintHead>Gender</PrintHead>
-              <PrintHead>Mobile</PrintHead>
-              <PrintHead>City</PrintHead>
-              <PrintHead>Family Approval</PrintHead>
-              <PrintHead>Status</PrintHead>
-              <PrintHead>Attendance</PrintHead>
-              <PrintHead>Diksha Date</PrintHead>
-              <PrintHead>Remarks</PrintHead>
+            <PrintHead>Sr.</PrintHead>
+<PrintHead>Token</PrintHead>
+<PrintHead>Name</PrintHead>
+<PrintHead>Age</PrintHead>
+<PrintHead>Gender</PrintHead>
+<PrintHead>Number</PrintHead>
+<PrintHead>City</PrintHead>
+<PrintHead>Family Approval</PrintHead>
             </tr>
           </thead>
 
           <tbody>
-            {filteredRegistrations.map((person, index) => (
-              <tr key={person.id}>
-                <PrintCell>{index + 1}</PrintCell>
-                <PrintCell>{person.token}</PrintCell>
-                <PrintCell>
-                  <strong>{person.full_name || "-"}</strong>
-                  <br />
-                  Occupation: {person.occupation || "-"}
-                </PrintCell>
-                <PrintCell>{person.age || "-"}</PrintCell>
-                <PrintCell>{person.gender || "-"}</PrintCell>
-                <PrintCell>
-                  Mobile: {person.mobile || "-"}
-                  <br />
-                  WhatsApp: {person.whatsapp || "-"}
-                </PrintCell>
-                <PrintCell>
-                  {person.city || "-"}
-                  <br />
-                  {person.state || "-"}
-                  <br />
-                  PIN: {person.pin_code || "-"}
-                </PrintCell>
-                <PrintCell>
-                  {person.marital_status === "Married" ? (
-                    <>Husband / Wife: {person.spouse_name || "-"}</>
-                  ) : (
-                    <>
-                      Father: {person.father_name || "-"}
-                      <br />
-                      Mother: {person.mother_name || "-"}
-                    </>
-                  )}
-                </PrintCell>
-                <PrintCell>{person.candidate_status || person.status}</PrintCell>
-                <PrintCell>
-                  FM: {person.final_meeting_attendance || "Not Marked"}
-                  <br />
-                  Diksha: {person.diksha_attendance || "Not Marked"}
-                </PrintCell>
-                <PrintCell>
-                {person.diksha_date ? formatDate(person.diksha_date) : "-"}
-                </PrintCell>
-                <PrintCell>
-                  {person.evaluator_notes || person.remarks_by || "-"}
-                </PrintCell>
-              </tr>
-            ))}
+          {filteredRegistrations.map((person, index) => {
+  const familyApproval =
+    person.marital_status === "Married" && person.gender === "Male"
+      ? `Father: ${person.father_name || "-"}`
+      : person.marital_status === "Married"
+      ? `Husband: ${person.spouse_name || "-"}`
+      : `Father: ${person.father_name || "-"} / Mother: ${
+          person.mother_name || "-"
+        }`;
+
+  return (
+    <tr key={person.id}>
+      <PrintCell>{index + 1}</PrintCell>
+      <PrintCell>
+        <strong>{person.token || "-"}</strong>
+      </PrintCell>
+      <PrintCell>
+        <strong>{person.full_name || "-"}</strong>
+      </PrintCell>
+      <PrintCell>{person.age || "-"}</PrintCell>
+      <PrintCell>{person.gender || "-"}</PrintCell>
+      <PrintCell>{person.mobile || "-"}</PrintCell>
+      <PrintCell>{person.city || "-"}</PrintCell>
+      <PrintCell>{familyApproval}</PrintCell>
+    </tr>
+  );
+})}
           </tbody>
         </table>
 
-        <div className="mt-8">
-          <p className="font-bold">Address Details:</p>
-
-          {filteredRegistrations.map((person, index) => (
-            <p key={person.id} className="mt-2 text-xs">
-              <strong>
-                {index + 1}. {person.token} - {person.full_name || "-"}:
-              </strong>{" "}
-              {person.address || "-"}
-            </p>
-          ))}
-        </div>
+       
 
         <div className="mt-10 grid grid-cols-2 gap-10 text-sm">
           <div>
@@ -3414,14 +3378,14 @@ function TableCell({ children }: { children: ReactNode }) {
 
 function PrintHead({ children }: { children: ReactNode }) {
   return (
-    <th className="border border-black px-2 py-2 text-left font-bold">
+    <th className="border border-black px-1 py-1 text-left font-bold">
       {children}
     </th>
   );
 }
 
 function PrintCell({ children }: { children: ReactNode }) {
-  return <td className="border border-black px-2 py-2">{children}</td>;
+  return <td className="border border-black px-1 py-1">{children}</td>;
 }
 function DevoteeLine({ label, value }: { label: string; value: string }) {
   return (
