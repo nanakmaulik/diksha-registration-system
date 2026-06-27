@@ -173,6 +173,28 @@ button {
     margin: 0 0 2mm;
   }
   
+  .devotee-form-details .devotee-value {
+    text-transform: uppercase;
+  }
+  .family-info .devotee-line {
+    min-height: 4mm;
+  }
+  
+  .family-info .devotee-value {
+    border-bottom: none !important;
+    background-image: none !important;
+    text-transform: uppercase;
+  }
+  .devotee-form-details .devotee-value {
+    text-transform: uppercase;
+  }
+  
+  .family-info .devotee-value {
+    border-bottom: none !important;
+    background-image: none !important;
+    text-decoration: none !important;
+    text-transform: uppercase;
+  }
   .family-details-section {
     display: grid;
     grid-template-columns: 28mm 28mm 1fr;
