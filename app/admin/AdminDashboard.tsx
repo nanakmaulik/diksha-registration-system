@@ -172,6 +172,8 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
   const [tokenSuccess, setTokenSuccess] = useState<{
     token: string;
     name: string;
+    meetingDate?: string;
+    meetingTime?: string;
   } | null>(null);
 
   const todayDate = getTodayDateString();
@@ -291,6 +293,8 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
     setTokenSuccess({
       token: generatedToken || "-",
       name: request.full_name || "-",
+      meetingDate: request.requested_meeting_date || "",
+      meetingTime: request.requested_meeting_time || "",
     });
     
     setProcessingRequestId(null);
@@ -351,6 +355,8 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
     setTokenSuccess({
       token: generatedToken || "-",
       name: `${groupType} Token - ${selectedRequestIds.length} candidates`,
+      meetingDate: selectedRequests[0]?.requested_meeting_date || "",
+      meetingTime: selectedRequests[0]?.requested_meeting_time || "",
     });
   
     setSelectedRequestIds([]);
@@ -2985,7 +2991,19 @@ const isOverCapacity = slot ? slot.current_count >= slot.capacity : false;
           {tokenSuccess.token}
         </p>
       </div>
+      <div className="mt-4 rounded-3xl border border-green-200 bg-green-50 p-5">
+  <p className="text-sm font-bold uppercase tracking-wide text-green-800">
+    Meeting Date / मीटिंग तारीख
+  </p>
 
+  <p className="mt-2 text-3xl font-black text-green-900">
+    {tokenSuccess.meetingDate ? formatDate(tokenSuccess.meetingDate) : "-"}
+  </p>
+
+  <p className="mt-1 text-lg font-extrabold text-green-800">
+    {tokenSuccess.meetingTime || "-"}
+  </p>
+</div>
       <p className="mt-5 text-sm font-semibold text-stone-600">
         Please note this token number and share it with the candidate.
       </p>
