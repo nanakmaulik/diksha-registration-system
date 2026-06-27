@@ -176,10 +176,7 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
 
   const todayDate = getTodayDateString();
   const availableFinalMeetingSlots = slots.filter(
-    (slot) =>
-      slot.status !== "full" &&
-      slot.current_count < slot.capacity &&
-      slot.slot_date >= todayDate
+    (slot) => slot.slot_date >= todayDate
   );
   
   const finalMeetingMonths = Array.from(
@@ -936,7 +933,7 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
     }, [registrations, attendanceDate]);
 
     const upcomingSlots = slots
-    .filter((slot) => slot.status !== "full" && slot.slot_date >= tomorrowDate)
+    .filter((slot) => slot.slot_date >= tomorrowDate)
     .sort((a, b) => a.slot_date.localeCompare(b.slot_date))
     .slice(0, showAllSlots ? 30 : 6);
 
@@ -1804,9 +1801,21 @@ titleHi="स्थगित"
 
             <p className="font-bold text-orange-800">{seatsLeft}</p>
 
-            <span className="w-fit rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-              Open
-            </span>
+            <span
+  className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${
+    slot.current_count > slot.capacity
+      ? "bg-red-100 text-red-700"
+      : slot.current_count >= slot.capacity
+      ? "bg-orange-100 text-orange-800"
+      : "bg-green-100 text-green-700"
+  }`}
+>
+  {slot.current_count > slot.capacity
+    ? "Overbooked"
+    : slot.current_count >= slot.capacity
+    ? "Full"
+    : "Open"}
+</span>
             <div className="flex items-center gap-2">
   {editingSlotId === slot.id ? (
     <>
@@ -2698,16 +2707,17 @@ titleHi="स्थगित"
 
         const slot = calendarDay.slot;
         const seatsLeft = slot ? slot.capacity - slot.current_count : 0;
-        const isFull = !slot || seatsLeft <= 0 || slot.status === "full";
+        const isFull = !slot;
+const isOverCapacity = slot ? slot.current_count >= slot.capacity : false;
         const isSelected = finalMeetingSlotId === slot?.id;
 
         return (
           <button
             key={calendarDay.date}
             type="button"
-            disabled={!slot || isFull}
+            disabled={!slot}
             onClick={() => {
-              if (!slot || isFull) return;
+              if (!slot) return;
               setFinalMeetingSlotId(slot.id);
             }}
             className={`min-h-[62px] border-r border-t border-orange-100 p-2 text-left transition last:border-r-0 ${
@@ -2726,12 +2736,14 @@ titleHi="स्थगित"
                   className={`inline-flex w-fit rounded-full px-2 py-1 text-[9px] font-extrabold ${
                     isSelected
                       ? "bg-white text-orange-800"
-                      : isFull
-                      ? "bg-stone-200 text-stone-500"
+                      : isOverCapacity
+                      ? "bg-red-100 text-red-700"
                       : "bg-green-100 text-green-700"
                   }`}
                 >
-                  {isFull ? "Full" : `${seatsLeft} left`}
+                  {isOverCapacity
+  ? `${slot.current_count}/${slot.capacity}`
+  : `${seatsLeft} left`}
                 </span>
               ) : (
                 <span className="text-[9px] font-bold text-stone-400">
