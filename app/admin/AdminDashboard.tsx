@@ -2630,9 +2630,9 @@ titleHi="स्थगित"
                   <DevoteeLine label="State" value={person.state || "-"} />
                   <DevoteeLine label="Country" value={person.country || "-"} />
                   <DevoteeLine
-                    label="PIN / ZIP"
-                    value={person.pin_code || "-"}
-                  />
+  label="PIN Code"
+  value={person.pin_code || "-"}
+/>
                   <DevoteeLine
                     label="Occupation"
                     value={person.occupation || "-"}
