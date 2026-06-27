@@ -492,14 +492,30 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
       return;
     }
   
-    alert("Final Meeting rescheduled successfully.\nFinal Meeting date update हो गई।");
+    const { data: updatedRegistration, error: fetchTokenError } = await supabase
+    .from("registrations")
+    .select("token, full_name, final_meeting_date, final_meeting_time")
+    .eq("id", selectedAction.registrationId)
+    .single();
   
-    setIsReschedulingFinalMeeting(false);
-    setSelectedAction(null);
-    setActionNotes("");
-    setFinalMeetingSlotId("");
-  
+  if (fetchTokenError) {
+    alert("Final Meeting rescheduled successfully, but token fetch error: " + fetchTokenError.message);
     window.location.reload();
+    return;
+  }
+  
+  setTokenSuccess({
+    token: updatedRegistration?.token || "-",
+    name: updatedRegistration?.full_name || selectedAction.candidateName || "-",
+    meetingDate: updatedRegistration?.final_meeting_date || "",
+    meetingTime: updatedRegistration?.final_meeting_time || "",
+  });
+  
+  setIsReschedulingFinalMeeting(false);
+  setSelectedAction(null);
+  setActionNotes("");
+  setFinalMeetingSlotId("");
+  setFinalMeetingMonth("");
   }
   async function handleScheduleDiksha() {
     if (!selectedAction) return;
@@ -3100,11 +3116,11 @@ const isOverCapacity = slot ? slot.current_count >= slot.capacity : false;
       </div>
 
       <h3 className="mt-5 text-3xl font-extrabold text-green-700">
-        Token Generated Successfully
+      Token Number Updated Successfully
       </h3>
 
       <p className="mt-2 text-xl font-bold text-orange-800">
-        टोकन सफलतापूर्वक बन गया
+      नया टोकन नंबर सफलतापूर्वक बन गया
       </p>
 
       <p className="mt-5 text-sm font-semibold text-stone-600">
@@ -3119,7 +3135,9 @@ const isOverCapacity = slot ? slot.current_count >= slot.capacity : false;
         <p className="text-sm font-bold uppercase tracking-wide text-orange-800">
           Token Number / टोकन नंबर
         </p>
-
+        <p className="mt-3 text-sm font-bold uppercase tracking-wide text-stone-600">
+  This is your new token number
+</p>
         <p className="mt-3 text-6xl font-black text-orange-900 md:text-7xl">
           {tokenSuccess.token}
         </p>
