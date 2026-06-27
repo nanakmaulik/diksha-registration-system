@@ -143,6 +143,11 @@ const [rejectionReason, setRejectionReason] = useState("");
 const [processingRequestId, setProcessingRequestId] = useState<string | null>(
   null
 );
+const [editingRequestSlotId, setEditingRequestSlotId] = useState<string | null>(
+  null
+);
+const [editingRequestNewSlotId, setEditingRequestNewSlotId] = useState("");
+const [isUpdatingRequestSlot, setIsUpdatingRequestSlot] = useState(false);
 const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([]);
 const [isDeletingRequests, setIsDeletingRequests] = useState(false);
 const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
@@ -261,6 +266,48 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
 
     window.location.reload();
   }
+  async function handleRescheduleRegistrationRequest(request: RegistrationRequest) {
+    if (!editingRequestNewSlotId) {
+      alert("Please select new meeting date.\nकृपया नई meeting date चुनें।");
+      return;
+    }
+  
+    if (!requestUpdatedBy.trim()) {
+      alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
+      return;
+    }
+  
+    const selectedSlot = slots.find((slot) => slot.id === editingRequestNewSlotId);
+  
+    const confirmed = window.confirm(
+      `Change meeting date for ${request.full_name || "-"}?\n\nNew Date: ${
+        selectedSlot ? formatDate(selectedSlot.slot_date) : "-"
+      }\nTime: ${selectedSlot?.slot_time || "-"}`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsUpdatingRequestSlot(true);
+  
+    const { error } = await supabase.rpc("reschedule_registration_request", {
+      p_request_id: request.id,
+      p_new_slot_id: editingRequestNewSlotId,
+      p_updated_by: requestUpdatedBy.trim(),
+    });
+  
+    if (error) {
+      alert("Request meeting date update error: " + error.message);
+      setIsUpdatingRequestSlot(false);
+      return;
+    }
+  
+    setEditingRequestSlotId(null);
+    setEditingRequestNewSlotId("");
+    setIsUpdatingRequestSlot(false);
+  
+    window.location.reload();
+  }
+
   async function handleApproveRequest(request: RegistrationRequest) {
     if (!requestUpdatedBy.trim()) {
       alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
@@ -1627,14 +1674,73 @@ titleHi="स्थगित"
   <div className="space-y-3">
   <div className="rounded-2xl bg-white p-4 uppercase shadow-sm">
   <p className="text-xs font-bold text-stone-500">Requested Meeting</p>
+
   <p className="font-bold text-orange-800">
     {request.requested_meeting_date
       ? formatDate(request.requested_meeting_date)
       : "-"}
   </p>
+
   <p className="text-sm font-semibold text-stone-600">
     {request.requested_meeting_time || "-"}
   </p>
+
+  {editingRequestSlotId === request.id ? (
+    <div className="mt-3 space-y-2">
+      <select
+        value={editingRequestNewSlotId}
+        onChange={(event) => setEditingRequestNewSlotId(event.target.value)}
+        className="w-full rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-bold outline-none focus:border-orange-600"
+      >
+        <option value="">Select new date</option>
+        {slots
+          .filter((slot) => slot.slot_date >= todayDate)
+          .sort((a, b) => a.slot_date.localeCompare(b.slot_date))
+          .map((slot) => (
+            <option key={slot.id} value={slot.id}>
+              {formatDate(slot.slot_date)} - {slot.slot_time} -{" "}
+              {slot.current_count}/{slot.capacity}
+            </option>
+          ))}
+      </select>
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => handleRescheduleRegistrationRequest(request)}
+          disabled={isUpdatingRequestSlot || !editingRequestNewSlotId}
+          className="flex-1 rounded-xl bg-green-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+        >
+          Save
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setEditingRequestSlotId(null);
+            setEditingRequestNewSlotId("");
+          }}
+          className="flex-1 rounded-xl bg-stone-100 px-3 py-2 text-xs font-bold text-stone-700"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  ) : (
+    <button
+      type="button"
+      onClick={() => {
+        setEditingRequestSlotId(request.id);
+        setEditingRequestNewSlotId(request.requested_slot_id || "");
+      }}
+      className="mt-3 rounded-xl bg-orange-100 px-3 py-2 text-xs font-bold text-orange-800"
+    >
+      Change Date
+      <span className="block text-[10px] font-normal">
+        तारीख बदलें
+      </span>
+    </button>
+  )}
 </div>
 
 <div className="rounded-2xl bg-white p-4 uppercase shadow-sm">
