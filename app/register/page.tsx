@@ -409,7 +409,7 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please enter postal / ZIP code.\nकृपया पोस्टल / ज़िप कोड भरें।",
+            "Please enter PIN code.\nकृपया पिन कोड भरें।",
         };
       }
 
@@ -417,7 +417,7 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please enter a valid postal / ZIP code.\nकृपया सही पोस्टल / ज़िप कोड भरें।",
+          "Please enter a valid PIN code.\nकृपया सही पिन कोड भरें।",
         };
       }
     }
@@ -805,15 +805,15 @@ p_id_type: formData.idType,
               subtitleEn="Indian and international addresses are accepted."
               subtitleHi="भारत और विदेश दोनों के पते स्वीकार हैं।"
             >
-              <InputField
-    labelEn="Postal / ZIP Code"
-    labelHi="पोस्टल / ज़िप कोड"
-    name="pinCode"
-    value={formData.pinCode}
-    onChange={handleChange}
-    placeholder="143001, 10001, SW1A 1AA, etc."
-    required
-  />
+             <InputField
+  labelEn="PIN Code"
+  labelHi="पिन कोड"
+  name="pinCode"
+  value={formData.pinCode}
+  onChange={handleChange}
+  placeholder="Enter PIN code"
+  required
+/>
               <InputField
                 labelEn="Mobile Number"
                 labelHi="मोबाइल नंबर"
