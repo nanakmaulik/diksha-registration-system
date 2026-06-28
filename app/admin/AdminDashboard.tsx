@@ -149,6 +149,8 @@ const [editingRequestSlotId, setEditingRequestSlotId] = useState<string | null>(
 const [editingRequestNewSlotId, setEditingRequestNewSlotId] = useState("");
 const [isUpdatingRequestSlot, setIsUpdatingRequestSlot] = useState(false);
 const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([]);
+const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<string[]>([]);
+const [isConvertingGroupToken, setIsConvertingGroupToken] = useState(false);
 const [isDeletingRequests, setIsDeletingRequests] = useState(false);
 const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
   const [selectedAadhaar, setSelectedAadhaar] = useState<{
@@ -558,6 +560,29 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
     window.location.reload();
   }
   
+  function handleToggleRegistrationSelection(registrationId: string) {
+    setSelectedRegistrationIds((prev) =>
+      prev.includes(registrationId)
+        ? prev.filter((id) => id !== registrationId)
+        : [...prev, registrationId]
+    );
+  }
+  
+  function handleToggleAllFilteredRegistrations() {
+    const ids = filteredRegistrations.map((person) => person.id);
+  
+    if (ids.length === 0) return;
+  
+    const allSelected = ids.every((id) => selectedRegistrationIds.includes(id));
+  
+    if (allSelected) {
+      setSelectedRegistrationIds([]);
+      return;
+    }
+  
+    setSelectedRegistrationIds(ids);
+  }
+
   function handleToggleRequestSelection(requestId: string) {
     setSelectedRequestIds((prev) =>
       prev.includes(requestId)
@@ -1079,6 +1104,68 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
       setTimeout(() => {
         window.print();
       }, 100);
+    }
+
+    async function handleConvertSelectedRegistrationsToGroup(
+      groupType: "Couple" | "Family"
+    ) {
+      if (selectedRegistrationIds.length < 2) {
+        alert("Please select at least 2 registrations.");
+        return;
+      }
+    
+      if (groupType === "Couple" && selectedRegistrationIds.length !== 2) {
+        alert("Couple token ke liye exactly 2 registrations select karo.");
+        return;
+      }
+    
+      const selectedPeople = filteredRegistrations.filter((person) =>
+        selectedRegistrationIds.includes(person.id)
+      );
+    
+      const uniqueSlotIds = Array.from(
+        new Set(selectedPeople.map((person) => person.slot_id))
+      );
+    
+      if (uniqueSlotIds.length !== 1) {
+        alert("Selected registrations ki meeting date same honi chahiye.");
+        return;
+      }
+    
+      const confirmed = window.confirm(
+        `Convert ${selectedRegistrationIds.length} selected registration(s) to one shared ${groupType} token?\n\nFresh token generate hoga. Baaki kisi aur token ko change nahi kiya jayega.`
+      );
+    
+      if (!confirmed) return;
+    
+      setIsConvertingGroupToken(true);
+    
+      const { data, error } = await supabase.rpc(
+        "convert_registrations_to_group_token",
+        {
+          p_registration_ids: selectedRegistrationIds,
+          p_updated_by: "Sadhak",
+          p_group_type: groupType,
+        }
+      );
+    
+      if (error) {
+        alert("Group token conversion error: " + error.message);
+        setIsConvertingGroupToken(false);
+        return;
+      }
+    
+      const result = Array.isArray(data) ? data[0] : null;
+    
+      setTokenSuccess({
+        token: result?.token || "-",
+        name: `${groupType} Token - ${selectedRegistrationIds.length} candidates`,
+        meetingDate: result?.slot_date || "",
+        meetingTime: result?.slot_time || "",
+      });
+    
+      setSelectedRegistrationIds([]);
+      setIsConvertingGroupToken(false);
     }
 
   function handleExportCsv() {
@@ -2047,6 +2134,36 @@ titleHi="स्थगित"
             </div>
 
             <div className="flex flex-col gap-3 md:flex-row">
+            <button
+  type="button"
+  onClick={handleToggleAllFilteredRegistrations}
+  className="rounded-2xl border border-orange-300 px-5 py-3 font-bold text-orange-800"
+>
+  {selectedRegistrationIds.length > 0 ? "Unselect All" : "Select All"}
+  <span className="block text-sm font-normal">
+    registrations select करें
+  </span>
+</button>
+
+<button
+  type="button"
+  onClick={() => handleConvertSelectedRegistrationsToGroup("Couple")}
+  disabled={selectedRegistrationIds.length !== 2 || isConvertingGroupToken}
+  className="rounded-2xl bg-blue-700 px-5 py-3 font-bold text-white disabled:opacity-50"
+>
+  Convert as Couple
+  <span className="block text-sm font-normal">Couple token बनाएं</span>
+</button>
+
+<button
+  type="button"
+  onClick={() => handleConvertSelectedRegistrationsToGroup("Family")}
+  disabled={selectedRegistrationIds.length < 2 || isConvertingGroupToken}
+  className="rounded-2xl bg-purple-700 px-5 py-3 font-bold text-white disabled:opacity-50"
+>
+  Convert as Family
+  <span className="block text-sm font-normal">Family token बनाएं</span>
+</button>
               <button
                 type="button"
                 onClick={handleExportCsv}
@@ -2233,6 +2350,7 @@ titleHi="स्थगित"
             <table className="w-full min-w-[1450px] border-collapse text-left">
               <thead className="bg-orange-100">
                 <tr>
+                <TableHead>Select</TableHead>
                   <TableHead>Token</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile</TableHead>
@@ -2245,6 +2363,7 @@ titleHi="स्थगित"
                 </tr>
 
                 <tr className="text-sm text-stone-600">
+                <TableHead>चुनें</TableHead>
                   <TableHead>टोकन</TableHead>
                   <TableHead>नाम</TableHead>
                   <TableHead>मोबाइल</TableHead>
@@ -2261,7 +2380,7 @@ titleHi="स्थगित"
                 {filteredRegistrations.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={10}
                       className="px-4 py-10 text-center font-semibold text-stone-600"
                     >
                       No matching registrations / कोई मिलान पंजीकरण नहीं मिला
@@ -2273,6 +2392,14 @@ titleHi="स्थगित"
                       key={person.id}
                       className={index % 2 === 0 ? "bg-white" : "bg-orange-50"}
                     >
+                      <TableCell>
+  <input
+    type="checkbox"
+    checked={selectedRegistrationIds.includes(person.id)}
+    onChange={() => handleToggleRegistrationSelection(person.id)}
+    className="h-5 w-5 accent-orange-700"
+  />
+</TableCell>
                       <TableCell>{person.token}</TableCell>
 
                       <TableCell>
