@@ -92,13 +92,13 @@ const needsFatherMother =
 
   useEffect(() => {
     async function loadSlots() {
-      const tomorrow = getTomorrowDateString();
+      const today = getTodayDateString();
 
-      const { data, error } = await supabase
-        .from("slots")
-        .select("*")
-        .gte("slot_date", tomorrow)
-        .order("slot_date", { ascending: true });
+const { data, error } = await supabase
+  .from("slots")
+  .select("*")
+  .gte("slot_date", today)
+  .order("slot_date", { ascending: true });
 
       if (error) {
         alert("Slot loading error: " + error.message);
@@ -287,42 +287,42 @@ const needsFatherMother =
       if (!formData.fullName.trim()) {
         return {
           isValid: false,
-          message: "Please enter full name.\nकृपया पूरा नाम भरें।",
+          message: "Please enter full name.",
         };
       }
 
       if (!formData.age.trim()) {
         return {
           isValid: false,
-          message: "Please enter age.\nकृपया आयु भरें।",
+          message: "Please enter age.",
         };
       }
 
       if (Number(formData.age) <= 0) {
         return {
           isValid: false,
-          message: "Please enter a valid age.\nकृपया सही आयु भरें।",
+          message: "Please enter a valid age.",
         };
       }
 
       if (!formData.gender.trim()) {
         return {
           isValid: false,
-          message: "Please select gender.\nकृपया लिंग चुनें।",
+          message: "Please select gender.",
         };
       }
 
       if (!formData.occupation.trim()) {
         return {
           isValid: false,
-          message: "Please enter occupation.\nकृपया व्यवसाय भरें।",
+          message: "Please enter occupation.",
         };
       }
 
       if (!formData.maritalStatus.trim()) {
         return {
           isValid: false,
-          message: "Please select marital status.\nकृपया वैवाहिक स्थिति चुनें।",
+          message: "Please select marital status.",
         };
       }
     }
@@ -331,7 +331,7 @@ const needsFatherMother =
       if (!formData.mobile.trim()) {
         return {
           isValid: false,
-          message: "Please enter mobile number.\nकृपया मोबाइल नंबर भरें।",
+          message: "Please enter mobile number.",
         };
       }
 
@@ -341,14 +341,14 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please enter a valid mobile number. If outside India, include country code.\nकृपया सही मोबाइल नंबर भरें। भारत के बाहर हैं तो country code भी डालें।",
+            "Please enter a valid mobile number. If outside India, include country code.",
         };
       }
 
       if (!formData.whatsapp.trim()) {
         return {
           isValid: false,
-          message: "Please enter WhatsApp number.\nकृपया WhatsApp नंबर भरें।",
+          message: "Please enter WhatsApp number.",
         };
       }
 
@@ -358,21 +358,21 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please enter a valid WhatsApp number. If outside India, include country code.\nकृपया सही WhatsApp नंबर भरें।",
+            "Please enter a valid WhatsApp number. If outside India, include country code.",
         };
       }
 
       if (!formData.address.trim()) {
         return {
           isValid: false,
-          message: "Please enter full address.\nकृपया पूरा पता भरें।",
+          message: "Please enter full address.",
         };
       }
 
       if (!formData.city.trim()) {
         return {
           isValid: false,
-          message: "Please enter city.\nकृपया शहर भरें।",
+          message: "Please enter city.",
         };
       }
 
@@ -380,14 +380,14 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please enter state / province / region.\nकृपया राज्य / प्रांत / क्षेत्र भरें।",
+            "Please enter state / province / region.",
         };
       }
 
       if (!formData.country.trim()) {
         return {
           isValid: false,
-          message: "Please select country.\nकृपया देश चुनें।",
+          message: "Please select country.",
         };
       }
 
@@ -395,7 +395,7 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please enter PIN code.\nकृपया पिन कोड भरें।",
+            "Please enter PIN code.",
         };
       }
 
@@ -403,7 +403,7 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-          "Please enter a valid PIN code.\nकृपया सही पिन कोड भरें।",
+          "Please enter a valid PIN code.",
         };
       }
     }
@@ -412,14 +412,14 @@ const needsFatherMother =
       if (isMarriedFemale && !formData.spouseName.trim()) {
         return {
           isValid: false,
-          message: "Please enter husband name.\nकृपया पति का नाम भरें।",
+          message: "Please enter husband name.",
         };
       }
     
       if (isMarriedMale && !formData.fatherName.trim()) {
         return {
           isValid: false,
-          message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
+          message: "Please enter father's name.",
         };
       }
     
@@ -427,14 +427,14 @@ const needsFatherMother =
         if (!formData.fatherName.trim()) {
           return {
             isValid: false,
-            message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
+            message: "Please enter father's name.",
           };
         }
     
         if (!formData.motherName.trim()) {
           return {
             isValid: false,
-            message: "Please enter mother's name.\nकृपया माता का नाम भरें।",
+            message: "Please enter mother's name.",
           };
         }
       }
@@ -443,7 +443,7 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please enter family member name.\nकृपया परिवार के सदस्य का नाम भरें।",
+            "Please enter family member name.",
         };
       }
 
@@ -451,7 +451,7 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please select family member relation.\nकृपया परिवार के सदस्य से संबंध चुनें।",
+            "Please select family member relation.",
         };
       }
 
@@ -459,7 +459,7 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please enter family member mobile number.\nकृपया परिवार के सदस्य का मोबाइल नंबर भरें।",
+            "Please enter family member mobile number.",
         };
       }
 
@@ -469,7 +469,7 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please enter a valid family member mobile number. If outside India, include country code.\nकृपया सही परिवार सदस्य मोबाइल नंबर भरें।",
+            "Please enter a valid family member mobile number. If outside India, include country code.",
         };
       }
      
@@ -480,14 +480,14 @@ const needsFatherMother =
       if (!formData.idType.trim()) {
         return {
           isValid: false,
-          message: "Please select ID type.\nकृपया पहचान प्रमाण का प्रकार चुनें।",
+          message: "Please select ID type.",
         };
       }
 
       if (!formData.idNumber.trim()) {
         return {
           isValid: false,
-          message: "Please enter ID number.\nकृपया पहचान नंबर भरें।",
+          message: "Please enter ID number.",
         };
       }
 
@@ -499,7 +499,7 @@ const needsFatherMother =
         return {
           isValid: false,
           message:
-            "Please select an appointment date.\nकृपया अपॉइंटमेंट तारीख चुनें।",
+            "Please select an appointment date.",
         };
       }
     }
@@ -577,7 +577,7 @@ p_id_type: formData.idType,
   
         if (message.includes("slot_full")) {
           alert(
-            "This date is now full. Please select another date.\nयह तारीख अब भर चुकी है। कृपया दूसरी तारीख चुनें।"
+            "This date is now full. Please select another date."
           );
           setStep(5);
           setIsSubmitting(false);
@@ -632,16 +632,12 @@ p_id_type: formData.idType,
           <h1 className="text-3xl font-extrabold md:text-4xl">
             Diksha Registration
           </h1>
-          <h2 className="mt-2 text-2xl font-bold text-orange-800">
-            दीक्षा पंजीकरण
-          </h2>
+         
           <p className="mt-3 text-sm text-stone-600">
             Please fill the registration form carefully. International address
             and phone numbers are supported.
           </p>
-          <p className="text-sm text-stone-600">
-            कृपया फॉर्म ध्यान से भरें। भारत और विदेश दोनों के पते स्वीकार हैं।
-          </p>
+          
         </header>
 
         <div className="mb-6 rounded-3xl bg-white p-4 shadow-sm">
@@ -698,9 +694,9 @@ p_id_type: formData.idType,
                 required
                 options={[
                   ["", "Select gender"],
-                  ["Male", "Male / पुरुष"],
-                  ["Female", "Female / महिला"],
-                  ["Other", "Other / अन्य"],
+                  ["Male", "Male"],
+                  ["Female", "Female"],
+                  ["Other", "Other"],
                 ]}
               />
 
@@ -712,17 +708,17 @@ p_id_type: formData.idType,
   onChange={handleChange}
   required
   options={[
-    ["", "Select occupation / व्यवसाय चुनें"],
-    ["Student", "Student / विद्यार्थी"],
-    ["Housewife", "Housewife / गृहिणी"],
-    ["Service", "Service / नौकरी"],
-    ["Business", "Business / व्यापार"],
-    ["Farmer", "Farmer / किसान"],
-    ["Retired", "Retired / सेवानिवृत्त"],
-    ["Virakt", "Virakt / विरक्त"],
-    ["Self Employed", "Self Employed / स्वरोजगार"],
-    ["Unemployed", "Unemployed / बेरोजगार"],
-    ["Other", "Other / अन्य"],
+    ["", "Select occupation "],
+    ["Student", "Student "],
+    ["Housewife", "Housewife "],
+    ["Service", "Service "],
+    ["Business", "Business "],
+    ["Farmer", "Farmer "],
+    ["Retired", "Retired"],
+    ["Virakt", "Virakt "],
+    ["Self Employed", "Self Employed "],
+    ["Unemployed", "Unemployed "],
+    ["Other", "Other "],
   ]}
 />
 
@@ -1249,24 +1245,20 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
 
 function StepCard({
   titleEn,
-  titleHi,
   subtitleEn,
-  subtitleHi,
   children,
 }: {
   titleEn: string;
-  titleHi: string;
+  titleHi?: string;
   subtitleEn: string;
-  subtitleHi: string;
+  subtitleHi?: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="rounded-3xl bg-white p-5 shadow-sm md:p-8">
       <div className="mb-6">
         <h3 className="text-2xl font-extrabold">{titleEn}</h3>
-        <h4 className="mt-1 text-xl font-bold text-orange-800">{titleHi}</h4>
         <p className="mt-2 text-sm text-stone-600">{subtitleEn}</p>
-        <p className="text-sm text-stone-600">{subtitleHi}</p>
       </div>
 
       <div className="grid gap-5">{children}</div>
@@ -1274,9 +1266,9 @@ function StepCard({
   );
 }
 
+
 function InputField({
   labelEn,
-  labelHi,
   name,
   value,
   onChange,
@@ -1285,7 +1277,7 @@ function InputField({
   required = false,
 }: {
   labelEn: string;
-  labelHi: string;
+  labelHi?: string;
   name: string;
   value: string;
   onChange: (
@@ -1301,10 +1293,8 @@ function InputField({
     <div>
       <label className="mb-2 block font-bold">
         {labelEn} {required && <span className="text-red-600">*</span>}
-        <span className="block text-sm font-semibold text-orange-800">
-          {labelHi}
-        </span>
       </label>
+
       <input
         type={type}
         name={name}
@@ -1319,7 +1309,6 @@ function InputField({
 
 function TextareaField({
   labelEn,
-  labelHi,
   name,
   value,
   onChange,
@@ -1327,7 +1316,7 @@ function TextareaField({
   required = false,
 }: {
   labelEn: string;
-  labelHi: string;
+  labelHi?: string;
   name: string;
   value: string;
   onChange: (
@@ -1342,10 +1331,8 @@ function TextareaField({
     <div>
       <label className="mb-2 block font-bold">
         {labelEn} {required && <span className="text-red-600">*</span>}
-        <span className="block text-sm font-semibold text-orange-800">
-          {labelHi}
-        </span>
       </label>
+
       <textarea
         name={name}
         value={value}
@@ -1360,7 +1347,6 @@ function TextareaField({
 
 function SelectField({
   labelEn,
-  labelHi,
   name,
   value,
   onChange,
@@ -1368,7 +1354,7 @@ function SelectField({
   required = false,
 }: {
   labelEn: string;
-  labelHi: string;
+  labelHi?: string;
   name: string;
   value: string;
   onChange: (
@@ -1383,10 +1369,8 @@ function SelectField({
     <div>
       <label className="mb-2 block font-bold">
         {labelEn} {required && <span className="text-red-600">*</span>}
-        <span className="block text-sm font-semibold text-orange-800">
-          {labelHi}
-        </span>
       </label>
+
       <select
         name={name}
         value={value}
@@ -1480,13 +1464,12 @@ function formatMonth(dateString: string) {
   });
 }
 
-function getTomorrowDateString() {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+function getTodayDateString() {
+  const today = new Date();
 
-  const year = tomorrow.getFullYear();
-  const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
-  const day = String(tomorrow.getDate()).padStart(2, "0");
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }

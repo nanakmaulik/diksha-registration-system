@@ -1006,7 +1006,7 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
     (slot) => slot.current_count < slot.capacity
   );
 
-  const tomorrowDate = getTomorrowDateString();
+  const tomorrowDate = getTodayDateString();
   const threeMonthsLaterDate = getDateAfterMonths(3);
   const finalMeetingAttendanceList = useMemo(() => {
     return registrations.filter((person) => {
@@ -1310,326 +1310,6 @@ csvTextValue(person.whatsapp),
           </div>
         </header>
 
-        <section className="mb-8 space-y-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            <StatsCard
-              title="Total Registered"
-              titleHi="कुल पंजीकरण"
-              value={String(totalRegistered)}
-            />
-
-            <StatsCard
-              title="Showing Now"
-              titleHi="अभी दिख रहे हैं"
-              value={String(filteredRegistrations.length)}
-            />
-
-            <StatsCard
-              title="Slots Full"
-              titleHi="भरे हुए स्लॉट"
-              value={String(slotsFull)}
-            />
-
-            <StatsCard
-              title="Next Available Slot"
-              titleHi="अगला उपलब्ध स्लॉट"
-              value={
-                nextAvailableSlot
-                  ? formatDateShort(nextAvailableSlot.slot_date)
-                  : "None"
-              }
-            />
-          </div>
-
-          <div className="rounded-3xl bg-white p-5 shadow-sm md:p-6">
-            <div className="mb-5">
-              <h3 className="text-2xl font-extrabold">Reports Summary</h3>
-              <h4 className="mt-1 text-xl font-bold text-orange-800">
-                रिपोर्ट सारांश
-              </h4>
-              <p className="mt-2 text-sm text-stone-600">
-                Click any report card to filter registrations.
-              </p>
-              <p className="text-sm text-stone-600">
-                पंजीकरण फ़िल्टर करने के लिए किसी भी रिपोर्ट कार्ड पर क्लिक करें।
-              </p>
-            </div>
-
-
-            <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
-              <ReportCountCard
-                title="Scheduled Final Meetings"
-                titleHi="फाइनल मीटिंग शेड्यूल"
-                value={reportCounts.scheduledFinalMeetings}
-                active={reportFilter === "scheduled_final_meetings"}
-                onClick={() => setReportFilter("scheduled_final_meetings")}
-              />
-
-              <ReportCountCard
-                title="Pending"
-                titleHi="लंबित"
-                value={reportCounts.pending}
-                active={reportFilter === "pending"}
-                onClick={() => setReportFilter("pending")}
-              />
-
-              <ReportCountCard
-                title="Approved"
-                titleHi="स्वीकृत"
-                value={reportCounts.approved}
-                active={reportFilter === "approved"}
-                onClick={() => setReportFilter("approved")}
-              />
-<ReportCountCard
-  title="Final Meeting Attended"
-  titleHi="फाइनल मीटिंग उपस्थित"
-  value={reportCounts.finalMeetingAttended}
-  active={reportFilter === "final_meeting_attended"}
-  onClick={() => setReportFilter("final_meeting_attended")}
-/>
-              <ReportCountCard
-                title="Deferred"
-titleHi="स्थगित"
-                value={reportCounts.rejected}
-                active={reportFilter === "rejected"}
-                onClick={() => setReportFilter("rejected")}
-              />
-
-              <ReportCountCard
-                title="Scheduled Diksha"
-                titleHi="दीक्षा शेड्यूल"
-                value={reportCounts.scheduledDiksha}
-                active={reportFilter === "scheduled_diksha"}
-                onClick={() => setReportFilter("scheduled_diksha")}
-              />
-
-              <ReportCountCard
-                title="Diksha Completed"
-                titleHi="दीक्षा पूर्ण"
-                value={reportCounts.dikshaCompleted}
-                active={reportFilter === "diksha_completed"}
-                onClick={() => setReportFilter("diksha_completed")}
-              />
-
-              <ReportCountCard
-                title="No Show"
-                titleHi="अनुपस्थित"
-                value={reportCounts.noShow}
-                active={reportFilter === "no_show"}
-                onClick={() => setReportFilter("no_show")}
-              />
-
-              <ReportCountCard
-                title="Today Final Meetings"
-                titleHi="आज फाइनल मीटिंग"
-                value={reportCounts.todayFinalMeetings}
-                active={reportFilter === "today_final_meetings"}
-                onClick={() => setReportFilter("today_final_meetings")}
-              />
-
-<ReportCountCard
-  title="Today Diksha"
-  titleHi="आज दीक्षा"
-  value={reportCounts.todayDiksha}
-  active={reportFilter === "today_diksha"}
-  onClick={() => setReportFilter("today_diksha")}
-/>
-
-<ReportCountCard
-  title="Rescheduled Diksha"
-  titleHi="बदली हुई दीक्षा"
-  value={reportCounts.rescheduledDiksha}
-  active={reportFilter === "rescheduled_diksha"}
-  onClick={() => setReportFilter("rescheduled_diksha")}
-/>
-
-<ReportCountCard
-  title="All"
-                titleHi="सभी"
-                value={registrations.length}
-                active={reportFilter === "all"}
-                onClick={() => setReportFilter("all")}
-              />
-            </div>
-          </div>
-        </section>
-        <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
-  <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-    <div>
-      <h3 className="text-2xl font-extrabold">
-        Final Meeting Attendance
-      </h3>
-      <h4 className="mt-1 text-xl font-bold text-orange-800">
-        फाइनल मीटिंग उपस्थिति
-      </h4>
-      <p className="mt-2 text-sm text-stone-600">
-        Select a meeting date and mark candidates present as they arrive.
-      </p>
-      <p className="text-sm text-stone-600">
-        मीटिंग तारीख चुनें और आने वाले candidates को Present mark करें।
-      </p>
-    </div>
-
-    <div className="rounded-2xl bg-green-100 px-5 py-3 text-center">
-      <p className="text-sm font-bold text-green-800">Present</p>
-      <p className="text-3xl font-extrabold text-green-800">
-        {
-          finalMeetingAttendanceList.filter(
-            (person) => person.final_meeting_attendance === "Present"
-          ).length
-        }
-        /{finalMeetingAttendanceList.length}
-      </p>
-    </div>
-  </div>
-
-  <div className="mb-5 grid gap-3 md:grid-cols-[220px_1fr_auto_auto]">
-    <select
-      value={attendanceDate}
-      onChange={(event) => {
-        setAttendanceDate(event.target.value);
-        setSelectedAttendanceIds([]);
-      }}
-      className="rounded-2xl border border-orange-200 bg-white px-4 py-3 font-bold outline-none focus:border-orange-600"
-    >
-      {slots.map((slot) => (
-        <option key={slot.id} value={slot.slot_date}>
-          {formatDate(slot.slot_date)}
-        </option>
-      ))}
-    </select>
-
-    <input
-      type="text"
-      value={attendanceUpdatedBy}
-      onChange={(event) => setAttendanceUpdatedBy(event.target.value)}
-      placeholder="Sadhak name"
-      className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
-    />
-
-    <button
-      type="button"
-      onClick={handleToggleAllAttendance}
-      className="rounded-2xl border border-orange-300 px-4 py-3 text-sm font-bold text-orange-800"
-    >
-      Select All Pending
-      <span className="block text-xs font-normal">
-        pending सभी चुनें
-      </span>
-    </button>
-
-    <button
-      type="button"
-      onClick={handleMarkSelectedAttendancePresent}
-      disabled={selectedAttendanceIds.length === 0 || isMarkingAttendance}
-      className="rounded-2xl bg-green-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
-    >
-      {isMarkingAttendance
-        ? "Marking..."
-        : `Mark Present (${selectedAttendanceIds.length})`}
-      <span className="block text-xs font-normal">
-        Present mark करें
-      </span>
-    </button>
-  </div>
-
-  {finalMeetingAttendanceList.length === 0 ? (
-    <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
-      No candidates found for this meeting date.
-      <span className="block text-sm font-normal">
-        इस तारीख के लिए कोई candidate नहीं मिला।
-      </span>
-    </div>
-  ) : (
-    <div className="max-h-[520px] overflow-y-auto rounded-3xl border border-orange-100 bg-white">
-      <div className="grid grid-cols-[50px_1.4fr_1fr_1fr_1fr_auto] bg-orange-100 px-4 py-3 text-sm font-extrabold text-orange-900">
-        <p></p>
-        <p>Name</p>
-        <p>Token</p>
-        <p>Mobile</p>
-        <p>Attendance</p>
-        <p>Action</p>
-      </div>
-
-      {finalMeetingAttendanceList.map((person) => {
-        const isPresent = person.final_meeting_attendance === "Present";
-
-        return (
-          <div
-            key={person.id}
-            className={`grid grid-cols-[50px_1.4fr_1fr_1fr_1fr_auto] items-center border-t border-orange-100 px-4 py-3 text-sm ${
-              isPresent ? "bg-green-50" : "bg-white"
-            }`}
-          >
-            <input
-              type="checkbox"
-              checked={
-                isPresent || selectedAttendanceIds.includes(person.id)
-              }
-              disabled={isPresent}
-              onChange={() => handleToggleAttendanceSelection(person.id)}
-              className="h-5 w-5 accent-green-700 disabled:opacity-50"
-            />
-
-            <div>
-              <p className="font-extrabold text-stone-900">
-                {person.full_name || "-"}
-              </p>
-              <p className="text-xs font-semibold text-stone-500">
-                {person.gender || "-"} · Age {person.age || "-"} ·{" "}
-                {person.marital_status || "-"}
-              </p>
-            </div>
-
-            <p className="font-extrabold text-orange-900">
-              {person.token || "-"}
-            </p>
-
-            <p className="font-bold text-stone-700">
-              {showFullMobile ? person.mobile : maskMobile(person.mobile)}
-            </p>
-
-            <span
-              className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${
-                isPresent
-                  ? "bg-green-100 text-green-700"
-                  : "bg-orange-100 text-orange-800"
-              }`}
-            >
-              {isPresent ? "Present" : "Not Marked"}
-            </span>
-
-            {isPresent ? (
-  <button
-    type="button"
-    disabled={isMarkingAttendance}
-    onClick={() => handleUndoSingleAttendancePresent(person)}
-    className="rounded-2xl bg-red-100 px-4 py-2 text-xs font-bold text-red-700 disabled:opacity-50"
-  >
-    Undo
-    <span className="block text-[10px] font-normal">
-      वापस करें
-    </span>
-  </button>
-) : (
-  <button
-    type="button"
-    disabled={isMarkingAttendance}
-    onClick={() => handleMarkSingleAttendancePresent(person)}
-    className="rounded-2xl bg-green-700 px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
-  >
-    Mark Present
-    <span className="block text-[10px] font-normal">
-      उपस्थित
-    </span>
-  </button>
-)}
-          </div>
-        );
-      })}
-    </div>
-  )}
-</section>
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
   <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <div>
@@ -1962,6 +1642,328 @@ titleHi="स्थगित"
     </div>
   )}
 </section>
+
+        <section className="mb-8 space-y-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <StatsCard
+              title="Total Registered"
+              titleHi="कुल पंजीकरण"
+              value={String(totalRegistered)}
+            />
+
+            <StatsCard
+              title="Showing Now"
+              titleHi="अभी दिख रहे हैं"
+              value={String(filteredRegistrations.length)}
+            />
+
+            <StatsCard
+              title="Slots Full"
+              titleHi="भरे हुए स्लॉट"
+              value={String(slotsFull)}
+            />
+
+            <StatsCard
+              title="Next Available Slot"
+              titleHi="अगला उपलब्ध स्लॉट"
+              value={
+                nextAvailableSlot
+                  ? formatDateShort(nextAvailableSlot.slot_date)
+                  : "None"
+              }
+            />
+          </div>
+
+          <div className="rounded-3xl bg-white p-5 shadow-sm md:p-6">
+            <div className="mb-5">
+              <h3 className="text-2xl font-extrabold">Reports Summary</h3>
+              <h4 className="mt-1 text-xl font-bold text-orange-800">
+                रिपोर्ट सारांश
+              </h4>
+              <p className="mt-2 text-sm text-stone-600">
+                Click any report card to filter registrations.
+              </p>
+              <p className="text-sm text-stone-600">
+                पंजीकरण फ़िल्टर करने के लिए किसी भी रिपोर्ट कार्ड पर क्लिक करें।
+              </p>
+            </div>
+
+
+            <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+              <ReportCountCard
+                title="Scheduled Final Meetings"
+                titleHi="फाइनल मीटिंग शेड्यूल"
+                value={reportCounts.scheduledFinalMeetings}
+                active={reportFilter === "scheduled_final_meetings"}
+                onClick={() => setReportFilter("scheduled_final_meetings")}
+              />
+
+              <ReportCountCard
+                title="Pending"
+                titleHi="लंबित"
+                value={reportCounts.pending}
+                active={reportFilter === "pending"}
+                onClick={() => setReportFilter("pending")}
+              />
+
+              <ReportCountCard
+                title="Approved"
+                titleHi="स्वीकृत"
+                value={reportCounts.approved}
+                active={reportFilter === "approved"}
+                onClick={() => setReportFilter("approved")}
+              />
+<ReportCountCard
+  title="Final Meeting Attended"
+  titleHi="फाइनल मीटिंग उपस्थित"
+  value={reportCounts.finalMeetingAttended}
+  active={reportFilter === "final_meeting_attended"}
+  onClick={() => setReportFilter("final_meeting_attended")}
+/>
+              <ReportCountCard
+                title="Deferred"
+titleHi="स्थगित"
+                value={reportCounts.rejected}
+                active={reportFilter === "rejected"}
+                onClick={() => setReportFilter("rejected")}
+              />
+
+              <ReportCountCard
+                title="Scheduled Diksha"
+                titleHi="दीक्षा शेड्यूल"
+                value={reportCounts.scheduledDiksha}
+                active={reportFilter === "scheduled_diksha"}
+                onClick={() => setReportFilter("scheduled_diksha")}
+              />
+
+              <ReportCountCard
+                title="Diksha Completed"
+                titleHi="दीक्षा पूर्ण"
+                value={reportCounts.dikshaCompleted}
+                active={reportFilter === "diksha_completed"}
+                onClick={() => setReportFilter("diksha_completed")}
+              />
+
+              <ReportCountCard
+                title="No Show"
+                titleHi="अनुपस्थित"
+                value={reportCounts.noShow}
+                active={reportFilter === "no_show"}
+                onClick={() => setReportFilter("no_show")}
+              />
+
+              <ReportCountCard
+                title="Today Final Meetings"
+                titleHi="आज फाइनल मीटिंग"
+                value={reportCounts.todayFinalMeetings}
+                active={reportFilter === "today_final_meetings"}
+                onClick={() => setReportFilter("today_final_meetings")}
+              />
+
+<ReportCountCard
+  title="Today Diksha"
+  titleHi="आज दीक्षा"
+  value={reportCounts.todayDiksha}
+  active={reportFilter === "today_diksha"}
+  onClick={() => setReportFilter("today_diksha")}
+/>
+
+<ReportCountCard
+  title="Rescheduled Diksha"
+  titleHi="बदली हुई दीक्षा"
+  value={reportCounts.rescheduledDiksha}
+  active={reportFilter === "rescheduled_diksha"}
+  onClick={() => setReportFilter("rescheduled_diksha")}
+/>
+
+<ReportCountCard
+  title="All"
+                titleHi="सभी"
+                value={registrations.length}
+                active={reportFilter === "all"}
+                onClick={() => setReportFilter("all")}
+              />
+            </div>
+          </div>
+        </section>
+        <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
+  <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h3 className="text-2xl font-extrabold">
+        Final Meeting Attendance
+      </h3>
+      <h4 className="mt-1 text-xl font-bold text-orange-800">
+        फाइनल मीटिंग उपस्थिति
+      </h4>
+      <p className="mt-2 text-sm text-stone-600">
+        Select a meeting date and mark candidates present as they arrive.
+      </p>
+      <p className="text-sm text-stone-600">
+        मीटिंग तारीख चुनें और आने वाले candidates को Present mark करें।
+      </p>
+    </div>
+
+    <div className="rounded-2xl bg-green-100 px-5 py-3 text-center">
+      <p className="text-sm font-bold text-green-800">Present</p>
+      <p className="text-3xl font-extrabold text-green-800">
+        {
+          finalMeetingAttendanceList.filter(
+            (person) => person.final_meeting_attendance === "Present"
+          ).length
+        }
+        /{finalMeetingAttendanceList.length}
+      </p>
+    </div>
+  </div>
+
+  <div className="mb-5 grid gap-3 md:grid-cols-[220px_1fr_auto_auto]">
+    <select
+      value={attendanceDate}
+      onChange={(event) => {
+        setAttendanceDate(event.target.value);
+        setSelectedAttendanceIds([]);
+      }}
+      className="rounded-2xl border border-orange-200 bg-white px-4 py-3 font-bold outline-none focus:border-orange-600"
+    >
+      {slots.map((slot) => (
+        <option key={slot.id} value={slot.slot_date}>
+          {formatDate(slot.slot_date)}
+        </option>
+      ))}
+    </select>
+
+    <input
+      type="text"
+      value={attendanceUpdatedBy}
+      onChange={(event) => setAttendanceUpdatedBy(event.target.value)}
+      placeholder="Sadhak name"
+      className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+    />
+
+    <button
+      type="button"
+      onClick={handleToggleAllAttendance}
+      className="rounded-2xl border border-orange-300 px-4 py-3 text-sm font-bold text-orange-800"
+    >
+      Select All Pending
+      <span className="block text-xs font-normal">
+        pending सभी चुनें
+      </span>
+    </button>
+
+    <button
+      type="button"
+      onClick={handleMarkSelectedAttendancePresent}
+      disabled={selectedAttendanceIds.length === 0 || isMarkingAttendance}
+      className="rounded-2xl bg-green-700 px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+    >
+      {isMarkingAttendance
+        ? "Marking..."
+        : `Mark Present (${selectedAttendanceIds.length})`}
+      <span className="block text-xs font-normal">
+        Present mark करें
+      </span>
+    </button>
+  </div>
+
+  {finalMeetingAttendanceList.length === 0 ? (
+    <div className="rounded-2xl bg-orange-50 p-5 text-center font-semibold text-stone-700">
+      No candidates found for this meeting date.
+      <span className="block text-sm font-normal">
+        इस तारीख के लिए कोई candidate नहीं मिला।
+      </span>
+    </div>
+  ) : (
+    <div className="max-h-[520px] overflow-y-auto rounded-3xl border border-orange-100 bg-white">
+      <div className="grid grid-cols-[50px_1.4fr_1fr_1fr_1fr_auto] bg-orange-100 px-4 py-3 text-sm font-extrabold text-orange-900">
+        <p></p>
+        <p>Name</p>
+        <p>Token</p>
+        <p>Mobile</p>
+        <p>Attendance</p>
+        <p>Action</p>
+      </div>
+
+      {finalMeetingAttendanceList.map((person) => {
+        const isPresent = person.final_meeting_attendance === "Present";
+
+        return (
+          <div
+            key={person.id}
+            className={`grid grid-cols-[50px_1.4fr_1fr_1fr_1fr_auto] items-center border-t border-orange-100 px-4 py-3 text-sm ${
+              isPresent ? "bg-green-50" : "bg-white"
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={
+                isPresent || selectedAttendanceIds.includes(person.id)
+              }
+              disabled={isPresent}
+              onChange={() => handleToggleAttendanceSelection(person.id)}
+              className="h-5 w-5 accent-green-700 disabled:opacity-50"
+            />
+
+            <div>
+              <p className="font-extrabold text-stone-900">
+                {person.full_name || "-"}
+              </p>
+              <p className="text-xs font-semibold text-stone-500">
+                {person.gender || "-"} · Age {person.age || "-"} ·{" "}
+                {person.marital_status || "-"}
+              </p>
+            </div>
+
+            <p className="font-extrabold text-orange-900">
+              {person.token || "-"}
+            </p>
+
+            <p className="font-bold text-stone-700">
+              {showFullMobile ? person.mobile : maskMobile(person.mobile)}
+            </p>
+
+            <span
+              className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${
+                isPresent
+                  ? "bg-green-100 text-green-700"
+                  : "bg-orange-100 text-orange-800"
+              }`}
+            >
+              {isPresent ? "Present" : "Not Marked"}
+            </span>
+
+            {isPresent ? (
+  <button
+    type="button"
+    disabled={isMarkingAttendance}
+    onClick={() => handleUndoSingleAttendancePresent(person)}
+    className="rounded-2xl bg-red-100 px-4 py-2 text-xs font-bold text-red-700 disabled:opacity-50"
+  >
+    Undo
+    <span className="block text-[10px] font-normal">
+      वापस करें
+    </span>
+  </button>
+) : (
+  <button
+    type="button"
+    disabled={isMarkingAttendance}
+    onClick={() => handleMarkSingleAttendancePresent(person)}
+    className="rounded-2xl bg-green-700 px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+  >
+    Mark Present
+    <span className="block text-[10px] font-normal">
+      उपस्थित
+    </span>
+  </button>
+)}
+          </div>
+        );
+      })}
+    </div>
+  )}
+</section>
+       
 
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
