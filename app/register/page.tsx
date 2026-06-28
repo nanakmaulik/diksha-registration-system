@@ -27,9 +27,8 @@ type RegistrationFormData = {
   familyMobile: string;
   idType: string;
   idNumber: string;
-  aadhaarFile: File | null;
   selectedSlotId: string;
-  remarksBy: string;
+  
 };
 
 type Slot = {
@@ -63,9 +62,9 @@ const initialFormData: RegistrationFormData = {
   familyMobile: "",
 idType: "aadhaar",
   idNumber: "",
-  aadhaarFile: null,
+  
   selectedSlotId: "",
-  remarksBy: "",
+  
 };
 
 export default function RegisterPage() {
@@ -207,16 +206,7 @@ const needsFatherMother =
     const target = event.target;
     const { name, value } = target;
 
-    if (target instanceof HTMLInputElement && target.type === "file") {
-      const file = target.files?.[0] || null;
-
-      setFormData((prev) => ({
-        ...prev,
-        [name]: file,
-      }));
-
-      return;
-    }
+ 
 
     if (target instanceof HTMLInputElement && target.type === "checkbox") {
       const checked = target.checked;
@@ -501,13 +491,7 @@ const needsFatherMother =
         };
       }
 
-      if (!formData.aadhaarFile) {
-        return {
-          isValid: false,
-          message:
-            "Please upload Aadhaar / ID proof.\nकृपया आधार / पहचान प्रमाण अपलोड करें।",
-        };
-      }
+     
     }
 
     if (currentStep === 5) {
@@ -555,34 +539,8 @@ const needsFatherMother =
     setIsSubmitting(true);
   
     try {
-      let aadhaarFileUrl = "";
-      let aadhaarFileName = "";
-  
-      if (formData.aadhaarFile) {
-        const fileExt = formData.aadhaarFile.name.split(".").pop();
-        const cleanMobile = formData.mobile.replace(/\D/g, "");
-        const filePath = `aadhaar-${cleanMobile}-${Date.now()}.${fileExt}`;
-  
-        const { error: uploadError } = await supabase.storage
-          .from("aadhaar-documents")
-          .upload(filePath, formData.aadhaarFile, {
-            cacheControl: "3600",
-            upsert: false,
-          });
-  
-        if (uploadError) {
-          alert("Aadhaar / ID upload error: " + uploadError.message);
-          setIsSubmitting(false);
-          return;
-        }
-  
-        const { data: publicUrlData } = supabase.storage
-          .from("aadhaar-documents")
-          .getPublicUrl(filePath);
-  
-        aadhaarFileUrl = publicUrlData.publicUrl;
-        aadhaarFileName = formData.aadhaarFile.name;
-      }
+      const aadhaarFileUrl = "";
+      const aadhaarFileName = "";
   
       const { data, error } = await supabase.rpc("submit_registration_request", {
         p_slot_id: formData.selectedSlotId,
@@ -611,7 +569,7 @@ p_id_type: formData.idType,
         p_id_number: formData.idNumber,
         p_aadhaar_file_url: aadhaarFileUrl,
         p_aadhaar_file_name: aadhaarFileName,
-        p_remarks_by: formData.remarksBy.trim() || "Self",
+        p_remarks_by: "Self",
       });
   
       if (error) {
@@ -1021,12 +979,12 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
           )}
 
           {step === 4 && (
-            <StepCard
-              titleEn="Identity Proof"
-              titleHi="पहचान प्रमाण"
-              subtitleEn="Upload Aadhaar or any valid government ID."
-              subtitleHi="आधार या कोई मान्य सरकारी पहचान प्रमाण अपलोड करें।"
-            >
+          <StepCard
+          titleEn="Identity Proof"
+          titleHi="पहचान प्रमाण"
+          subtitleEn="Please enter Aadhaar or any valid government ID details."
+          subtitleHi="कृपया आधार या कोई मान्य सरकारी पहचान प्रमाण की जानकारी भरें।"
+        >
               <SelectField
   labelEn="ID Type"
   labelHi="पहचान प्रमाण का प्रकार"
@@ -1051,19 +1009,9 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 required
               />
 
-              <FileField
-                labelEn="Upload Aadhaar / ID Proof"
-                labelHi="आधार / पहचान प्रमाण अपलोड करें"
-                name="aadhaarFile"
-                onChange={handleChange}
-                required
-              />
+            
 
-              {formData.aadhaarFile && (
-                <div className="rounded-2xl bg-green-50 p-4 text-sm font-bold text-green-700">
-                  Selected file: {formData.aadhaarFile.name}
-                </div>
-              )}
+             
             </StepCard>
           )}
 
@@ -1253,14 +1201,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 />
               </div>
 
-              <TextareaField
-                labelEn="Filled By / Remarks"
-                labelHi="फॉर्म भरने वाला / टिप्पणी"
-                name="remarksBy"
-                value={formData.remarksBy}
-                onChange={handleChange}
-                placeholder="Remarks"
-              />
+              
             </StepCard>
           )}
 
@@ -1462,44 +1403,6 @@ function SelectField({
   );
 }
 
-function FileField({
-  labelEn,
-  labelHi,
-  name,
-  onChange,
-  required = false,
-}: {
-  labelEn: string;
-  labelHi: string;
-  name: string;
-  onChange: (
-    event: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => void;
-  required?: boolean;
-}) {
-  return (
-    <div>
-      <label className="mb-2 block font-bold">
-        {labelEn} {required && <span className="text-red-600">*</span>}
-        <span className="block text-sm font-semibold text-orange-800">
-          {labelHi}
-        </span>
-      </label>
-      <input
-        type="file"
-        name={name}
-        onChange={onChange}
-        accept=".jpg,.jpeg,.png,.pdf"
-        className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
-      />
-      <p className="mt-2 text-xs text-stone-500">
-        Accepted: JPG, PNG, PDF
-      </p>
-    </div>
-  );
-}
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
