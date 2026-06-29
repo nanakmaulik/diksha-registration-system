@@ -91,12 +91,17 @@ const [pincodeMessage, setPincodeMessage] = useState("");
 const isMarriedMale =
   formData.maritalStatus === "Married" && formData.gender === "Male";
 
-const isMarriedFemale =
+  const isMarriedFemale =
   formData.maritalStatus === "Married" && formData.gender === "Female";
+
+const isWidowed =
+  formData.maritalStatus === "Widowed";
+
+const needsSpouseName =
+  isMarriedFemale || isWidowed;
 
 const needsFatherMother =
   formData.maritalStatus !== "Married";
-
   const finalOccupation =
   formData.occupation === "Other"
     ? formData.occupationOther.trim()
@@ -454,7 +459,7 @@ const { data, error } = await supabase
     }
 
     if (currentStep === 3) {
-      if (isMarriedFemale && !formData.spouseName.trim()) {
+      if (needsSpouseName && !formData.spouseName.trim()) {
         return {
           isValid: false,
           message: "Please enter husband name.\nकृपया पति का नाम भरें।",
@@ -615,7 +620,7 @@ const { data, error } = await supabase
         p_state: formData.state,
         p_country: formData.country,
         p_pin_code: formData.pinCode,
-        p_spouse_name: isMarriedFemale ? formData.spouseName : "",
+        p_spouse_name: needsSpouseName ? formData.spouseName : "",
         p_father_name:
           isMarriedMale || needsFatherMother ? formData.fatherName : "",
         p_mother_name: needsFatherMother ? formData.motherName : "",
@@ -952,14 +957,14 @@ const { data, error } = await supabase
               subtitleEn="Please provide family approval details based on marital status."
               subtitleHi="कृपया वैवाहिक स्थिति के अनुसार परिवार की स्वीकृति जानकारी भरें।"
             >
-           {isMarriedFemale && (
+          {needsSpouseName && (
   <InputField
-    labelEn="Husband Name"
-    labelHi="पति का नाम"
+    labelEn={isWidowed ? "Late Husband Name" : "Husband Name"}
+    labelHi={isWidowed ? "दिवंगत पति का नाम" : "पति का नाम"}
     name="spouseName"
     value={formData.spouseName}
     onChange={handleChange}
-    placeholder="Enter husband name"
+    placeholder={isWidowed ? "Enter late husband name" : "Enter husband name"}
     required
   />
 )}
@@ -1284,7 +1289,11 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                <ReviewRow
   label="Family Approval / परिवार स्वीकृति"
   value={
-    isMarriedFemale
+    isWidowed
+      ? `Late Husband: ${formData.spouseName || "-"}, Father: ${
+          formData.fatherName || "-"
+        }, Mother: ${formData.motherName || "-"}`
+      : isMarriedFemale
       ? `Husband: ${formData.spouseName || "-"}`
       : isMarriedMale
       ? `Father: ${formData.fatherName || "-"}`
