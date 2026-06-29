@@ -161,6 +161,35 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState<Registration | null>(
     null
   );
+  const [editingRegistration, setEditingRegistration] =
+  useState<Registration | null>(null);
+
+const [editFormData, setEditFormData] = useState({
+  full_name: "",
+  age: "",
+  gender: "",
+  occupation: "",
+  marital_status: "",
+  mobile: "",
+  whatsapp: "",
+  address: "",
+  city: "",
+  state: "",
+  country: "",
+  pin_code: "",
+  spouse_name: "",
+  father_name: "",
+  mother_name: "",
+  family_name: "",
+  family_relation: "",
+  family_mobile: "",
+  id_type: "",
+  id_number: "",
+});
+
+const [isSavingRegistrationEdit, setIsSavingRegistrationEdit] = useState(false);
+const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
+  useState<string | null>(null);
 
   const [selectedAction, setSelectedAction] = useState<{
     registrationId: string;
@@ -1167,7 +1196,132 @@ const [isBulkApprovingRequests, setIsBulkApprovingRequests] = useState(false);
       setSelectedRegistrationIds([]);
       setIsConvertingGroupToken(false);
     }
-
+    function openEditRegistration(person: Registration) {
+      setEditingRegistration(person);
+    
+      setEditFormData({
+        full_name: person.full_name || "",
+        age: person.age ? String(person.age) : "",
+        gender: person.gender || "",
+        occupation: person.occupation || "",
+        marital_status: person.marital_status || "",
+        mobile: person.mobile || "",
+        whatsapp: person.whatsapp || "",
+        address: person.address || "",
+        city: person.city || "",
+        state: person.state || "",
+        country: person.country || "",
+        pin_code: person.pin_code || "",
+        spouse_name: person.spouse_name || "",
+        father_name: person.father_name || "",
+        mother_name: person.mother_name || "",
+        family_name: person.family_name || "",
+        family_relation: person.family_relation || "",
+        family_mobile: person.family_mobile || "",
+        id_type: person.id_type || "",
+        id_number: person.id_number || "",
+      });
+    }
+    
+    function handleEditFormChange(
+      event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    ) {
+      const { name, value } = event.target;
+    
+      setEditFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+    
+    async function handleSaveRegistrationEdit() {
+      if (!editingRegistration) return;
+    
+      if (!editFormData.full_name.trim()) {
+        alert("Please enter name.");
+        return;
+      }
+    
+      if (!editFormData.mobile.trim()) {
+        alert("Please enter mobile number.");
+        return;
+      }
+    
+      if (!editFormData.id_number.trim()) {
+        alert("Please enter ID / Aadhaar number.");
+        return;
+      }
+    
+      setIsSavingRegistrationEdit(true);
+    
+      const { error } = await supabase
+        .from("registrations")
+        .update({
+          full_name: editFormData.full_name.trim(),
+          age: editFormData.age ? Number(editFormData.age) : null,
+          gender: editFormData.gender || null,
+          occupation: editFormData.occupation || null,
+          marital_status: editFormData.marital_status || null,
+          mobile: editFormData.mobile.trim(),
+          whatsapp: editFormData.whatsapp.trim() || null,
+          address: editFormData.address.trim() || null,
+          city: editFormData.city.trim() || null,
+          state: editFormData.state.trim() || null,
+          country: editFormData.country.trim() || null,
+          pin_code: editFormData.pin_code.trim() || null,
+          spouse_name: editFormData.spouse_name.trim() || null,
+          father_name: editFormData.father_name.trim() || null,
+          mother_name: editFormData.mother_name.trim() || null,
+          family_name: editFormData.family_name.trim() || null,
+          family_relation: editFormData.family_relation.trim() || null,
+          family_mobile: editFormData.family_mobile.trim() || null,
+          id_type: editFormData.id_type || null,
+          id_number: editFormData.id_number.trim() || null,
+        })
+        .eq("id", editingRegistration.id);
+    
+      if (error) {
+        alert("Registration update error: " + error.message);
+        setIsSavingRegistrationEdit(false);
+        return;
+      }
+    
+      setIsSavingRegistrationEdit(false);
+      setEditingRegistration(null);
+      window.location.reload();
+    }
+    
+    async function handleDeleteRegistration(person: Registration) {
+      const confirmed = window.confirm(
+        `Delete registration for ${person.full_name || person.token}?\n\nToken: ${
+          person.token || "-"
+        }\n\nThis action cannot be undone.`
+      );
+    
+      if (!confirmed) return;
+    
+      const doubleConfirm = window.confirm(
+        "Are you sure? This will permanently delete this registration from the dashboard."
+      );
+    
+      if (!doubleConfirm) return;
+    
+      setIsDeletingRegistrationId(person.id);
+    
+      const { error } = await supabase
+        .from("registrations")
+        .delete()
+        .eq("id", person.id);
+    
+      if (error) {
+        alert("Registration delete error: " + error.message);
+        setIsDeletingRegistrationId(null);
+        return;
+      }
+    
+      setIsDeletingRegistrationId(null);
+      window.location.reload();
+    }
   function handleExportCsv() {
     if (filteredRegistrations.length === 0) {
       alert("No records to export.\nExport करने के लिए कोई रिकॉर्ड नहीं है।");
@@ -2246,6 +2400,7 @@ titleHi="स्थगित"
   label="Final Meeting Attended"
   onClick={() => setReportFilter("final_meeting_attended")}
 />
+
               <ReportButton
                 active={reportFilter === "rejected"}
                 label="Deferred"
@@ -2465,6 +2620,28 @@ titleHi="स्थगित"
                               इतिहास
                             </span>
                           </button>
+                          <button
+  type="button"
+  onClick={() => openEditRegistration(person)}
+  className="rounded-full bg-blue-100 px-4 py-2 text-xs font-bold text-blue-700"
+>
+  Edit
+  <span className="block text-[10px] font-normal">
+    विवरण बदलें
+  </span>
+</button>
+
+<button
+  type="button"
+  onClick={() => handleDeleteRegistration(person)}
+  disabled={isDeletingRegistrationId === person.id}
+  className="rounded-full bg-red-100 px-4 py-2 text-xs font-bold text-red-700 disabled:opacity-50"
+>
+  {isDeletingRegistrationId === person.id ? "Deleting..." : "Delete"}
+  <span className="block text-[10px] font-normal">
+    हटाएं
+  </span>
+</button>
                         </div>
                       </TableCell>
 
@@ -2635,7 +2812,247 @@ titleHi="स्थगित"
           </div>
         </div>
       </section>
+      {editingRegistration && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div className="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-2xl font-extrabold">
+            Edit Registration
+          </h3>
+          <p className="mt-1 text-sm font-semibold text-stone-600">
+            Token: {editingRegistration.token || "-"}
+          </p>
+          <p className="text-sm text-stone-600">
+            Candidate details dashboard se update kar sakte ho.
+          </p>
+        </div>
 
+        <button
+          type="button"
+          onClick={() => setEditingRegistration(null)}
+          className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
+        >
+          Close
+          <span className="block text-[10px] font-normal">
+            बंद करें
+          </span>
+        </button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <EditInput
+          label="Full Name"
+          name="full_name"
+          value={editFormData.full_name}
+          onChange={handleEditFormChange}
+          required
+        />
+
+        <EditInput
+          label="Age"
+          name="age"
+          value={editFormData.age}
+          onChange={handleEditFormChange}
+          type="number"
+        />
+
+        <EditSelect
+          label="Gender"
+          name="gender"
+          value={editFormData.gender}
+          onChange={handleEditFormChange}
+          options={[
+            ["", "Select gender"],
+            ["Male", "Male"],
+            ["Female", "Female"],
+            ["Other", "Other"],
+          ]}
+        />
+
+        <EditSelect
+          label="Occupation"
+          name="occupation"
+          value={editFormData.occupation}
+          onChange={handleEditFormChange}
+          options={[
+            ["", "Select occupation"],
+            ["Student", "Student"],
+            ["Housewife", "Housewife"],
+            ["Service", "Service"],
+            ["Business", "Business"],
+            ["Farmer", "Farmer"],
+            ["Retired", "Retired"],
+            ["Virakt", "Virakt"],
+            ["Self Employed", "Self Employed"],
+            ["Unemployed", "Unemployed"],
+            ["Other", "Other"],
+          ]}
+        />
+
+        <EditSelect
+          label="Marital Status"
+          name="marital_status"
+          value={editFormData.marital_status}
+          onChange={handleEditFormChange}
+          options={[
+            ["", "Select marital status"],
+            ["Single", "Single"],
+            ["Married", "Married"],
+            ["Widowed", "Widowed"],
+            ["Divorced", "Divorced"],
+          ]}
+        />
+
+        <EditInput
+          label="Mobile"
+          name="mobile"
+          value={editFormData.mobile}
+          onChange={handleEditFormChange}
+          required
+        />
+
+        <EditInput
+          label="WhatsApp"
+          name="whatsapp"
+          value={editFormData.whatsapp}
+          onChange={handleEditFormChange}
+        />
+
+        <EditInput
+          label="City"
+          name="city"
+          value={editFormData.city}
+          onChange={handleEditFormChange}
+        />
+
+        <EditInput
+          label="State"
+          name="state"
+          value={editFormData.state}
+          onChange={handleEditFormChange}
+        />
+
+        <EditInput
+          label="Country"
+          name="country"
+          value={editFormData.country}
+          onChange={handleEditFormChange}
+        />
+
+        <EditInput
+          label="PIN Code"
+          name="pin_code"
+          value={editFormData.pin_code}
+          onChange={handleEditFormChange}
+        />
+
+        <EditSelect
+          label="ID Type"
+          name="id_type"
+          value={editFormData.id_type}
+          onChange={handleEditFormChange}
+          options={[
+            ["", "Select ID type"],
+            ["aadhaar", "Aadhaar Card"],
+            ["passport", "Passport"],
+            ["other", "Other Government ID"],
+          ]}
+        />
+
+        <EditInput
+          label="ID / Aadhaar Number"
+          name="id_number"
+          value={editFormData.id_number}
+          onChange={handleEditFormChange}
+          required
+        />
+
+        <EditInput
+          label="Husband / Wife Name"
+          name="spouse_name"
+          value={editFormData.spouse_name}
+          onChange={handleEditFormChange}
+        />
+
+        <EditInput
+          label="Father Name"
+          name="father_name"
+          value={editFormData.father_name}
+          onChange={handleEditFormChange}
+        />
+
+        <EditInput
+          label="Mother Name"
+          name="mother_name"
+          value={editFormData.mother_name}
+          onChange={handleEditFormChange}
+        />
+
+        <EditInput
+          label="Family Representative Name"
+          name="family_name"
+          value={editFormData.family_name}
+          onChange={handleEditFormChange}
+        />
+
+        <EditSelect
+          label="Family Relation"
+          name="family_relation"
+          value={editFormData.family_relation}
+          onChange={handleEditFormChange}
+          options={[
+            ["", "Select relation"],
+            ["Father", "Father"],
+            ["Mother", "Mother"],
+            ["Husband", "Husband"],
+            ["Wife", "Wife"],
+            ["Son", "Son"],
+            ["Daughter", "Daughter"],
+            ["Brother", "Brother"],
+            ["Sister", "Sister"],
+            ["Other", "Other"],
+          ]}
+        />
+
+        <EditInput
+          label="Family Mobile"
+          name="family_mobile"
+          value={editFormData.family_mobile}
+          onChange={handleEditFormChange}
+        />
+
+        <div className="md:col-span-3">
+          <EditTextarea
+            label="Address"
+            name="address"
+            value={editFormData.address}
+            onChange={handleEditFormChange}
+          />
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 md:flex-row md:justify-end">
+        <button
+          type="button"
+          onClick={() => setEditingRegistration(null)}
+          className="rounded-2xl border border-orange-300 px-6 py-3 font-bold text-orange-800"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSaveRegistrationEdit}
+          disabled={isSavingRegistrationEdit}
+          className="rounded-2xl bg-green-700 px-6 py-3 font-bold text-white disabled:opacity-60"
+        >
+          {isSavingRegistrationEdit ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       {selectedHistory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
@@ -3721,6 +4138,114 @@ function PrintHead({ children }: { children: ReactNode }) {
 function PrintCell({ children }: { children: ReactNode }) {
   return <td className="border border-black px-1 py-1">{children}</td>;
 }
+
+function EditInput({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-bold text-stone-700">
+        {label} {required && <span className="text-red-600">*</span>}
+      </label>
+
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+      />
+    </div>
+  );
+}
+
+function EditTextarea({
+  label,
+  name,
+  value,
+  onChange,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-bold text-stone-700">
+        {label}
+      </label>
+
+      <textarea
+        name={name}
+        value={value}
+        onChange={onChange}
+        rows={3}
+        className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+      />
+    </div>
+  );
+}
+
+function EditSelect({
+  label,
+  name,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => void;
+  options: string[][];
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-bold text-stone-700">
+        {label}
+      </label>
+
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
+      >
+        {options.map(([optionValue, optionLabel]) => (
+          <option key={optionValue} value={optionValue}>
+            {optionLabel}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function DevoteeLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="devotee-line">
