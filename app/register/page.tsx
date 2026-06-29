@@ -160,7 +160,7 @@ const { data, error } = await supabase
   
     try {
       setIsPincodeLoading(true);
-      setPincodeMessage("Finding address from PIN code...");
+      setPincodeMessage("Finding address from PIN code...\nपिन कोड से पता खोज रहे हैं...");
   
       const response = await fetch(
         `https://api.postalpincode.in/pincode/${cleanedPin}`
@@ -174,7 +174,7 @@ const { data, error } = await supabase
         !firstResult?.PostOffice ||
         firstResult.PostOffice.length === 0
       ) {
-        setPincodeMessage("No address found for this PIN code.");
+        setPincodeMessage("No address found for this PIN code.\nइस पिन कोड के लिए पता नहीं मिला।");
         return;
       }
   
@@ -189,10 +189,10 @@ const { data, error } = await supabase
       }));
   
       setPincodeMessage(
-        `Address found: ${postOffice.District}, ${postOffice.State}`
+        `Address found: ${postOffice.District}, ${postOffice.State}\nपता मिला: ${postOffice.District}, ${postOffice.State}`
       );
     } catch (error) {
-      setPincodeMessage("Could not fetch address. Please enter manually.");
+      setPincodeMessage("Could not fetch address. Please enter manually.\nपता नहीं मिल पाया। कृपया manually भरें।");
     } finally {
       setIsPincodeLoading(false);
     }
@@ -287,42 +287,42 @@ const { data, error } = await supabase
       if (!formData.fullName.trim()) {
         return {
           isValid: false,
-          message: "Please enter full name.",
+          message: "Please enter full name.\nकृपया पूरा नाम भरें।",
         };
       }
 
       if (!formData.age.trim()) {
         return {
           isValid: false,
-          message: "Please enter age.",
+          message: "Please enter age.\nकृपया आयु भरें।",
         };
       }
 
       if (Number(formData.age) <= 0) {
         return {
           isValid: false,
-          message: "Please enter a valid age.",
+          message: "Please enter a valid age.\nकृपया सही आयु भरें।",
         };
       }
 
       if (!formData.gender.trim()) {
         return {
           isValid: false,
-          message: "Please select gender.",
+          message: "Please select gender.\nकृपया लिंग चुनें।",
         };
       }
 
       if (!formData.occupation.trim()) {
         return {
           isValid: false,
-          message: "Please enter occupation.",
+          message: "Please enter occupation.\nकृपया व्यवसाय भरें।",
         };
       }
 
       if (!formData.maritalStatus.trim()) {
         return {
           isValid: false,
-          message: "Please select marital status.",
+          message: "Please select marital status.\nकृपया वैवाहिक स्थिति चुनें।",
         };
       }
     }
@@ -331,7 +331,7 @@ const { data, error } = await supabase
       if (!formData.mobile.trim()) {
         return {
           isValid: false,
-          message: "Please enter mobile number.",
+          message: "Please enter mobile number.\nकृपया मोबाइल नंबर भरें।",
         };
       }
 
@@ -341,14 +341,15 @@ const { data, error } = await supabase
         return {
           isValid: false,
           message:
-            "Please enter a valid mobile number. If outside India, include country code.",
+          
+          "Please enter a valid mobile number. If outside India, include country code.\nकृपया सही मोबाइल नंबर भरें। भारत से बाहर हैं तो country code जरूर लगाएं।",
         };
       }
 
       if (!formData.whatsapp.trim()) {
         return {
           isValid: false,
-          message: "Please enter WhatsApp number.",
+          message: "Please enter WhatsApp number.\nकृपया WhatsApp नंबर भरें।",
         };
       }
 
@@ -358,21 +359,22 @@ const { data, error } = await supabase
         return {
           isValid: false,
           message:
-            "Please enter a valid WhatsApp number. If outside India, include country code.",
+          
+          "Please enter a valid WhatsApp number. If outside India, include country code.\nकृपया सही WhatsApp नंबर भरें। भारत से बाहर हैं तो country code जरूर लगाएं।",
         };
       }
 
       if (!formData.address.trim()) {
         return {
           isValid: false,
-          message: "Please enter full address.",
+          message: "Please enter full address.\nकृपया पूरा पता भरें।",
         };
       }
 
       if (!formData.city.trim()) {
         return {
           isValid: false,
-          message: "Please enter city.",
+          message: "Please enter city.\nकृपया शहर भरें।",
         };
       }
 
@@ -380,30 +382,29 @@ const { data, error } = await supabase
         return {
           isValid: false,
           message:
-            "Please enter state / province / region.",
+          "Please enter state / province / region.\nकृपया राज्य / प्रांत / क्षेत्र भरें।",
         };
       }
 
       if (!formData.country.trim()) {
         return {
           isValid: false,
-          message: "Please select country.",
+          message: "Please select country.\nकृपया देश चुनें।",
         };
       }
 
       if (!formData.pinCode.trim()) {
         return {
           isValid: false,
-          message:
-            "Please enter PIN code.",
+          
+          message: "Please enter PIN code.\nकृपया पिन कोड भरें।",
         };
       }
 
       if (formData.pinCode.trim().length < 3) {
         return {
           isValid: false,
-          message:
-          "Please enter a valid PIN code.",
+          message: "Please enter a valid PIN code.\nकृपया सही पिन कोड भरें।",
         };
       }
     }
@@ -412,14 +413,14 @@ const { data, error } = await supabase
       if (isMarriedFemale && !formData.spouseName.trim()) {
         return {
           isValid: false,
-          message: "Please enter husband name.",
+          message: "Please enter husband name.\nकृपया पति का नाम भरें।",
         };
       }
     
       if (isMarriedMale && !formData.fatherName.trim()) {
         return {
           isValid: false,
-          message: "Please enter father's name.",
+          message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
         };
       }
     
@@ -427,14 +428,14 @@ const { data, error } = await supabase
         if (!formData.fatherName.trim()) {
           return {
             isValid: false,
-            message: "Please enter father's name.",
+            message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
           };
         }
     
         if (!formData.motherName.trim()) {
           return {
             isValid: false,
-            message: "Please enter mother's name.",
+            message: "Please enter mother's name.\nकृपया माता का नाम भरें।",
           };
         }
       }
@@ -442,24 +443,22 @@ const { data, error } = await supabase
       if (!formData.familyName.trim()) {
         return {
           isValid: false,
-          message:
-            "Please enter family member name.",
+          message: "Please enter family member name.\nकृपया पारिवारिक प्रतिनिधि का नाम भरें।",
         };
       }
 
       if (!formData.familyRelation.trim()) {
         return {
           isValid: false,
-          message:
-            "Please select family member relation.",
+          
+          message: "Please select family member relation.\nकृपया पारिवारिक प्रतिनिधि से संबंध चुनें।",
         };
       }
 
       if (!formData.familyMobile.trim()) {
         return {
           isValid: false,
-          message:
-            "Please enter family member mobile number.",
+          message: "Please enter family member mobile number.\nकृपया पारिवारिक प्रतिनिधि का मोबाइल नंबर भरें।",
         };
       }
 
@@ -469,7 +468,7 @@ const { data, error } = await supabase
         return {
           isValid: false,
           message:
-            "Please enter a valid family member mobile number. If outside India, include country code.",
+  "Please enter a valid family member mobile number. If outside India, include country code.\nकृपया सही पारिवारिक मोबाइल नंबर भरें। भारत से बाहर हैं तो country code जरूर लगाएं।",
         };
       }
      
@@ -480,14 +479,14 @@ const { data, error } = await supabase
       if (!formData.idType.trim()) {
         return {
           isValid: false,
-          message: "Please select ID type.",
+          message: "Please select ID type.\nकृपया पहचान प्रमाण का प्रकार चुनें।",
         };
       }
 
       if (!formData.idNumber.trim()) {
         return {
           isValid: false,
-          message: "Please enter ID number.",
+          message: "Please enter ID number.\nकृपया पहचान नंबर भरें।",
         };
       }
 
@@ -498,8 +497,7 @@ const { data, error } = await supabase
       if (!formData.selectedSlotId) {
         return {
           isValid: false,
-          message:
-            "Please select an appointment date.",
+          message: "Please select an appointment date.\nकृपया अपॉइंटमेंट तारीख चुनें।",
         };
       }
     }
@@ -632,12 +630,16 @@ p_id_type: formData.idType,
           <h1 className="text-3xl font-extrabold md:text-4xl">
             Diksha Registration
           </h1>
-         
+          <h2 className="mt-2 text-2xl font-bold text-orange-800">
+  दीक्षा पंजीकरण
+</h2>
           <p className="mt-3 text-sm text-stone-600">
             Please fill the registration form carefully. International address
             and phone numbers are supported.
           </p>
-          
+          <p className="text-sm text-stone-600">
+  कृपया फॉर्म ध्यान से भरें। भारत और विदेश दोनों के पते स्वीकार हैं।
+</p>
         </header>
 
         <div className="mb-6 rounded-3xl bg-white p-4 shadow-sm">
@@ -693,10 +695,10 @@ p_id_type: formData.idType,
                 onChange={handleChange}
                 required
                 options={[
-                  ["", "Select gender"],
-                  ["Male", "Male"],
-                  ["Female", "Female"],
-                  ["Other", "Other"],
+                  ["", "Select gender / लिंग चुनें"],
+                  ["Male", "Male / पुरुष"],
+                  ["Female", "Female / महिला"],
+                  ["Other", "Other / अन्य"],
                 ]}
               />
 
@@ -708,17 +710,17 @@ p_id_type: formData.idType,
   onChange={handleChange}
   required
   options={[
-    ["", "Select occupation "],
-    ["Student", "Student "],
-    ["Housewife", "Housewife "],
-    ["Service", "Service "],
-    ["Business", "Business "],
-    ["Farmer", "Farmer "],
-    ["Retired", "Retired"],
-    ["Virakt", "Virakt "],
-    ["Self Employed", "Self Employed "],
-    ["Unemployed", "Unemployed "],
-    ["Other", "Other "],
+    ["", "Select occupation / व्यवसाय चुनें"],
+    ["Student", "Student / विद्यार्थी"],
+    ["Housewife", "Housewife / गृहिणी"],
+    ["Service", "Service / नौकरी"],
+    ["Business", "Business / व्यापार"],
+    ["Farmer", "Farmer / किसान"],
+    ["Retired", "Retired / सेवानिवृत्त"],
+    ["Virakt", "Virakt / विरक्त"],
+    ["Self Employed", "Self Employed / स्वरोजगार"],
+    ["Unemployed", "Unemployed / बेरोजगार"],
+    ["Other", "Other / अन्य"],
   ]}
 />
 
@@ -730,7 +732,7 @@ p_id_type: formData.idType,
                 onChange={handleChange}
                 required
                 options={[
-                  ["", "Select marital status"],
+                  ["", "Select marital status / वैवाहिक स्थिति चुनें"],
                   ["Single", "Single / अविवाहित"],
                   ["Married", "Married / विवाहित"],
                   ["Widowed", "Widowed / विधवा / विधुर"],
@@ -942,7 +944,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 onChange={handleChange}
                 required
                 options={[
-                  ["", "Select relation"],
+                  ["", "Select relation / संबंध चुनें"],
                   ["Father", "Father / पिता"],
                   ["Mother", "Mother / माता"],
                   ["Husband", "Husband / पति"],
@@ -1020,11 +1022,11 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
             >
               {isLoadingSlots ? (
                 <div className="rounded-2xl bg-orange-50 p-6 text-center font-bold text-stone-700">
-                  Loading available dates...
+                  Loading available dates... / उपलब्ध तारीखें लोड हो रही हैं...
                 </div>
               ) : slots.length === 0 ? (
                 <div className="rounded-2xl bg-red-50 p-6 text-center font-bold text-red-700">
-                  No appointment dates available right now.
+                  No appointment dates available right now. / अभी कोई अपॉइंटमेंट तारीख उपलब्ध नहीं है।
                 </div>
               ) : (
                 <>
@@ -1042,7 +1044,15 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
 
 <div className="overflow-hidden rounded-3xl border border-orange-100 bg-white">
   <div className="grid grid-cols-7 bg-orange-100 text-center text-xs font-extrabold text-orange-900 md:text-sm">
-    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+  {[
+  "Mon / सोम",
+  "Tue / मंगल",
+  "Wed / बुध",
+  "Thu / गुरु",
+  "Fri / शुक्र",
+  "Sat / शनि",
+  "Sun / रवि",
+].map((day) => (
       <div
         key={day}
         className="border-r border-orange-200 px-2 py-3 last:border-r-0"
@@ -1112,11 +1122,11 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                     : "bg-green-100 text-green-700"
                 }`}
               >
-                {isFull ? "Full" : `${seatsLeft} left`}
+                {isFull ? "Full / भरा हुआ" : `${seatsLeft} left / बाकी`}
               </span>
             ) : (
               <span className="text-[10px] font-bold text-stone-400">
-                No slot
+                No slot / स्लॉट नहीं
               </span>
             )}
           </div>
@@ -1128,9 +1138,9 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
 
 {selectedSlot && (
   <div className="mt-4 rounded-2xl bg-orange-50 p-4 text-sm font-bold text-orange-900">
-    Selected Meeting Date: {formatDate(selectedSlot.slot_date)}
+    Selected Meeting Date / चुनी हुई मीटिंग तारीख: {formatDate(selectedSlot.slot_date)}
     <span className="block font-semibold text-stone-700">
-      Time: {selectedSlot.slot_time}
+    Time / समय: {selectedSlot.slot_time}
     </span>
   </div>
 )}
@@ -1149,7 +1159,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
               <div className="grid gap-3">
                 <ReviewRow label="Name / नाम" value={formData.fullName} />
                 <ReviewRow
-                  label="Age / Gender"
+                  label="Age / Gender / आयु / लिंग"
                   value={`${formData.age} / ${formData.gender}`}
                 />
                 <ReviewRow
@@ -1157,7 +1167,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                   value={formData.mobile}
                 />
                 <ReviewRow
-                  label="WhatsApp"
+                  label="WhatsApp / व्हाट्सऐप"
                   value={formData.whatsapp}
                 />
                 <ReviewRow
@@ -1245,7 +1255,9 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
 
 function StepCard({
   titleEn,
+  titleHi,
   subtitleEn,
+  subtitleHi,
   children,
 }: {
   titleEn: string;
@@ -1258,7 +1270,18 @@ function StepCard({
     <section className="rounded-3xl bg-white p-5 shadow-sm md:p-8">
       <div className="mb-6">
         <h3 className="text-2xl font-extrabold">{titleEn}</h3>
+
+        {titleHi && (
+          <h4 className="mt-1 text-xl font-bold text-orange-800">
+            {titleHi}
+          </h4>
+        )}
+
         <p className="mt-2 text-sm text-stone-600">{subtitleEn}</p>
+
+        {subtitleHi && (
+          <p className="text-sm text-stone-600">{subtitleHi}</p>
+        )}
       </div>
 
       <div className="grid gap-5">{children}</div>
@@ -1266,9 +1289,9 @@ function StepCard({
   );
 }
 
-
 function InputField({
   labelEn,
+  labelHi,
   name,
   value,
   onChange,
@@ -1293,6 +1316,11 @@ function InputField({
     <div>
       <label className="mb-2 block font-bold">
         {labelEn} {required && <span className="text-red-600">*</span>}
+        {labelHi && (
+          <span className="block text-sm font-semibold text-orange-800">
+            {labelHi}
+          </span>
+        )}
       </label>
 
       <input
@@ -1306,9 +1334,9 @@ function InputField({
     </div>
   );
 }
-
 function TextareaField({
   labelEn,
+  labelHi,
   name,
   value,
   onChange,
@@ -1331,6 +1359,11 @@ function TextareaField({
     <div>
       <label className="mb-2 block font-bold">
         {labelEn} {required && <span className="text-red-600">*</span>}
+        {labelHi && (
+          <span className="block text-sm font-semibold text-orange-800">
+            {labelHi}
+          </span>
+        )}
       </label>
 
       <textarea
@@ -1347,6 +1380,7 @@ function TextareaField({
 
 function SelectField({
   labelEn,
+  labelHi,
   name,
   value,
   onChange,
@@ -1369,6 +1403,11 @@ function SelectField({
     <div>
       <label className="mb-2 block font-bold">
         {labelEn} {required && <span className="text-red-600">*</span>}
+        {labelHi && (
+          <span className="block text-sm font-semibold text-orange-800">
+            {labelHi}
+          </span>
+        )}
       </label>
 
       <select
@@ -1386,7 +1425,6 @@ function SelectField({
     </div>
   );
 }
-
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
