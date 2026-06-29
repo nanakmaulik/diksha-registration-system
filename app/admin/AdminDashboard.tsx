@@ -117,13 +117,16 @@ export default function AdminDashboard({
   slots,
   activityLogs,
   registrationRequests,
+  accessMode = "admin",
 }: {
   registrations: Registration[];
   slots: Slot[];
   activityLogs: ActivityLog[];
   registrationRequests: RegistrationRequest[];
+  accessMode?: "admin" | "sadhak";
 }) {
   const router = useRouter();
+  const isSadhakAccess = accessMode === "sadhak";
 
   const [search, setSearch] = useState("");
   const [slotDate, setSlotDate] = useState(() => {
@@ -1723,10 +1726,10 @@ csvTextValue(person.whatsapp),
 
             <div>
               <h1 className="text-2xl font-extrabold md:text-3xl">
-                Admin Dashboard
+              {isSadhakAccess ? "Sadhak Dashboard" : "Admin Dashboard"}
               </h1>
               <h2 className="mt-1 text-xl font-bold text-orange-800">
-                प्रशासन डैशबोर्ड
+              {isSadhakAccess ? "साधक डैशबोर्ड" : "प्रशासन डैशबोर्ड"}
               </h2>
               <p className="mt-2 text-sm text-stone-600">
                 Manage registrations, final meetings, Diksha status, history and
@@ -2235,6 +2238,7 @@ csvTextValue(person.whatsapp),
   )}
 </section>
 
+{!isSadhakAccess && (
         <section className="mb-8 space-y-4">
           <div className="grid gap-4 md:grid-cols-4">
             <StatsCard
@@ -2378,6 +2382,7 @@ titleHi="स्थगित"
             </div>
           </div>
         </section>
+        )}
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
   <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <div>
@@ -2555,7 +2560,7 @@ titleHi="स्थगित"
     </div>
   )}
 </section>
-       
+{!isSadhakAccess && (
 
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -2711,7 +2716,8 @@ titleHi="स्थगित"
   </div>
 )}
         </section>
-
+)}
+{!isSadhakAccess && (
         <section className="rounded-3xl bg-white p-5 shadow-sm md:p-6">
           <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
@@ -3156,8 +3162,9 @@ titleHi="स्थगित"
             </table>
           </div>
         </section>
+        )}
       </div>
-
+      {!isSadhakAccess && (
       <section
   className={`print-area print-list-area ${
     printMode === "list" ? "" : "print-hidden"
@@ -3250,6 +3257,7 @@ titleHi="स्थगित"
           </div>
         </div>
       </section>
+      )}
       {editingRegistration && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
     <div className="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
@@ -3846,6 +3854,7 @@ titleHi="स्थगित"
           </div>
         </div>
       )}
+      {!isSadhakAccess && (
       <section
         className={`print-area devotee-forms-area ${
           printMode === "forms" ? "" : "print-hidden"
@@ -4015,6 +4024,7 @@ titleHi="स्थगित"
           );
         })}
       </section>
+      )}
       {selectedAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">

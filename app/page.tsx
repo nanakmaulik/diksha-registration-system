@@ -32,20 +32,37 @@ export default function Home() {
           कृपया अपनी जानकारी ध्यानपूर्वक भरें।
         </p>
 
-        <Link
-          href="/register"
-          className="mt-8 inline-block rounded-2xl bg-orange-700 px-8 py-4 font-bold text-white"
-        >
-          Start Registration
-          <span className="block text-sm font-normal">पंजीकरण शुरू करें</span>
-        </Link>
-        <Link
-  href="/admin"
-  className="mt-4 inline-block text-sm font-bold text-orange-800 underline"
->
-  Admin Dashboard
-  <span className="block text-xs font-normal">प्रशासन डैशबोर्ड</span>
-</Link>
+        <div className="mt-8 grid gap-3 md:grid-cols-3">
+  <Link
+    href="/register"
+    className="rounded-2xl bg-orange-700 px-6 py-4 text-center font-extrabold text-white shadow-sm transition hover:bg-orange-800"
+  >
+    Start Registration
+    <span className="block text-sm font-normal">
+      पंजीकरण शुरू करें
+    </span>
+  </Link>
+
+  <Link
+    href="/admin"
+    className="rounded-2xl border border-orange-300 bg-white px-6 py-4 text-center font-extrabold text-orange-800 shadow-sm transition hover:bg-orange-50"
+  >
+    Admin Dashboard
+    <span className="block text-sm font-normal">
+      प्रशासन डैशबोर्ड
+    </span>
+  </Link>
+
+  <Link
+    href="/sadhak-login"
+    className="rounded-2xl border border-orange-300 bg-white px-6 py-4 text-center font-extrabold text-orange-800 shadow-sm transition hover:bg-orange-50"
+  >
+    Sadhak Login
+    <span className="block text-sm font-normal">
+      साधक लॉगिन
+    </span>
+  </Link>
+</div>
       </div>
     </main>
   );
