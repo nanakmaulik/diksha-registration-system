@@ -104,6 +104,10 @@ type RegistrationRequest = {
   verified_at: string | null;
   rejection_reason: string | null;
   created_registration_id: string | null;
+  vrindavan_stay_days: string | null;
+video_proof_attached: string | null;
+video_proof_other: string | null;
+referred_to: string | null;
   created_at: string;
 };
 
@@ -149,6 +153,20 @@ const [editingRequestSlotId, setEditingRequestSlotId] = useState<string | null>(
 const [editingRequestNewSlotId, setEditingRequestNewSlotId] = useState("");
 const [isUpdatingRequestSlot, setIsUpdatingRequestSlot] = useState(false);
 const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([]);
+const [pendingQuestionAnswers, setPendingQuestionAnswers] = useState<
+  Record<
+    string,
+    {
+      vrindavan_stay_days: string;
+      video_proof_attached: string;
+      video_proof_other: string;
+      referred_to: string;
+    }
+  >
+>({});
+
+const [savingQuestionRequestId, setSavingQuestionRequestId] =
+  useState<string | null>(null);
 const [editingRequest, setEditingRequest] =
   useState<RegistrationRequest | null>(null);
 
@@ -365,6 +383,80 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   
     window.location.reload();
   }
+  function getPendingQuestionAnswers(request: RegistrationRequest) {
+    return (
+      pendingQuestionAnswers[request.id] || {
+        vrindavan_stay_days: request.vrindavan_stay_days || "",
+        video_proof_attached: request.video_proof_attached || "",
+        video_proof_other: request.video_proof_other || "",
+        referred_to: request.referred_to || "",
+      }
+    );
+  }
+  
+  function handlePendingQuestionChange(
+    request: RegistrationRequest,
+    field:
+      | "vrindavan_stay_days"
+      | "video_proof_attached"
+      | "video_proof_other"
+      | "referred_to",
+    value: string
+  ) {
+    const currentAnswers = getPendingQuestionAnswers(request);
+  
+    setPendingQuestionAnswers((prev) => ({
+      ...prev,
+      [request.id]: {
+        ...currentAnswers,
+        [field]: value,
+        ...(field === "video_proof_attached" && value !== "Others"
+          ? { video_proof_other: "" }
+          : {}),
+      },
+    }));
+  }
+  
+  async function savePendingQuestionAnswers(
+    request: RegistrationRequest,
+    showAlert = true
+  ) {
+    const answers = getPendingQuestionAnswers(request);
+  
+    if (
+      answers.video_proof_attached === "Others" &&
+      !answers.video_proof_other.trim()
+    ) {
+      alert("Please enter other video proof details.\nकृपया other video proof details भरें।");
+      return false;
+    }
+  
+    setSavingQuestionRequestId(request.id);
+  
+    const { error } = await supabase
+      .from("registration_requests")
+      .update({
+        vrindavan_stay_days: answers.vrindavan_stay_days.trim() || null,
+        video_proof_attached: answers.video_proof_attached || null,
+        video_proof_other: answers.video_proof_other.trim() || null,
+        referred_to: answers.referred_to || null,
+      })
+      .eq("id", request.id);
+  
+    if (error) {
+      alert("Question answers save error: " + error.message);
+      setSavingQuestionRequestId(null);
+      return false;
+    }
+  
+    setSavingQuestionRequestId(null);
+  
+    if (showAlert) {
+      alert("Question answers saved successfully.\nप्रश्नों के उत्तर सेव हो गए।");
+    }
+  
+    return true;
+  }
 
   async function handleApproveRequest(request: RegistrationRequest) {
     if (!requestUpdatedBy.trim()) {
@@ -379,7 +471,11 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     );
   
     if (!confirmed) return;
-  
+
+    const answersSaved = await savePendingQuestionAnswers(request, false);
+    
+    if (!answersSaved) return;
+    
     setProcessingRequestId(request.id);
   
     const { data, error } = await supabase.rpc("approve_registration_request", {
@@ -1919,7 +2015,131 @@ csvTextValue(person.whatsapp),
   </div>
 </div>
 
+<div className="mt-4 rounded-2xl border border-orange-200 bg-white p-4">
+  <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p className="text-lg font-extrabold text-stone-900">
+        Final Verification Questions
+      </p>
+      <p className="text-sm font-semibold text-orange-800">
+        अंतिम सत्यापन प्रश्न
+      </p>
+    </div>
 
+    <button
+      type="button"
+      onClick={() => savePendingQuestionAnswers(request)}
+      disabled={savingQuestionRequestId === request.id}
+      className="rounded-2xl bg-green-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+    >
+      {savingQuestionRequestId === request.id ? "Saving..." : "Save Answers"}
+      <span className="block text-xs font-normal">
+        उत्तर सेव करें
+      </span>
+    </button>
+  </div>
+
+  <div className="grid gap-4 md:grid-cols-3">
+    <div>
+      <label className="mb-2 block text-sm font-bold text-stone-700">
+        For how many days you are here in Vrindavan?
+        <span className="block text-xs font-semibold text-orange-800">
+          आप वृंदावन में कितने दिनों के लिए हैं?
+        </span>
+      </label>
+
+      <input
+        type="text"
+        value={getPendingQuestionAnswers(request).vrindavan_stay_days}
+        onChange={(event) =>
+          handlePendingQuestionChange(
+            request,
+            "vrindavan_stay_days",
+            event.target.value
+          )
+        }
+        placeholder="Example: 3 days"
+        className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+      />
+    </div>
+
+    <div>
+      <label className="mb-2 block text-sm font-bold text-stone-700">
+        Video proof attached
+        <span className="block text-xs font-semibold text-orange-800">
+          वीडियो प्रमाण संलग्न
+        </span>
+      </label>
+
+      <select
+        value={getPendingQuestionAnswers(request).video_proof_attached}
+        onChange={(event) =>
+          handlePendingQuestionChange(
+            request,
+            "video_proof_attached",
+            event.target.value
+          )
+        }
+        className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
+      >
+        <option value="">Select video proof</option>
+        <option value="Father">Father / पिता</option>
+        <option value="Mother">Mother / माता</option>
+        <option value="Both">Both / दोनों</option>
+        <option value="Wife">Wife / पत्नी</option>
+        <option value="Not Reqd.">Not Reqd. / आवश्यक नहीं</option>
+        <option value="Others">Others / अन्य</option>
+      </select>
+
+      {getPendingQuestionAnswers(request).video_proof_attached ===
+        "Others" && (
+        <input
+          type="text"
+          value={getPendingQuestionAnswers(request).video_proof_other}
+          onChange={(event) =>
+            handlePendingQuestionChange(
+              request,
+              "video_proof_other",
+              event.target.value
+            )
+          }
+          placeholder="Enter other video proof details"
+          className="mt-3 w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+        />
+      )}
+    </div>
+
+    <div>
+      <label className="mb-2 block text-sm font-bold text-stone-700">
+        Referred to
+        <span className="block text-xs font-semibold text-orange-800">
+          किसके पास भेजा गया
+        </span>
+      </label>
+
+      <select
+        value={getPendingQuestionAnswers(request).referred_to}
+        onChange={(event) =>
+          handlePendingQuestionChange(
+            request,
+            "referred_to",
+            event.target.value
+          )
+        }
+        className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
+      >
+        <option value="">Select referred to</option>
+        <option value="ALB">ALB</option>
+        <option value="SS">SS</option>
+        <option value="SSB">SSB</option>
+        <option value="PS">PS</option>
+        <option value="GSB">GSB</option>
+        <option value="NNB">NNB</option>
+        <option value="MMB">MMB</option>
+      </select>
+    </div>
+  </div>
+</div>
 
 <div className="mt-4 rounded-2xl bg-white p-4 text-sm uppercase text-stone-700">
             <p className="font-bold">Address:</p>
