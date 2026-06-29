@@ -149,6 +149,33 @@ const [editingRequestSlotId, setEditingRequestSlotId] = useState<string | null>(
 const [editingRequestNewSlotId, setEditingRequestNewSlotId] = useState("");
 const [isUpdatingRequestSlot, setIsUpdatingRequestSlot] = useState(false);
 const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([]);
+const [editingRequest, setEditingRequest] =
+  useState<RegistrationRequest | null>(null);
+
+const [editRequestFormData, setEditRequestFormData] = useState({
+  full_name: "",
+  age: "",
+  gender: "",
+  occupation: "",
+  marital_status: "",
+  mobile: "",
+  whatsapp: "",
+  address: "",
+  city: "",
+  state: "",
+  country: "",
+  pin_code: "",
+  spouse_name: "",
+  father_name: "",
+  mother_name: "",
+  family_name: "",
+  family_relation: "",
+  family_mobile: "",
+  id_type: "",
+  id_number: "",
+});
+
+const [isSavingRequestEdit, setIsSavingRequestEdit] = useState(false);
 const [selectedRegistrationIds, setSelectedRegistrationIds] = useState<string[]>([]);
 const [isConvertingGroupToken, setIsConvertingGroupToken] = useState(false);
 const [isDeletingRequests, setIsDeletingRequests] = useState(false);
@@ -483,6 +510,102 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   
     setProcessingRequestId(null);
     setRejectionReason("");
+    window.location.reload();
+  }
+  function openEditRequest(request: RegistrationRequest) {
+    setEditingRequest(request);
+  
+    setEditRequestFormData({
+      full_name: request.full_name || "",
+      age: request.age ? String(request.age) : "",
+      gender: request.gender || "",
+      occupation: request.occupation || "",
+      marital_status: request.marital_status || "",
+      mobile: request.mobile || "",
+      whatsapp: request.whatsapp || "",
+      address: request.address || "",
+      city: request.city || "",
+      state: request.state || "",
+      country: request.country || "",
+      pin_code: request.pin_code || "",
+      spouse_name: request.spouse_name || "",
+      father_name: request.father_name || "",
+      mother_name: request.mother_name || "",
+      family_name: request.family_name || "",
+      family_relation: request.family_relation || "",
+      family_mobile: request.family_mobile || "",
+      id_type: request.id_type || "",
+      id_number: request.id_number || "",
+    });
+  }
+  
+  function handleEditRequestFormChange(
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) {
+    const { name, value } = event.target;
+  
+    setEditRequestFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+  
+  async function handleSaveRequestEdit() {
+    if (!editingRequest) return;
+  
+    if (!editRequestFormData.full_name.trim()) {
+      alert("Please enter name.\nकृपया नाम भरें।");
+      return;
+    }
+  
+    if (!editRequestFormData.mobile.trim()) {
+      alert("Please enter mobile number.\nकृपया मोबाइल नंबर भरें।");
+      return;
+    }
+  
+    if (!editRequestFormData.id_number.trim()) {
+      alert("Please enter ID / Aadhaar number.\nकृपया पहचान नंबर भरें।");
+      return;
+    }
+  
+    setIsSavingRequestEdit(true);
+  
+    const { error } = await supabase
+      .from("registration_requests")
+      .update({
+        full_name: editRequestFormData.full_name.trim(),
+        age: editRequestFormData.age ? Number(editRequestFormData.age) : null,
+        gender: editRequestFormData.gender || null,
+        occupation: editRequestFormData.occupation || null,
+        marital_status: editRequestFormData.marital_status || null,
+        mobile: editRequestFormData.mobile.trim(),
+        whatsapp: editRequestFormData.whatsapp.trim() || null,
+        address: editRequestFormData.address.trim() || null,
+        city: editRequestFormData.city.trim() || null,
+        state: editRequestFormData.state.trim() || null,
+        country: editRequestFormData.country.trim() || null,
+        pin_code: editRequestFormData.pin_code.trim() || null,
+        spouse_name: editRequestFormData.spouse_name.trim() || null,
+        father_name: editRequestFormData.father_name.trim() || null,
+        mother_name: editRequestFormData.mother_name.trim() || null,
+        family_name: editRequestFormData.family_name.trim() || null,
+        family_relation: editRequestFormData.family_relation || null,
+        family_mobile: editRequestFormData.family_mobile.trim() || null,
+        id_type: editRequestFormData.id_type || null,
+        id_number: editRequestFormData.id_number.trim() || null,
+      })
+      .eq("id", editingRequest.id);
+  
+    if (error) {
+      alert("Pending request update error: " + error.message);
+      setIsSavingRequestEdit(false);
+      return;
+    }
+  
+    setIsSavingRequestEdit(false);
+    setEditingRequest(null);
     window.location.reload();
   }
   async function handleRescheduleFinalMeeting() {
@@ -1766,6 +1889,17 @@ csvTextValue(person.whatsapp),
         अनुरोध Deferred करें
       </span>
     </button>
+
+    <button
+  type="button"
+  onClick={() => openEditRequest(request)}
+  className="rounded-2xl bg-blue-100 px-5 py-3 text-sm font-bold text-blue-700"
+>
+  Edit Details
+  <span className="block text-xs font-normal">
+    विवरण बदलें
+  </span>
+</button>
 
     {request.aadhaar_file_url && (
       <button
@@ -3053,6 +3187,254 @@ titleHi="स्थगित"
     </div>
   </div>
 )}
+{editingRequest && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div className="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-2xl font-extrabold">
+            Edit Pending Request
+          </h3>
+
+          <p className="mt-1 text-sm font-semibold text-stone-600">
+            Ref: RQ-{editingRequest.id.slice(-6).toUpperCase()}
+          </p>
+
+          <p className="text-sm text-stone-600">
+            Token generate hone se pehle candidate details yaha se update kar sakte ho.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setEditingRequest(null)}
+          className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
+        >
+          Close
+          <span className="block text-[10px] font-normal">
+            बंद करें
+          </span>
+        </button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <EditInput
+          label="Full Name / पूरा नाम"
+          name="full_name"
+          value={editRequestFormData.full_name}
+          onChange={handleEditRequestFormChange}
+          required
+        />
+
+        <EditInput
+          label="Age / आयु"
+          name="age"
+          value={editRequestFormData.age}
+          onChange={handleEditRequestFormChange}
+          type="number"
+        />
+
+        <EditSelect
+          label="Gender / लिंग"
+          name="gender"
+          value={editRequestFormData.gender}
+          onChange={handleEditRequestFormChange}
+          options={[
+            ["", "Select gender / लिंग चुनें"],
+            ["Male", "Male / पुरुष"],
+            ["Female", "Female / महिला"],
+            ["Other", "Other / अन्य"],
+          ]}
+        />
+
+        <EditSelect
+          label="Occupation / व्यवसाय"
+          name="occupation"
+          value={editRequestFormData.occupation}
+          onChange={handleEditRequestFormChange}
+          options={[
+            ["", "Select occupation / व्यवसाय चुनें"],
+            ["Student", "Student / विद्यार्थी"],
+            ["Housewife", "Housewife / गृहिणी"],
+            ["Service", "Service / नौकरी"],
+            ["Business", "Business / व्यापार"],
+            ["Farmer", "Farmer / किसान"],
+            ["Retired", "Retired / सेवानिवृत्त"],
+            ["Virakt", "Virakt / विरक्त"],
+            ["Self Employed", "Self Employed / स्वरोजगार"],
+            ["Unemployed", "Unemployed / बेरोजगार"],
+            ["Other", "Other / अन्य"],
+          ]}
+        />
+
+        <EditSelect
+          label="Marital Status / वैवाहिक स्थिति"
+          name="marital_status"
+          value={editRequestFormData.marital_status}
+          onChange={handleEditRequestFormChange}
+          options={[
+            ["", "Select marital status / वैवाहिक स्थिति चुनें"],
+            ["Single", "Single / अविवाहित"],
+            ["Married", "Married / विवाहित"],
+            ["Widowed", "Widowed / विधवा / विधुर"],
+            ["Divorced", "Divorced / तलाकशुदा"],
+          ]}
+        />
+
+        <EditInput
+          label="Mobile / मोबाइल"
+          name="mobile"
+          value={editRequestFormData.mobile}
+          onChange={handleEditRequestFormChange}
+          required
+        />
+
+        <EditInput
+          label="WhatsApp / व्हाट्सऐप"
+          name="whatsapp"
+          value={editRequestFormData.whatsapp}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditInput
+          label="City / शहर"
+          name="city"
+          value={editRequestFormData.city}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditInput
+          label="State / राज्य"
+          name="state"
+          value={editRequestFormData.state}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditInput
+          label="Country / देश"
+          name="country"
+          value={editRequestFormData.country}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditInput
+          label="PIN Code / पिन कोड"
+          name="pin_code"
+          value={editRequestFormData.pin_code}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditSelect
+          label="ID Type / पहचान प्रमाण"
+          name="id_type"
+          value={editRequestFormData.id_type}
+          onChange={handleEditRequestFormChange}
+          options={[
+            ["", "Select ID type / पहचान प्रमाण चुनें"],
+            ["aadhaar", "Aadhaar Card / आधार कार्ड"],
+            ["passport", "Passport / पासपोर्ट"],
+            ["other", "Other Government ID / अन्य सरकारी पहचान"],
+          ]}
+        />
+
+        <EditInput
+          label="ID / Aadhaar Number / पहचान नंबर"
+          name="id_number"
+          value={editRequestFormData.id_number}
+          onChange={handleEditRequestFormChange}
+          required
+        />
+
+        <EditInput
+          label="Husband / Wife Name / पति या पत्नी का नाम"
+          name="spouse_name"
+          value={editRequestFormData.spouse_name}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditInput
+          label="Father Name / पिता का नाम"
+          name="father_name"
+          value={editRequestFormData.father_name}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditInput
+          label="Mother Name / माता का नाम"
+          name="mother_name"
+          value={editRequestFormData.mother_name}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditInput
+          label="Family Representative Name / पारिवारिक प्रतिनिधि का नाम"
+          name="family_name"
+          value={editRequestFormData.family_name}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditSelect
+          label="Family Relation / संबंध"
+          name="family_relation"
+          value={editRequestFormData.family_relation}
+          onChange={handleEditRequestFormChange}
+          options={[
+            ["", "Select relation / संबंध चुनें"],
+            ["Father", "Father / पिता"],
+            ["Mother", "Mother / माता"],
+            ["Husband", "Husband / पति"],
+            ["Wife", "Wife / पत्नी"],
+            ["Son", "Son / पुत्र"],
+            ["Daughter", "Daughter / पुत्री"],
+            ["Brother", "Brother / भाई"],
+            ["Sister", "Sister / बहन"],
+            ["Other", "Other / अन्य"],
+          ]}
+        />
+
+        <EditInput
+          label="Family Mobile / पारिवारिक मोबाइल"
+          name="family_mobile"
+          value={editRequestFormData.family_mobile}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <div className="md:col-span-3">
+          <EditTextarea
+            label="Address / पता"
+            name="address"
+            value={editRequestFormData.address}
+            onChange={handleEditRequestFormChange}
+          />
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 md:flex-row md:justify-end">
+        <button
+          type="button"
+          onClick={() => setEditingRequest(null)}
+          className="rounded-2xl border border-orange-300 px-6 py-3 font-bold text-orange-800"
+        >
+          Cancel
+          <span className="block text-xs font-normal">रद्द करें</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSaveRequestEdit}
+          disabled={isSavingRequestEdit}
+          className="rounded-2xl bg-green-700 px-6 py-3 font-bold text-white disabled:opacity-60"
+        >
+          {isSavingRequestEdit ? "Saving..." : "Save Changes"}
+          <span className="block text-xs font-normal">
+            बदलाव सेव करें
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       {selectedHistory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
