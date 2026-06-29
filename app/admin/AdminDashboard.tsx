@@ -3,7 +3,8 @@
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 
 type Registration = {
   id: string;
@@ -122,8 +123,13 @@ export default function AdminDashboard({
   activityLogs: ActivityLog[];
   registrationRequests: RegistrationRequest[];
 }) {
+  const router = useRouter();
+
   const [search, setSearch] = useState("");
-  const [slotDate, setSlotDate] = useState("all");
+  const [slotDate, setSlotDate] = useState(() => {
+  if (typeof window === "undefined") return "all";
+  return localStorage.getItem("adminSlotDate") || "all";
+});
   const [showFullMobile, setShowFullMobile] = useState(false);
   const [showAllSlots, setShowAllSlots] = useState(false);
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
@@ -138,7 +144,10 @@ const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
   useState(false);
   const [printMode, setPrintMode] = useState<"list" | "forms">("list");
   const [isBulkScheduling, setIsBulkScheduling] = useState(false);
-  const [attendanceDate, setAttendanceDate] = useState(getTodayDateString());
+  const [attendanceDate, setAttendanceDate] = useState(() => {
+    if (typeof window === "undefined") return getTodayDateString();
+    return localStorage.getItem("adminAttendanceDate") || getTodayDateString();
+  });
   const [selectedAttendanceIds, setSelectedAttendanceIds] = useState<string[]>([]);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [attendanceUpdatedBy, setAttendanceUpdatedBy] = useState("Sadhak");
@@ -256,6 +265,73 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     meetingDate?: string;
     meetingTime?: string;
   } | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem("adminSlotDate", slotDate);
+  }, [slotDate]);
+  
+  useEffect(() => {
+    localStorage.setItem("adminAttendanceDate", attendanceDate);
+  }, [attendanceDate]);
+  
+  useEffect(() => {
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  
+    function scheduleRefresh() {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+  
+      refreshTimer = setTimeout(() => {
+        router.refresh();
+      }, 700);
+    }
+  
+    const channel = supabase
+      .channel("admin-dashboard-live-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "registration_requests",
+        },
+        scheduleRefresh
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "registrations",
+        },
+        scheduleRefresh
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "slots",
+        },
+        scheduleRefresh
+      )
+      .subscribe();
+  
+    const fallbackInterval = window.setInterval(() => {
+      router.refresh();
+    }, 20000);
+  
+    return () => {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+  
+      window.clearInterval(fallbackInterval);
+      supabase.removeChannel(channel);
+    };
+  }, [router]);
+  
 
   const todayDate = getTodayDateString();
   const availableFinalMeetingSlots = slots.filter(
@@ -1939,16 +2015,23 @@ csvTextValue(person.whatsapp),
 
   <div className="space-y-3">
   <div className="rounded-2xl bg-white p-4 uppercase shadow-sm">
-      <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
-        Family Approval
-      </p>
-      <p className="mt-1 text-base font-extrabold text-stone-800">
-        {request.marital_status === "Married"
-          ? `Husband / Wife: ${request.spouse_name || "-"}`
-          : `Father: ${request.father_name || "-"} / Mother: ${
-              request.mother_name || "-"
-            }`}
-      </p>
+  <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+  Family Approval
+</p>
+
+<p className="mt-1 text-base font-extrabold text-stone-800">
+  Father: {request.father_name || "-"}
+</p>
+
+<p className="mt-1 text-base font-extrabold text-stone-800">
+  Mother: {request.mother_name || "-"}
+</p>
+
+{request.marital_status === "Married" && (
+  <p className="mt-1 text-base font-extrabold text-stone-800">
+    Husband / Wife: {request.spouse_name || "-"}
+  </p>
+)}
     </div>
 
     <div className="rounded-2xl bg-white p-4 uppercase shadow-sm">
@@ -2082,13 +2165,14 @@ csvTextValue(person.whatsapp),
         }
         className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
       >
-        <option value="">Select video proof</option>
-        <option value="Father">Father / पिता</option>
-        <option value="Mother">Mother / माता</option>
-        <option value="Both">Both / दोनों</option>
-        <option value="Wife">Wife / पत्नी</option>
-        <option value="Not Reqd.">Not Reqd. / आवश्यक नहीं</option>
-        <option value="Others">Others / अन्य</option>
+       <option value="">Select video proof</option>
+<option value="Father">Father / पिता</option>
+<option value="Mother">Mother / माता</option>
+<option value="Both">Both / दोनों</option>
+<option value="Husband">Husband / पति</option>
+<option value="Wife">Wife / पत्नी</option>
+<option value="Not Reqd.">Not Reqd. / आवश्यक नहीं</option>
+<option value="Others">Others / अन्य</option>
       </select>
 
       {getPendingQuestionAnswers(request).video_proof_attached ===
@@ -3906,14 +3990,14 @@ titleHi="स्थगित"
 
   <div className="thumb-impression-block">
   <div className="thumb-box">
-    <p>Left Thumb</p>
-    <p className="thumb-hi">बायां अंगूठा</p>
-  </div>
+  <p>Thumb</p>
+  <p className="thumb-hi">अंगूठा</p>
+</div>
 
-  <div className="thumb-box">
-    <p>Right Thumb</p>
-    <p className="thumb-hi">दायां अंगूठा</p>
-  </div>
+<div className="thumb-box">
+  <p>Thumb</p>
+  <p className="thumb-hi">अंगूठा</p>
+</div>
 </div>
 
   <div className="signature-block">

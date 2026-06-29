@@ -10,6 +10,7 @@ type RegistrationFormData = {
   age: string;
   gender: string;
   occupation: string;
+  occupationOther: string;
   maritalStatus: string;
   mobile: string;
   whatsapp: string;
@@ -18,16 +19,20 @@ type RegistrationFormData = {
   city: string;
   state: string;
   country: string;
+  countryOther: string;
   pinCode: string;
   spouseName: string;
   fatherName: string;
   motherName: string;
   familyName: string;
   familyRelation: string;
+  familyRelationOther: string;
   familyMobile: string;
   idType: string;
+  idTypeOther: string;
   idNumber: string;
   selectedSlotId: string;
+  
   
 };
 
@@ -45,6 +50,7 @@ const initialFormData: RegistrationFormData = {
   age: "",
   gender: "",
   occupation: "",
+  occupationOther: "",
   maritalStatus: "",
   mobile: "",
   whatsapp: "",
@@ -53,14 +59,17 @@ const initialFormData: RegistrationFormData = {
   city: "",
   state: "",
   country: "India",
+  countryOther: "",
   pinCode: "",
   spouseName: "",
   fatherName: "",
   motherName: "",
   familyName: "",
   familyRelation: "",
+  familyRelationOther: "",
   familyMobile: "",
-idType: "aadhaar",
+  idType: "aadhaar",
+  idTypeOther: "",
   idNumber: "",
   
   selectedSlotId: "",
@@ -87,6 +96,26 @@ const isMarriedFemale =
 
 const needsFatherMother =
   formData.maritalStatus !== "Married";
+
+  const finalOccupation =
+  formData.occupation === "Other"
+    ? formData.occupationOther.trim()
+    : formData.occupation;
+
+const finalCountry =
+  formData.country === "Other"
+    ? formData.countryOther.trim()
+    : formData.country;
+
+const finalFamilyRelation =
+  formData.familyRelation === "Other"
+    ? formData.familyRelationOther.trim()
+    : formData.familyRelation;
+
+const finalIdType =
+  formData.idType === "other"
+    ? formData.idTypeOther.trim()
+    : formData.idType;
 
   const totalSteps = 6;
 
@@ -319,6 +348,13 @@ const { data, error } = await supabase
         };
       }
 
+      if (formData.occupation === "Other" && !formData.occupationOther.trim()) {
+        return {
+          isValid: false,
+          message: "Please specify occupation.\nकृपया व्यवसाय लिखें।",
+        };
+      }
+
       if (!formData.maritalStatus.trim()) {
         return {
           isValid: false,
@@ -393,6 +429,14 @@ const { data, error } = await supabase
         };
       }
 
+
+      if (formData.country === "Other" && !formData.countryOther.trim()) {
+        return {
+          isValid: false,
+          message: "Please specify country.\nकृपया देश का नाम लिखें।",
+        };
+      }
+
       if (!formData.pinCode.trim()) {
         return {
           isValid: false,
@@ -455,6 +499,16 @@ const { data, error } = await supabase
         };
       }
 
+      if (
+        formData.familyRelation === "Other" &&
+        !formData.familyRelationOther.trim()
+      ) {
+        return {
+          isValid: false,
+          message: "Please specify family relation.\nकृपया संबंध लिखें।",
+        };
+      }
+
       if (!formData.familyMobile.trim()) {
         return {
           isValid: false,
@@ -480,6 +534,13 @@ const { data, error } = await supabase
         return {
           isValid: false,
           message: "Please select ID type.\nकृपया पहचान प्रमाण का प्रकार चुनें।",
+        };
+      }
+
+      if (formData.idType === "other" && !formData.idTypeOther.trim()) {
+        return {
+          isValid: false,
+          message: "Please specify ID type.\nकृपया पहचान प्रमाण का नाम लिखें।",
         };
       }
 
@@ -545,7 +606,7 @@ const { data, error } = await supabase
         p_full_name: formData.fullName,
         p_age: formData.age ? Number(formData.age) : null,
         p_gender: formData.gender,
-        p_occupation: formData.occupation,
+        p_occupation: finalOccupation,
         p_marital_status: formData.maritalStatus,
         p_mobile: formData.mobile,
         p_whatsapp: formData.whatsapp,
@@ -559,11 +620,11 @@ const { data, error } = await supabase
           isMarriedMale || needsFatherMother ? formData.fatherName : "",
         p_mother_name: needsFatherMother ? formData.motherName : "",
         p_family_name: formData.familyName,
-        p_family_relation: formData.familyRelation,
+        p_family_relation: finalFamilyRelation,
         p_family_mobile: formData.familyMobile,
         p_parent_video_proof_status: "",
         p_parent_video_proof_reason: "",
-p_id_type: formData.idType,
+        p_id_type: finalIdType,
         p_id_number: formData.idNumber,
         p_aadhaar_file_url: aadhaarFileUrl,
         p_aadhaar_file_name: aadhaarFileName,
@@ -724,6 +785,18 @@ p_id_type: formData.idType,
   ]}
 />
 
+{formData.occupation === "Other" && (
+  <InputField
+    labelEn="Please specify occupation"
+    labelHi="कृपया व्यवसाय लिखें"
+    name="occupationOther"
+    value={formData.occupationOther}
+    onChange={handleChange}
+    placeholder="Example: Artist, Driver, Shop worker"
+    required
+  />
+)}
+
               <SelectField
                 labelEn="Marital Status"
                 labelHi="वैवाहिक स्थिति"
@@ -848,7 +921,17 @@ p_id_type: formData.idType,
                   ["Other", "Other / अन्य"],
                 ]}
               />
-
+{formData.country === "Other" && (
+  <InputField
+    labelEn="Please specify country"
+    labelHi="कृपया देश का नाम लिखें"
+    name="countryOther"
+    value={formData.countryOther}
+    onChange={handleChange}
+    placeholder="Enter country name"
+    required
+  />
+)}
 <div>
   
 
@@ -958,6 +1041,18 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 ]}
               />
 
+{formData.familyRelation === "Other" && (
+  <InputField
+    labelEn="Please specify relation"
+    labelHi="कृपया संबंध लिखें"
+    name="familyRelationOther"
+    value={formData.familyRelationOther}
+    onChange={handleChange}
+    placeholder="Example: Uncle, Aunt, Guardian"
+    required
+  />
+)}
+
               <InputField
                labelEn="Present Family Representative Mobile"
 labelHi="उपस्थित पारिवारिक प्रतिनिधि का मोबाइल नंबर"
@@ -996,6 +1091,18 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
     ["other", "Other Government ID / अन्य सरकारी पहचान"],
   ]}
 />
+
+{formData.idType === "other" && (
+  <InputField
+    labelEn="Please specify ID type"
+    labelHi="कृपया पहचान प्रमाण का नाम लिखें"
+    name="idTypeOther"
+    value={formData.idTypeOther}
+    onChange={handleChange}
+    placeholder="Example: Voter ID, Driving License"
+    required
+  />
+)}
 
               <InputField
                 labelEn="ID Number"
@@ -1172,7 +1279,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 />
                 <ReviewRow
                   label="Address / पता"
-                  value={`${formData.address}, ${formData.city}, ${formData.state}, ${formData.country} - ${formData.pinCode}`}
+                  value={`${formData.address}, ${formData.city}, ${formData.state}, ${finalCountry} - ${formData.pinCode}`}
                 />
                <ReviewRow
   label="Family Approval / परिवार स्वीकृति"
@@ -1188,12 +1295,12 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
 />
                 <ReviewRow
                   label="Family Contact / परिवार संपर्क"
-                  value={`${formData.familyName} (${formData.familyRelation}) - ${formData.familyMobile}`}
+                  value={`${formData.familyName} (${finalFamilyRelation}) - ${formData.familyMobile}`}
                 />
                
                 <ReviewRow
                   label="ID Proof / पहचान प्रमाण"
-                  value={`${formData.idType} - ${formData.idNumber}`}
+                  value={`${finalIdType} - ${formData.idNumber}`}
                 />
                 <ReviewRow
                   label="Appointment / अपॉइंटमेंट"
