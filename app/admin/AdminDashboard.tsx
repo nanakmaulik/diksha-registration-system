@@ -154,6 +154,7 @@ const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
   const [selectedAttendanceIds, setSelectedAttendanceIds] = useState<string[]>([]);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [attendanceUpdatedBy, setAttendanceUpdatedBy] = useState("Sadhak");
+  const [attendanceSearch, setAttendanceSearch] = useState("");
   const [requestUpdatedBy, setRequestUpdatedBy] = useState("Sadhak");
 const [rejectionReason, setRejectionReason] = useState("");
 const [processingRequestId, setProcessingRequestId] = useState<string | null>(
@@ -1336,22 +1337,34 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   const tomorrowDate = getTodayDateString();
   const threeMonthsLaterDate = getDateAfterMonths(3);
   const finalMeetingAttendanceList = useMemo(() => {
-    return registrations.filter((person) => {
-      const meetingDate = person.slots?.slot_date || person.final_meeting_date;
-      const statusValue = person.candidate_status || person.status || "";
+    return registrations
+      .filter((person) => {
+        const meetingDate = person.slots?.slot_date || person.final_meeting_date;
+        const statusValue = person.candidate_status || person.status || "";
   
-      return (
-        meetingDate === attendanceDate &&
-        (
-          statusValue === "Scheduled for Final Meeting" ||
-          statusValue === "Pending" ||
-          statusValue === "Rejected" ||
-          statusValue === "Final Meeting Attended"
-        )
-      );
-    })
-    .sort(sortByMeetingDateAndToken);
-    }, [registrations, attendanceDate]);
+        return (
+          meetingDate === attendanceDate &&
+          (statusValue === "Scheduled for Final Meeting" ||
+            statusValue === "Pending" ||
+            statusValue === "Rejected" ||
+            statusValue === "Final Meeting Attended")
+        );
+      })
+      .filter((person) => {
+        const searchText = attendanceSearch.trim().toLowerCase();
+  
+        if (!searchText) return true;
+  
+        return (
+          (person.full_name || "").toLowerCase().includes(searchText) ||
+          (person.token || "").toLowerCase().includes(searchText) ||
+          (person.mobile || "").toLowerCase().includes(searchText) ||
+          (person.whatsapp || "").toLowerCase().includes(searchText) ||
+          (person.city || "").toLowerCase().includes(searchText)
+        );
+      })
+      .sort(sortByMeetingDateAndToken);
+  }, [registrations, attendanceDate, attendanceSearch]);
 
     const upcomingSlots = slots
     .filter(
@@ -2413,12 +2426,13 @@ titleHi="स्थगित"
     </div>
   </div>
 
-  <div className="mb-5 grid gap-3 md:grid-cols-[220px_1fr_auto_auto]">
+  <div className="mb-5 grid gap-3 md:grid-cols-[220px_1fr_1fr_auto_auto]">
     <select
       value={attendanceDate}
       onChange={(event) => {
         setAttendanceDate(event.target.value);
         setSelectedAttendanceIds([]);
+        setAttendanceSearch("");
       }}
       className="rounded-2xl border border-orange-200 bg-white px-4 py-3 font-bold outline-none focus:border-orange-600"
     >
@@ -2436,6 +2450,13 @@ titleHi="स्थगित"
       placeholder="Sadhak name"
       className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
     />
+    <input
+  type="text"
+  value={attendanceSearch}
+  onChange={(event) => setAttendanceSearch(event.target.value)}
+  placeholder="Search name, token, mobile, city"
+  className="rounded-2xl border border-orange-200 px-4 py-3 font-bold outline-none focus:border-orange-600"
+/>
 
     <button
       type="button"
@@ -4067,12 +4088,12 @@ titleHi="स्थगित"
   <p className="text-sm text-stone-600">फाइनल मीटिंग तारीख बदलें</p>
 
   <div className="mt-4">
-    <select
-      value={selectedFinalMeetingMonth}
-      onChange={(event) => {
-        setFinalMeetingMonth(event.target.value);
-        setFinalMeetingSlotId("");
-      }}
+  <select
+  value={selectedFinalMeetingMonth}
+  onChange={(event) => {
+    setFinalMeetingMonth(event.target.value);
+    setFinalMeetingSlotId("");
+  }}
       className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 font-bold outline-none focus:border-orange-600"
     >
       {finalMeetingMonths.map((month) => (
