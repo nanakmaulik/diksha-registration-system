@@ -2972,7 +2972,22 @@ titleHi="स्थगित"
             <table className="w-full min-w-[1450px] border-collapse text-left">
               <thead className="bg-orange-100">
                 <tr>
-                <TableHead>Select</TableHead>
+                <TableHead>
+  <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      checked={
+        filteredRegistrations.length > 0 &&
+        filteredRegistrations.every((person) =>
+          selectedRegistrationIds.includes(person.id)
+        )
+      }
+      onChange={handleToggleAllFilteredRegistrations}
+      className="h-5 w-5 accent-orange-700"
+    />
+    <span>Select</span>
+  </label>
+</TableHead>
                   <TableHead>Token</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile</TableHead>
@@ -2985,7 +3000,13 @@ titleHi="स्थगित"
                 </tr>
 
                 <tr className="text-sm text-stone-600">
-                <TableHead>चुनें</TableHead>
+                <TableHead>
+  <span className="text-xs">
+    {selectedRegistrationIds.length > 0
+      ? `${selectedRegistrationIds.length} selected`
+      : "चुनें"}
+  </span>
+</TableHead>
                   <TableHead>टोकन</TableHead>
                   <TableHead>नाम</TableHead>
                   <TableHead>मोबाइल</TableHead>
