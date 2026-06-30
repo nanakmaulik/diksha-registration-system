@@ -3117,17 +3117,19 @@ titleHi="स्थगित"
   </span>
 </button>
 
-<button
-  type="button"
-  onClick={() => handleDeleteRegistration(person)}
-  disabled={isDeletingRegistrationId === person.id}
-  className="rounded-full bg-red-100 px-4 py-2 text-xs font-bold text-red-700 disabled:opacity-50"
->
-  {isDeletingRegistrationId === person.id ? "Deleting..." : "Delete"}
-  <span className="block text-[10px] font-normal">
-    हटाएं
-  </span>
-</button>
+{(person.candidate_status || person.status) !== "Diksha Completed" && (
+  <button
+    type="button"
+    onClick={() => handleDeleteRegistration(person)}
+    disabled={isDeletingRegistrationId === person.id}
+    className="rounded-full bg-red-100 px-4 py-2 text-xs font-bold text-red-700 disabled:opacity-50"
+  >
+    {isDeletingRegistrationId === person.id ? "Deleting..." : "Delete"}
+    <span className="block text-[10px] font-normal">
+      हटाएं
+    </span>
+  </button>
+)}
                         </div>
                       </TableCell>
 
@@ -4675,8 +4677,11 @@ function isFinalMeetingCandidate(person: Registration) {
 
 function isDikshaCandidate(person: Registration) {
   const status = person.candidate_status || person.status || "";
+  const finalMeetingAttendance =
+    person.final_meeting_attendance || "Not Marked";
 
   return (
+    finalMeetingAttendance === "Present" ||
     status === "Approved" ||
     status === "Scheduled for Diksha" ||
     status === "Diksha Completed"
