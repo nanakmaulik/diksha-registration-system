@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 type RegistrationFormData = {
   fullName: string;
@@ -32,8 +32,6 @@ type RegistrationFormData = {
   idTypeOther: string;
   idNumber: string;
   selectedSlotId: string;
-  
-  
 };
 
 type Slot = {
@@ -71,9 +69,7 @@ const initialFormData: RegistrationFormData = {
   idType: "aadhaar",
   idTypeOther: "",
   idNumber: "",
-  
   selectedSlotId: "",
-  
 };
 
 export default function RegisterPage() {
@@ -87,40 +83,32 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSlots, setIsLoadingSlots] = useState(true);
   const [isPincodeLoading, setIsPincodeLoading] = useState(false);
-const [pincodeMessage, setPincodeMessage] = useState("");
-const isMarriedMale =
-  formData.maritalStatus === "Married" && formData.gender === "Male";
+  const [pincodeMessage, setPincodeMessage] = useState("");
 
-  const isMarriedFemale =
-  formData.maritalStatus === "Married" && formData.gender === "Female";
+  const needsHusbandName =
+    formData.gender === "Female" &&
+    (formData.maritalStatus === "Married" ||
+      formData.maritalStatus === "Widowed");
 
-const isWidowed =
-  formData.maritalStatus === "Widowed";
+  const needsFatherName = !needsHusbandName;
 
-const needsSpouseName =
-  isMarriedFemale || isWidowed;
-
-const needsFatherMother =
-  formData.maritalStatus !== "Married";
   const finalOccupation =
-  formData.occupation === "Other"
-    ? formData.occupationOther.trim()
-    : formData.occupation;
+    formData.occupation === "Other"
+      ? formData.occupationOther.trim()
+      : formData.occupation;
 
-const finalCountry =
-  formData.country === "Other"
-    ? formData.countryOther.trim()
-    : formData.country;
+  const finalCountry =
+    formData.country === "Other"
+      ? formData.countryOther.trim()
+      : formData.country;
 
-const finalFamilyRelation =
-  formData.familyRelation === "Other"
-    ? formData.familyRelationOther.trim()
-    : formData.familyRelation;
+  const finalFamilyRelation =
+    formData.familyRelation === "Other"
+      ? formData.familyRelationOther.trim()
+      : formData.familyRelation;
 
-const finalIdType =
-  formData.idType === "other"
-    ? formData.idTypeOther.trim()
-    : formData.idType;
+  const finalIdType =
+    formData.idType === "other" ? formData.idTypeOther.trim() : formData.idType;
 
   const totalSteps = 6;
 
@@ -128,11 +116,11 @@ const finalIdType =
     async function loadSlots() {
       const today = getTodayDateString();
 
-const { data, error } = await supabase
-  .from("slots")
-  .select("*")
-  .gte("slot_date", today)
-  .order("slot_date", { ascending: true });
+      const { data, error } = await supabase
+        .from("slots")
+        .select("*")
+        .gte("slot_date", today)
+        .order("slot_date", { ascending: true });
 
       if (error) {
         alert("Slot loading error: " + error.message);
@@ -175,45 +163,47 @@ const { data, error } = await supabase
   const visibleSlots = slots.filter(
     (slot) => !selectedMonth || slot.slot_date.startsWith(selectedMonth)
   );
+
   const calendarDays = getCalendarDaysForMonth(selectedMonth, visibleSlots);
+
   async function fetchAddressFromPincode(
     pinCode: string,
     countryValue = formData.country
   ) {
     const cleanedPin = pinCode.replace(/\D/g, "");
-  
+
     if (countryValue !== "India") {
       setPincodeMessage("");
       return;
     }
-  
+
     if (cleanedPin.length !== 6) {
       setPincodeMessage("");
       return;
     }
-  
+
     try {
       setIsPincodeLoading(true);
-      setPincodeMessage("Finding address from PIN code...\nपिन कोड से पता खोज रहे हैं...");
-  
+      setPincodeMessage("Finding address from PIN code...");
+
       const response = await fetch(
         `https://api.postalpincode.in/pincode/${cleanedPin}`
       );
-  
+
       const data = await response.json();
       const firstResult = data?.[0];
-  
+
       if (
         firstResult?.Status !== "Success" ||
         !firstResult?.PostOffice ||
         firstResult.PostOffice.length === 0
       ) {
-        setPincodeMessage("No address found for this PIN code.\nइस पिन कोड के लिए पता नहीं मिला।");
+        setPincodeMessage("No address found for this PIN code.");
         return;
       }
-  
+
       const postOffice = firstResult.PostOffice[0];
-  
+
       setFormData((prev) => ({
         ...prev,
         city: postOffice.District || prev.city,
@@ -221,12 +211,12 @@ const { data, error } = await supabase
         country: "India",
         pinCode: cleanedPin,
       }));
-  
+
       setPincodeMessage(
-        `Address found: ${postOffice.District}, ${postOffice.State}\nपता मिला: ${postOffice.District}, ${postOffice.State}`
+        `Address found: ${postOffice.District}, ${postOffice.State}`
       );
     } catch (error) {
-      setPincodeMessage("Could not fetch address. Please enter manually.\nपता नहीं मिल पाया। कृपया manually भरें।");
+      setPincodeMessage("Could not fetch address. Please enter manually.");
     } finally {
       setIsPincodeLoading(false);
     }
@@ -239,8 +229,6 @@ const { data, error } = await supabase
   ) {
     const target = event.target;
     const { name, value } = target;
-
- 
 
     if (target instanceof HTMLInputElement && target.type === "checkbox") {
       const checked = target.checked;
@@ -261,27 +249,52 @@ const { data, error } = await supabase
         ...prev,
         idType: value,
         idNumber:
-          value === "aadhaar" ? formatAadhaarInput(prev.idNumber) : prev.idNumber,
+          value === "aadhaar"
+            ? formatAadhaarInput(prev.idNumber)
+            : prev.idNumber,
+        idTypeOther: value === "other" ? prev.idTypeOther : "",
       }));
-    
+
       return;
     }
-    
+
     if (name === "idNumber") {
       setFormData((prev) => ({
         ...prev,
         idNumber: prev.idType === "aadhaar" ? formatAadhaarInput(value) : value,
       }));
-    
+
       return;
     }
-    
+
     if (name === "whatsapp" || name === "familyMobile") {
       setFormData((prev) => ({
         ...prev,
         [name]: formatPhoneInput(value),
       }));
-    
+
+      return;
+    }
+
+    if (name === "mobile") {
+      const formattedMobile = formatPhoneInput(value);
+
+      setFormData((prev) => ({
+        ...prev,
+        mobile: formattedMobile,
+        whatsapp: prev.sameWhatsapp ? formattedMobile : prev.whatsapp,
+      }));
+
+      return;
+    }
+
+    if (name === "occupation") {
+      setFormData((prev) => ({
+        ...prev,
+        occupation: value,
+        occupationOther: value === "Other" ? prev.occupationOther : "",
+      }));
+
       return;
     }
 
@@ -289,36 +302,37 @@ const { data, error } = await supabase
       setFormData((prev) => ({
         ...prev,
         country: value,
+        countryOther: value === "Other" ? prev.countryOther : "",
       }));
-    
+
       if (value !== "India") {
         setPincodeMessage("");
       } else {
         fetchAddressFromPincode(formData.pinCode, value);
       }
-    
+
       return;
     }
-    
+
+    if (name === "familyRelation") {
+      setFormData((prev) => ({
+        ...prev,
+        familyRelation: value,
+        familyRelationOther:
+          value === "Other" ? prev.familyRelationOther : "",
+      }));
+
+      return;
+    }
+
     if (name === "pinCode") {
       setFormData((prev) => ({
         ...prev,
         pinCode: value,
       }));
-    
+
       fetchAddressFromPincode(value);
-    
-      return;
-    }
-    if (name === "mobile") {
-      const formattedMobile = formatPhoneInput(value);
-    
-      setFormData((prev) => ({
-        ...prev,
-        mobile: formattedMobile,
-        whatsapp: prev.sameWhatsapp ? formattedMobile : prev.whatsapp,
-      }));
-    
+
       return;
     }
 
@@ -334,7 +348,7 @@ const { data, error } = await supabase
     >
   ) {
     setSelectedMonth(event.target.value);
-  
+
     setFormData((prev) => ({
       ...prev,
       selectedSlotId: "",
@@ -414,8 +428,7 @@ const { data, error } = await supabase
         return {
           isValid: false,
           message:
-          
-          "Please enter a valid mobile number. If outside India, include country code.\nकृपया सही मोबाइल नंबर भरें। भारत से बाहर हैं तो country code जरूर लगाएं।",
+            "Please enter a valid mobile number. If outside India, include country code.\nकृपया सही मोबाइल नंबर भरें। भारत से बाहर हैं तो country code जरूर लगाएं।",
         };
       }
 
@@ -432,8 +445,7 @@ const { data, error } = await supabase
         return {
           isValid: false,
           message:
-          
-          "Please enter a valid WhatsApp number. If outside India, include country code.\nकृपया सही WhatsApp नंबर भरें। भारत से बाहर हैं तो country code जरूर लगाएं।",
+            "Please enter a valid WhatsApp number. If outside India, include country code.\nकृपया सही WhatsApp नंबर भरें। भारत से बाहर हैं तो country code जरूर लगाएं।",
         };
       }
 
@@ -455,7 +467,7 @@ const { data, error } = await supabase
         return {
           isValid: false,
           message:
-          "Please enter state / province / region.\nकृपया राज्य / प्रांत / क्षेत्र भरें।",
+            "Please enter state / province / region.\nकृपया राज्य / प्रांत / क्षेत्र भरें।",
         };
       }
 
@@ -465,7 +477,6 @@ const { data, error } = await supabase
           message: "Please select country.\nकृपया देश चुनें।",
         };
       }
-
 
       if (formData.country === "Other" && !formData.countryOther.trim()) {
         return {
@@ -477,7 +488,6 @@ const { data, error } = await supabase
       if (!formData.pinCode.trim()) {
         return {
           isValid: false,
-          
           message: "Please enter PIN code.\nकृपया पिन कोड भरें।",
         };
       }
@@ -491,48 +501,33 @@ const { data, error } = await supabase
     }
 
     if (currentStep === 3) {
-      if (needsSpouseName && !formData.spouseName.trim()) {
+      if (needsHusbandName && !formData.spouseName.trim()) {
         return {
           isValid: false,
           message: "Please enter husband name.\nकृपया पति का नाम भरें।",
         };
       }
-    
-      if (isMarriedMale && !formData.fatherName.trim()) {
+
+      if (needsFatherName && !formData.fatherName.trim()) {
         return {
           isValid: false,
           message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
         };
       }
-    
-      if (needsFatherMother) {
-        if (!formData.fatherName.trim()) {
-          return {
-            isValid: false,
-            message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
-          };
-        }
-    
-        if (!formData.motherName.trim()) {
-          return {
-            isValid: false,
-            message: "Please enter mother's name.\nकृपया माता का नाम भरें।",
-          };
-        }
-      }
 
       if (!formData.familyName.trim()) {
         return {
           isValid: false,
-          message: "Please enter family member name.\nकृपया पारिवारिक प्रतिनिधि का नाम भरें।",
+          message:
+            "Please enter family representative name.\nकृपया पारिवारिक प्रतिनिधि का नाम भरें।",
         };
       }
 
       if (!formData.familyRelation.trim()) {
         return {
           isValid: false,
-          
-          message: "Please select family member relation.\nकृपया पारिवारिक प्रतिनिधि से संबंध चुनें।",
+          message:
+            "Please select family representative relation.\nकृपया पारिवारिक प्रतिनिधि से संबंध चुनें।",
         };
       }
 
@@ -549,7 +544,8 @@ const { data, error } = await supabase
       if (!formData.familyMobile.trim()) {
         return {
           isValid: false,
-          message: "Please enter family member mobile number.\nकृपया पारिवारिक प्रतिनिधि का मोबाइल नंबर भरें।",
+          message:
+            "Please enter family representative mobile number.\nकृपया पारिवारिक प्रतिनिधि का मोबाइल नंबर भरें।",
         };
       }
 
@@ -559,11 +555,9 @@ const { data, error } = await supabase
         return {
           isValid: false,
           message:
-  "Please enter a valid family member mobile number. If outside India, include country code.\nकृपया सही पारिवारिक मोबाइल नंबर भरें। भारत से बाहर हैं तो country code जरूर लगाएं।",
+            "Please enter a valid family representative mobile number. If outside India, include country code.\nकृपया सही पारिवारिक मोबाइल नंबर भरें। भारत से बाहर हैं तो country code जरूर लगाएं।",
         };
       }
-     
-     
     }
 
     if (currentStep === 4) {
@@ -587,15 +581,14 @@ const { data, error } = await supabase
           message: "Please enter ID number.\nकृपया पहचान नंबर भरें।",
         };
       }
-
-     
     }
 
     if (currentStep === 5) {
       if (!formData.selectedSlotId) {
         return {
           isValid: false,
-          message: "Please select an appointment date.\nकृपया अपॉइंटमेंट तारीख चुनें।",
+          message:
+            "Please select an appointment date.\nकृपया अपॉइंटमेंट तारीख चुनें।",
         };
       }
     }
@@ -622,22 +615,23 @@ const { data, error } = await supabase
     setStep((prev) => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   }
+
   async function handleSubmit() {
     if (isSubmitting) return;
-  
+
     const finalValidation = validateStep(5);
-  
+
     if (!finalValidation.isValid) {
       alert(finalValidation.message);
       return;
     }
-  
+
     setIsSubmitting(true);
-  
+
     try {
       const aadhaarFileUrl = "";
       const aadhaarFileName = "";
-  
+
       const { data, error } = await supabase.rpc("submit_registration_request", {
         p_slot_id: formData.selectedSlotId,
         p_full_name: formData.fullName,
@@ -650,12 +644,11 @@ const { data, error } = await supabase
         p_address: formData.address,
         p_city: formData.city,
         p_state: formData.state,
-        p_country: formData.country,
+        p_country: finalCountry,
         p_pin_code: formData.pinCode,
-        p_spouse_name: needsSpouseName ? formData.spouseName : "",
-        p_father_name:
-          isMarriedMale || needsFatherMother ? formData.fatherName : "",
-        p_mother_name: needsFatherMother ? formData.motherName : "",
+        p_spouse_name: needsHusbandName ? formData.spouseName : "",
+        p_father_name: needsFatherName ? formData.fatherName : "",
+        p_mother_name: "",
         p_family_name: formData.familyName,
         p_family_relation: finalFamilyRelation,
         p_family_mobile: formData.familyMobile,
@@ -667,49 +660,46 @@ const { data, error } = await supabase
         p_aadhaar_file_name: aadhaarFileName,
         p_remarks_by: "Self",
       });
-  
+
       if (error) {
         const message = error.message.toLowerCase();
-  
+
         if (message.includes("slot_full")) {
-          alert(
-            "This date is now full. Please select another date."
-          );
+          alert("This date is now full. Please select another date.");
           setStep(5);
           setIsSubmitting(false);
           return;
         }
-  
+
         alert("Registration request error: " + error.message);
         setIsSubmitting(false);
         return;
       }
-  
-      const result = Array.isArray(data) ? data[0] : data;
-  
+
       const requestId = Array.isArray(data)
-      ? data[0]?.request_id
-      : data?.request_id;
-    
-    const requestedMeetingDate = Array.isArray(data)
-      ? data[0]?.requested_meeting_date
-      : data?.requested_meeting_date;
-    
-    const requestedMeetingTime = Array.isArray(data)
-      ? data[0]?.requested_meeting_time
-      : data?.requested_meeting_time;
-    
-    router.push(
-      `/success?mode=request&requestId=${requestId || ""}&date=${
-        requestedMeetingDate || selectedSlot?.slot_date || ""
-      }&time=${requestedMeetingTime || selectedSlot?.slot_time || ""}`
-    );
+        ? data[0]?.request_id
+        : data?.request_id;
+
+      const requestedMeetingDate = Array.isArray(data)
+        ? data[0]?.requested_meeting_date
+        : data?.requested_meeting_date;
+
+      const requestedMeetingTime = Array.isArray(data)
+        ? data[0]?.requested_meeting_time
+        : data?.requested_meeting_time;
+
+      router.push(
+        `/success?mode=request&requestId=${requestId || ""}&date=${
+          requestedMeetingDate || selectedSlot?.slot_date || ""
+        }&time=${requestedMeetingTime || selectedSlot?.slot_time || ""}`
+      );
     } catch (error) {
       alert("Unexpected error. Please try again.");
       console.error(error);
       setIsSubmitting(false);
     }
   }
+
   return (
     <main className="min-h-screen bg-[#fff8ed] px-4 py-6 text-[#2d2418] md:py-10">
       <div className="mx-auto max-w-5xl">
@@ -728,23 +718,24 @@ const { data, error } = await supabase
           <h1 className="text-3xl font-extrabold md:text-4xl">
             Diksha Registration
           </h1>
+
           <h2 className="mt-2 text-2xl font-bold text-orange-800">
-  दीक्षा पंजीकरण
-</h2>
+            दीक्षा पंजीकरण
+          </h2>
+
           <p className="mt-3 text-sm text-stone-600">
             Please fill the registration form carefully. International address
             and phone numbers are supported.
           </p>
+
           <p className="text-sm text-stone-600">
-  कृपया फॉर्म ध्यान से भरें। भारत और विदेश दोनों के पते स्वीकार हैं।
-</p>
+            कृपया फॉर्म ध्यान से भरें। भारत और विदेश दोनों के पते स्वीकार हैं।
+          </p>
         </header>
 
         <div className="mb-6 rounded-3xl bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between text-sm font-bold text-stone-600">
-            <span>
-              Step {step} of {totalSteps}
-            </span>
+            <span>Step {step} of {totalSteps}</span>
             <span>{Math.round((step / totalSteps) * 100)}%</span>
           </div>
 
@@ -800,39 +791,39 @@ const { data, error } = await supabase
                 ]}
               />
 
-<SelectField
-  labelEn="Occupation"
-  labelHi="व्यवसाय"
-  name="occupation"
-  value={formData.occupation}
-  onChange={handleChange}
-  required
-  options={[
-    ["", "Select occupation / व्यवसाय चुनें"],
-    ["Student", "Student / विद्यार्थी"],
-    ["Housewife", "Housewife / गृहिणी"],
-    ["Service", "Service / नौकरी"],
-    ["Business", "Business / व्यापार"],
-    ["Farmer", "Farmer / किसान"],
-    ["Retired", "Retired / सेवानिवृत्त"],
-    ["Virakt", "Virakt / विरक्त"],
-    ["Self Employed", "Self Employed / स्वरोजगार"],
-    ["Unemployed", "Unemployed / बेरोजगार"],
-    ["Other", "Other / अन्य"],
-  ]}
-/>
+              <SelectField
+                labelEn="Occupation"
+                labelHi="व्यवसाय"
+                name="occupation"
+                value={formData.occupation}
+                onChange={handleChange}
+                required
+                options={[
+                  ["", "Select occupation / व्यवसाय चुनें"],
+                  ["Student", "Student / विद्यार्थी"],
+                  ["Housewife", "Housewife / गृहिणी"],
+                  ["Service", "Service / नौकरी"],
+                  ["Business", "Business / व्यापार"],
+                  ["Farmer", "Farmer / किसान"],
+                  ["Retired", "Retired / सेवानिवृत्त"],
+                  ["Virakt", "Virakt / विरक्त"],
+                  ["Self Employed", "Self Employed / स्वरोजगार"],
+                  ["Unemployed", "Unemployed / बेरोजगार"],
+                  ["Other", "Other / अन्य"],
+                ]}
+              />
 
-{formData.occupation === "Other" && (
-  <InputField
-    labelEn="Please specify occupation"
-    labelHi="कृपया व्यवसाय लिखें"
-    name="occupationOther"
-    value={formData.occupationOther}
-    onChange={handleChange}
-    placeholder="Example: Artist, Driver, Shop worker"
-    required
-  />
-)}
+              {formData.occupation === "Other" && (
+                <InputField
+                  labelEn="Please specify occupation"
+                  labelHi="कृपया व्यवसाय लिखें"
+                  name="occupationOther"
+                  value={formData.occupationOther}
+                  onChange={handleChange}
+                  placeholder="Enter occupation"
+                  required
+                />
+              )}
 
               <SelectField
                 labelEn="Marital Status"
@@ -860,15 +851,16 @@ const { data, error } = await supabase
               subtitleEn="Indian and international addresses are accepted."
               subtitleHi="भारत और विदेश दोनों के पते स्वीकार हैं।"
             >
-             <InputField
-  labelEn="PIN Code"
-  labelHi="पिन कोड"
-  name="pinCode"
-  value={formData.pinCode}
-  onChange={handleChange}
-  placeholder="Enter PIN code"
-  required
-/>
+              <InputField
+                labelEn="PIN Code"
+                labelHi="पिन कोड"
+                name="pinCode"
+                value={formData.pinCode}
+                onChange={handleChange}
+                placeholder="Enter PIN code"
+                required
+              />
+
               <InputField
                 labelEn="Mobile Number"
                 labelHi="मोबाइल नंबर"
@@ -876,7 +868,7 @@ const { data, error } = await supabase
                 type="tel"
                 value={formData.mobile}
                 onChange={handleChange}
-                placeholder="+91 9876543210 / +1 2125551234"
+                placeholder="+91 98765 43210 / +1 2125551234"
                 required
               />
 
@@ -900,7 +892,7 @@ const { data, error } = await supabase
                 type="tel"
                 value={formData.whatsapp}
                 onChange={handleChange}
-                placeholder="+91 9876543210 / +1 2125551234"
+                placeholder="+91 98765 43210 / +1 2125551234"
                 required
               />
 
@@ -958,27 +950,25 @@ const { data, error } = await supabase
                   ["Other", "Other / अन्य"],
                 ]}
               />
-{formData.country === "Other" && (
-  <InputField
-    labelEn="Please specify country"
-    labelHi="कृपया देश का नाम लिखें"
-    name="countryOther"
-    value={formData.countryOther}
-    onChange={handleChange}
-    placeholder="Enter country name"
-    required
-  />
-)}
-<div>
-  
 
-  {formData.country === "India" &&
-    (isPincodeLoading || pincodeMessage) && (
-      <p className="mt-2 rounded-xl bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-800">
-        {isPincodeLoading ? "Fetching address..." : pincodeMessage}
-      </p>
-    )}
-</div>
+              {formData.country === "Other" && (
+                <InputField
+                  labelEn="Please specify country"
+                  labelHi="कृपया देश का नाम लिखें"
+                  name="countryOther"
+                  value={formData.countryOther}
+                  onChange={handleChange}
+                  placeholder="Enter country name"
+                  required
+                />
+              )}
+
+              {formData.country === "India" &&
+                (isPincodeLoading || pincodeMessage) && (
+                  <p className="mt-2 rounded-xl bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-800">
+                    {isPincodeLoading ? "Fetching address..." : pincodeMessage}
+                  </p>
+                )}
             </StepCard>
           )}
 
@@ -989,66 +979,42 @@ const { data, error } = await supabase
               subtitleEn="Please provide family approval details based on marital status."
               subtitleHi="कृपया वैवाहिक स्थिति के अनुसार परिवार की स्वीकृति जानकारी भरें।"
             >
-          {needsSpouseName && (
-  <InputField
-    labelEn={isWidowed ? "Late Husband Name" : "Husband Name"}
-    labelHi={isWidowed ? "दिवंगत पति का नाम" : "पति का नाम"}
-    name="spouseName"
-    value={formData.spouseName}
-    onChange={handleChange}
-    placeholder={isWidowed ? "Enter late husband name" : "Enter husband name"}
-    required
-  />
-)}
+              {needsHusbandName && (
+                <InputField
+                  labelEn="Husband Name"
+                  labelHi="पति का नाम"
+                  name="spouseName"
+                  value={formData.spouseName}
+                  onChange={handleChange}
+                  placeholder="Enter husband name"
+                  required
+                />
+              )}
 
-{isMarriedMale && (
-  <InputField
-    labelEn="Father's Name"
-    labelHi="पिता का नाम"
-    name="fatherName"
-    value={formData.fatherName}
-    onChange={handleChange}
-    placeholder="Enter father's name"
-    required
-  />
-)}
-
-{needsFatherMother && (
-  <>
-    <InputField
-      labelEn="Father's Name"
-      labelHi="पिता का नाम"
-      name="fatherName"
-      value={formData.fatherName}
-      onChange={handleChange}
-      placeholder="Enter father's name"
-      required
-    />
-
-    <InputField
-      labelEn="Mother's Name"
-      labelHi="माता का नाम"
-      name="motherName"
-      value={formData.motherName}
-      onChange={handleChange}
-      placeholder="Enter mother's name"
-      required
-    />
-  </>
-)}
+              {needsFatherName && (
+                <InputField
+                  labelEn="Father's Name"
+                  labelHi="पिता का नाम"
+                  name="fatherName"
+                  value={formData.fatherName}
+                  onChange={handleChange}
+                  placeholder="Enter father's name"
+                  required
+                />
+              )}
 
               <div className="rounded-2xl bg-orange-50 p-4 text-sm text-stone-700">
                 <p className="font-bold">
-                Present Family Representative Details
+                  Present Family Representative Details
                 </p>
                 <p className="mt-1">
-                उपस्थित पारिवारिक प्रतिनिधि की जानकारी
+                  उपस्थित पारिवारिक प्रतिनिधि की जानकारी
                 </p>
               </div>
 
               <InputField
                 labelEn="Present Family Representative Name"
-labelHi="उपस्थित पारिवारिक प्रतिनिधि का नाम"
+                labelHi="उपस्थित पारिवारिक प्रतिनिधि का नाम"
                 name="familyName"
                 value={formData.familyName}
                 onChange={handleChange}
@@ -1058,7 +1024,7 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
 
               <SelectField
                 labelEn="Present Family Representative Relation"
-labelHi="उपस्थित पारिवारिक प्रतिनिधि से संबंध"
+                labelHi="उपस्थित पारिवारिक प्रतिनिधि से संबंध"
                 name="familyRelation"
                 value={formData.familyRelation}
                 onChange={handleChange}
@@ -1078,68 +1044,63 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 ]}
               />
 
-{formData.familyRelation === "Other" && (
-  <InputField
-    labelEn="Please specify relation"
-    labelHi="कृपया संबंध लिखें"
-    name="familyRelationOther"
-    value={formData.familyRelationOther}
-    onChange={handleChange}
-    placeholder="Example: Uncle, Aunt, Guardian"
-    required
-  />
-)}
+              {formData.familyRelation === "Other" && (
+                <InputField
+                  labelEn="Please specify relation"
+                  labelHi="कृपया संबंध लिखें"
+                  name="familyRelationOther"
+                  value={formData.familyRelationOther}
+                  onChange={handleChange}
+                  placeholder="Example: Uncle, Aunt, Guardian"
+                  required
+                />
+              )}
 
               <InputField
-               labelEn="Present Family Representative Mobile"
-labelHi="उपस्थित पारिवारिक प्रतिनिधि का मोबाइल नंबर"
+                labelEn="Present Family Representative Mobile"
+                labelHi="उपस्थित पारिवारिक प्रतिनिधि का मोबाइल नंबर"
                 name="familyMobile"
                 type="tel"
                 value={formData.familyMobile}
                 onChange={handleChange}
-                placeholder="+91 9876543210 / +1 2125551234"
+                placeholder="+91 98765 43210 / +1 2125551234"
                 required
               />
-              
-
-
-
-
             </StepCard>
           )}
 
           {step === 4 && (
-          <StepCard
-          titleEn="Identity Proof"
-          titleHi="पहचान प्रमाण"
-          subtitleEn="Please enter Aadhaar or any valid government ID details."
-          subtitleHi="कृपया आधार या कोई मान्य सरकारी पहचान प्रमाण की जानकारी भरें।"
-        >
+            <StepCard
+              titleEn="Identity Proof"
+              titleHi="पहचान प्रमाण"
+              subtitleEn="Please enter Aadhaar or any valid government ID details."
+              subtitleHi="कृपया आधार या कोई मान्य सरकारी पहचान प्रमाण की जानकारी भरें।"
+            >
               <SelectField
-  labelEn="ID Type"
-  labelHi="पहचान प्रमाण का प्रकार"
-  name="idType"
-  value={formData.idType}
-  onChange={handleChange}
-  required
-  options={[
-    ["aadhaar", "Aadhaar Card / आधार कार्ड"],
-    ["passport", "Passport / पासपोर्ट"],
-    ["other", "Other Government ID / अन्य सरकारी पहचान"],
-  ]}
-/>
+                labelEn="ID Type"
+                labelHi="पहचान प्रमाण का प्रकार"
+                name="idType"
+                value={formData.idType}
+                onChange={handleChange}
+                required
+                options={[
+                  ["aadhaar", "Aadhaar Card / आधार कार्ड"],
+                  ["passport", "Passport / पासपोर्ट"],
+                  ["other", "Other Government ID / अन्य सरकारी पहचान"],
+                ]}
+              />
 
-{formData.idType === "other" && (
-  <InputField
-    labelEn="Please specify ID type"
-    labelHi="कृपया पहचान प्रमाण का नाम लिखें"
-    name="idTypeOther"
-    value={formData.idTypeOther}
-    onChange={handleChange}
-    placeholder="Example: Voter ID, Driving License"
-    required
-  />
-)}
+              {formData.idType === "other" && (
+                <InputField
+                  labelEn="Please specify ID type"
+                  labelHi="कृपया पहचान प्रमाण का नाम लिखें"
+                  name="idTypeOther"
+                  value={formData.idTypeOther}
+                  onChange={handleChange}
+                  placeholder="Example: Voter ID, Driving License"
+                  required
+                />
+              )}
 
               <InputField
                 labelEn="ID Number"
@@ -1147,13 +1108,13 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                 name="idNumber"
                 value={formData.idNumber}
                 onChange={handleChange}
-                placeholder="Enter ID number"
+                placeholder={
+                  formData.idType === "aadhaar"
+                    ? "1234 5678 9123"
+                    : "Enter ID number"
+                }
                 required
               />
-
-            
-
-             
             </StepCard>
           )}
 
@@ -1166,11 +1127,11 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
             >
               {isLoadingSlots ? (
                 <div className="rounded-2xl bg-orange-50 p-6 text-center font-bold text-stone-700">
-                  Loading available dates... / उपलब्ध तारीखें लोड हो रही हैं...
+                  Loading available dates...
                 </div>
               ) : slots.length === 0 ? (
                 <div className="rounded-2xl bg-red-50 p-6 text-center font-bold text-red-700">
-                  No appointment dates available right now. / अभी कोई अपॉइंटमेंट तारीख उपलब्ध नहीं है।
+                  No appointment dates available right now.
                 </div>
               ) : (
                 <>
@@ -1186,108 +1147,108 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                     ])}
                   />
 
-<div className="overflow-hidden rounded-3xl border border-orange-100 bg-white">
-  <div className="grid grid-cols-7 bg-orange-100 text-center text-xs font-extrabold text-orange-900 md:text-sm">
-  {[
-  "Mon / सोम",
-  "Tue / मंगल",
-  "Wed / बुध",
-  "Thu / गुरु",
-  "Fri / शुक्र",
-  "Sat / शनि",
-  "Sun / रवि",
-].map((day) => (
-      <div
-        key={day}
-        className="border-r border-orange-200 px-2 py-3 last:border-r-0"
-      >
-        {day}
-      </div>
-    ))}
-  </div>
+                  <div className="overflow-hidden rounded-3xl border border-orange-100 bg-white">
+                    <div className="grid grid-cols-7 bg-orange-100 text-center text-xs font-extrabold text-orange-900 md:text-sm">
+                      {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
+                        (day) => (
+                          <div
+                            key={day}
+                            className="border-r border-orange-200 px-2 py-3 last:border-r-0"
+                          >
+                            {day}
+                          </div>
+                        )
+                      )}
+                    </div>
 
-  <div className="grid grid-cols-7">
-    {calendarDays.map((calendarDay, index) => {
-      if (calendarDay.isEmpty) {
-        return (
-          <div
-            key={`empty-${index}`}
-            className="min-h-[82px] border-r border-t border-orange-100 bg-orange-50/40 last:border-r-0 md:min-h-[110px]"
-          />
-        );
-      }
+                    <div className="grid grid-cols-7">
+                      {calendarDays.map((calendarDay, index) => {
+                        if (calendarDay.isEmpty) {
+                          return (
+                            <div
+                              key={`empty-${index}`}
+                              className="min-h-[82px] border-r border-t border-orange-100 bg-orange-50/40 last:border-r-0 md:min-h-[110px]"
+                            />
+                          );
+                        }
 
-      const slot = calendarDay.slot;
-      const seatsLeft = slot ? slot.capacity - slot.current_count : 0;
-      const isFull = !slot || seatsLeft <= 0 || slot.status === "full";
-      const isSelected = formData.selectedSlotId === slot?.id;
+                        const slot = calendarDay.slot;
+                        const seatsLeft = slot
+                          ? slot.capacity - slot.current_count
+                          : 0;
+                        const isFull =
+                          !slot || seatsLeft <= 0 || slot.status === "full";
+                        const isSelected =
+                          formData.selectedSlotId === slot?.id;
 
-      return (
-        <button
-          key={calendarDay.date}
-          type="button"
-          disabled={!slot || isFull}
-          onClick={() => {
-            if (!slot || isFull) return;
-            selectSlot(slot.id);
-          }}
-          className={`min-h-[82px] border-r border-t border-orange-100 p-2 text-left transition last:border-r-0 md:min-h-[110px] md:p-3 ${
-            isSelected
-              ? "bg-orange-700 text-white"
-              : isFull
-              ? "cursor-not-allowed bg-stone-100 text-stone-400"
-              : "bg-white hover:bg-orange-50"
-          }`}
-        >
-          <div className="flex h-full flex-col justify-between gap-2">
-            <div>
-              <p className="text-lg font-extrabold md:text-2xl">
-                {calendarDay.day}
-              </p>
+                        return (
+                          <button
+                            key={calendarDay.date}
+                            type="button"
+                            disabled={!slot || isFull}
+                            onClick={() => {
+                              if (!slot || isFull) return;
+                              selectSlot(slot.id);
+                            }}
+                            className={`min-h-[82px] border-r border-t border-orange-100 p-2 text-left transition last:border-r-0 md:min-h-[110px] md:p-3 ${
+                              isSelected
+                                ? "bg-orange-700 text-white"
+                                : isFull
+                                ? "cursor-not-allowed bg-stone-100 text-stone-400"
+                                : "bg-white hover:bg-orange-50"
+                            }`}
+                          >
+                            <div className="flex h-full flex-col justify-between gap-2">
+                              <div>
+                                <p className="text-lg font-extrabold md:text-2xl">
+                                  {calendarDay.day}
+                                </p>
 
-              {slot && (
-                <p
-                  className={`mt-1 text-[10px] font-bold md:text-xs ${
-                    isSelected ? "text-orange-50" : "text-stone-600"
-                  }`}
-                >
-                  {slot.slot_time}
-                </p>
-              )}
-            </div>
+                                {slot && (
+                                  <p
+                                    className={`mt-1 text-[10px] font-bold md:text-xs ${
+                                      isSelected
+                                        ? "text-orange-50"
+                                        : "text-stone-600"
+                                    }`}
+                                  >
+                                    {slot.slot_time}
+                                  </p>
+                                )}
+                              </div>
 
-            {slot ? (
-              <span
-                className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-extrabold md:text-xs ${
-                  isSelected
-                    ? "bg-white text-orange-800"
-                    : isFull
-                    ? "bg-stone-200 text-stone-500"
-                    : "bg-green-100 text-green-700"
-                }`}
-              >
-                {isFull ? "Full / भरा हुआ" : `${seatsLeft} left / बाकी`}
-              </span>
-            ) : (
-              <span className="text-[10px] font-bold text-stone-400">
-                No slot / स्लॉट नहीं
-              </span>
-            )}
-          </div>
-        </button>
-      );
-    })}
-  </div>
-</div>
+                              {slot ? (
+                                <span
+                                  className={`inline-flex w-fit rounded-full px-2 py-1 text-[10px] font-extrabold md:text-xs ${
+                                    isSelected
+                                      ? "bg-white text-orange-800"
+                                      : isFull
+                                      ? "bg-stone-200 text-stone-500"
+                                      : "bg-green-100 text-green-700"
+                                  }`}
+                                >
+                                  {isFull ? "Full" : `${seatsLeft} left`}
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold text-stone-400">
+                                  No slot
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-{selectedSlot && (
-  <div className="mt-4 rounded-2xl bg-orange-50 p-4 text-sm font-bold text-orange-900">
-    Selected Meeting Date / चुनी हुई मीटिंग तारीख: {formatDate(selectedSlot.slot_date)}
-    <span className="block font-semibold text-stone-700">
-    Time / समय: {selectedSlot.slot_time}
-    </span>
-  </div>
-)}
+                  {selectedSlot && (
+                    <div className="mt-4 rounded-2xl bg-orange-50 p-4 text-sm font-bold text-orange-900">
+                      Selected Meeting Date: {formatDate(selectedSlot.slot_date)}
+                      <span className="block font-semibold text-stone-700">
+                        Time: {selectedSlot.slot_time}
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
             </StepCard>
@@ -1302,47 +1263,42 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
             >
               <div className="grid gap-3">
                 <ReviewRow label="Name / नाम" value={formData.fullName} />
+
                 <ReviewRow
-                  label="Age / Gender / आयु / लिंग"
+                  label="Age / Gender"
                   value={`${formData.age} / ${formData.gender}`}
                 />
-                <ReviewRow
-                  label="Mobile / मोबाइल"
-                  value={formData.mobile}
-                />
-                <ReviewRow
-                  label="WhatsApp / व्हाट्सऐप"
-                  value={formData.whatsapp}
-                />
+
+                <ReviewRow label="Mobile / मोबाइल" value={formData.mobile} />
+
+                <ReviewRow label="WhatsApp" value={formData.whatsapp} />
+
                 <ReviewRow
                   label="Address / पता"
-                  value={`${formData.address}, ${formData.city}, ${formData.state}, ${finalCountry} - ${formData.pinCode}`}
+                  value={`${formData.address}, ${formData.city}, ${
+                    formData.state
+                  }, ${finalCountry} - ${formData.pinCode}`}
                 />
-               <ReviewRow
-  label="Family Approval / परिवार स्वीकृति"
-  value={
-    isWidowed
-      ? `Late Husband: ${formData.spouseName || "-"}, Father: ${
-          formData.fatherName || "-"
-        }, Mother: ${formData.motherName || "-"}`
-      : isMarriedFemale
-      ? `Husband: ${formData.spouseName || "-"}`
-      : isMarriedMale
-      ? `Father: ${formData.fatherName || "-"}`
-      : `Father: ${formData.fatherName || "-"}, Mother: ${
-          formData.motherName || "-"
-        }`
-  }
-/>
+
+                <ReviewRow
+                  label="Family Approval / परिवार स्वीकृति"
+                  value={
+                    needsHusbandName
+                      ? `Husband: ${formData.spouseName || "-"}`
+                      : `Father: ${formData.fatherName || "-"}`
+                  }
+                />
+
                 <ReviewRow
                   label="Family Contact / परिवार संपर्क"
                   value={`${formData.familyName} (${finalFamilyRelation}) - ${formData.familyMobile}`}
                 />
-               
+
                 <ReviewRow
                   label="ID Proof / पहचान प्रमाण"
                   value={`${finalIdType} - ${formData.idNumber}`}
                 />
+
                 <ReviewRow
                   label="Appointment / अपॉइंटमेंट"
                   value={
@@ -1354,8 +1310,6 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
                   }
                 />
               </div>
-
-              
             </StepCard>
           )}
 
@@ -1383,11 +1337,11 @@ labelHi="उपस्थित पारिवारिक प्रतिनि
               </button>
             ) : (
               <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="rounded-2xl bg-orange-700 px-6 py-4 font-bold text-white disabled:opacity-60 md:flex-1"
-            >
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="rounded-2xl bg-orange-700 px-6 py-4 font-bold text-white disabled:opacity-60 md:flex-1"
+              >
                 {isSubmitting ? "Submitting..." : "Submit Registration"}
                 <span className="block text-sm font-normal">
                   {isSubmitting ? "जमा हो रहा है..." : "पंजीकरण जमा करें"}
@@ -1409,27 +1363,18 @@ function StepCard({
   children,
 }: {
   titleEn: string;
-  titleHi?: string;
+  titleHi: string;
   subtitleEn: string;
-  subtitleHi?: string;
+  subtitleHi: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="rounded-3xl bg-white p-5 shadow-sm md:p-8">
       <div className="mb-6">
         <h3 className="text-2xl font-extrabold">{titleEn}</h3>
-
-        {titleHi && (
-          <h4 className="mt-1 text-xl font-bold text-orange-800">
-            {titleHi}
-          </h4>
-        )}
-
+        <h4 className="mt-1 text-xl font-bold text-orange-800">{titleHi}</h4>
         <p className="mt-2 text-sm text-stone-600">{subtitleEn}</p>
-
-        {subtitleHi && (
-          <p className="text-sm text-stone-600">{subtitleHi}</p>
-        )}
+        <p className="text-sm text-stone-600">{subtitleHi}</p>
       </div>
 
       <div className="grid gap-5">{children}</div>
@@ -1448,7 +1393,7 @@ function InputField({
   required = false,
 }: {
   labelEn: string;
-  labelHi?: string;
+  labelHi: string;
   name: string;
   value: string;
   onChange: (
@@ -1464,11 +1409,9 @@ function InputField({
     <div>
       <label className="mb-2 block font-bold">
         {labelEn} {required && <span className="text-red-600">*</span>}
-        {labelHi && (
-          <span className="block text-sm font-semibold text-orange-800">
-            {labelHi}
-          </span>
-        )}
+        <span className="block text-sm font-semibold text-orange-800">
+          {labelHi}
+        </span>
       </label>
 
       <input
@@ -1482,6 +1425,7 @@ function InputField({
     </div>
   );
 }
+
 function TextareaField({
   labelEn,
   labelHi,
@@ -1492,7 +1436,7 @@ function TextareaField({
   required = false,
 }: {
   labelEn: string;
-  labelHi?: string;
+  labelHi: string;
   name: string;
   value: string;
   onChange: (
@@ -1507,11 +1451,9 @@ function TextareaField({
     <div>
       <label className="mb-2 block font-bold">
         {labelEn} {required && <span className="text-red-600">*</span>}
-        {labelHi && (
-          <span className="block text-sm font-semibold text-orange-800">
-            {labelHi}
-          </span>
-        )}
+        <span className="block text-sm font-semibold text-orange-800">
+          {labelHi}
+        </span>
       </label>
 
       <textarea
@@ -1536,7 +1478,7 @@ function SelectField({
   required = false,
 }: {
   labelEn: string;
-  labelHi?: string;
+  labelHi: string;
   name: string;
   value: string;
   onChange: (
@@ -1551,11 +1493,9 @@ function SelectField({
     <div>
       <label className="mb-2 block font-bold">
         {labelEn} {required && <span className="text-red-600">*</span>}
-        {labelHi && (
-          <span className="block text-sm font-semibold text-orange-800">
-            {labelHi}
-          </span>
-        )}
+        <span className="block text-sm font-semibold text-orange-800">
+          {labelHi}
+        </span>
       </label>
 
       <select
@@ -1641,6 +1581,7 @@ function getCalendarDaysForMonth(monthValue: string, monthSlots: Slot[]) {
 
   return calendarDays;
 }
+
 function formatMonth(dateString: string) {
   const date = parseLocalDate(dateString);
 
@@ -1659,6 +1600,7 @@ function getTodayDateString() {
 
   return `${year}-${month}-${day}`;
 }
+
 function formatAadhaarInput(value: string) {
   const digits = value.replace(/\D/g, "").slice(0, 12);
   return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
