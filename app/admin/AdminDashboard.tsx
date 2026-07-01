@@ -45,6 +45,7 @@ pin_code: string | null;
   created_at: string;
   aadhaar_file_url: string | null;
   aadhaar_file_name: string | null;
+  referred_to: string | null;
   slots: {
     slot_date: string;
     slot_time: string;
@@ -1382,15 +1383,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     filteredRegistrations[0]?.slots?.slot_time || "3:30 PM";
 
     const groupedPrintRegistrations = useMemo(() => {
-      const male = filteredRegistrations.filter((person) =>
-        (person.token || "").toUpperCase().startsWith("M")
-      );
-    
-      const female = filteredRegistrations.filter((person) =>
-        (person.token || "").toUpperCase().startsWith("F")
-      );
-    
-      const couple = filteredRegistrations.filter((person) =>
+      const couples = filteredRegistrations.filter((person) =>
         (person.token || "").toUpperCase().startsWith("CP")
       );
     
@@ -1398,11 +1391,32 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
         (person.token || "").toUpperCase().startsWith("FAM")
       );
     
+      const females = filteredRegistrations.filter((person) => {
+        const token = (person.token || "").toUpperCase();
+        return person.gender === "Female" && !token.startsWith("CP") && !token.startsWith("FAM");
+      });
+    
+      const males = filteredRegistrations.filter((person) => {
+        const token = (person.token || "").toUpperCase();
+        return person.gender === "Male" && !token.startsWith("CP") && !token.startsWith("FAM");
+      });
+    
+      const others = filteredRegistrations.filter((person) => {
+        const token = (person.token || "").toUpperCase();
+        return (
+          person.gender !== "Male" &&
+          person.gender !== "Female" &&
+          !token.startsWith("CP") &&
+          !token.startsWith("FAM")
+        );
+      });
+    
       return [
-        { title: "MALE", titleHi: "पुरुष", records: male },
-        { title: "FEMALE", titleHi: "महिला", records: female },
-        { title: "COUPLE", titleHi: "जोड़ा", records: couple },
-        { title: "FAMILY", titleHi: "परिवार", records: family },
+        { title: "COUPLES", records: couples },
+        { title: "FAMILY", records: family },
+        { title: "FEMALES", records: females },
+        { title: "MALES", records: males },
+        { title: "OTHERS", records: others },
       ].filter((group) => group.records.length > 0);
     }, [filteredRegistrations]);
 
@@ -3236,62 +3250,70 @@ titleHi="स्थगित"
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr>
-            <PrintHead>Sr.</PrintHead>
-<PrintHead>Token</PrintHead>
-<PrintHead>Name</PrintHead>
-<PrintHead>Age</PrintHead>
-<PrintHead>Gender</PrintHead>
-<PrintHead>Number</PrintHead>
-<PrintHead>City</PrintHead>
-<PrintHead>Family Approval</PrintHead>
+            <PrintHead>ROW</PrintHead>
+<PrintHead>CAT</PrintHead>
+<PrintHead>ROLL</PrintHead>
+<PrintHead>NAME</PrintHead>
+<PrintHead>G</PrintHead>
+<PrintHead>CITY</PrintHead>
+<PrintHead>MS</PrintHead>
+<PrintHead>FAMILY REL</PrintHead>
+<PrintHead>APPR</PrintHead>
+<PrintHead>REMARKS BY</PrintHead>
             </tr>
           </thead>
 
           <tbody>
   {groupedPrintRegistrations.map((group) => (
     <Fragment key={group.title}>
-      <tr key={`${group.title}-heading`}>
+      <tr>
         <td
-          colSpan={8}
-          className="border border-black bg-stone-100 px-2 py-2 text-center text-sm font-extrabold"
+          colSpan={10}
+          className="border border-black bg-stone-100 px-2 py-2 text-left text-sm font-extrabold"
         >
-          {group.title} / {group.titleHi}
+          {group.title} ({group.records.length})
         </td>
       </tr>
 
-      {group.records.map((person, index) => {
-        const familyApproval =
-          person.marital_status === "Married" && person.gender === "Male"
-            ? `Father: ${person.father_name || "-"}`
-            : person.marital_status === "Married"
-            ? `Husband: ${person.spouse_name || "-"}`
-            : `Father: ${person.father_name || "-"} / Mother: ${
-                person.mother_name || "-"
-              }`;
-
-        return (
-          <tr key={person.id}>
-            <PrintCell>{index + 1}</PrintCell>
-            <PrintCell>
-              <strong>{person.token || "-"}</strong>
-            </PrintCell>
-            <PrintCell>
-              <strong>{person.full_name || "-"}</strong>
-            </PrintCell>
-            <PrintCell>{person.age || "-"}</PrintCell>
-            <PrintCell>{person.gender || "-"}</PrintCell>
-            <PrintCell>{formatPhoneDisplay(person.mobile)}</PrintCell>
-            <PrintCell>{person.city || "-"}</PrintCell>
-            <PrintCell>{familyApproval}</PrintCell>
-          </tr>
-        );
-      })}
+      {group.records.map((person, index) => (
+        <tr key={person.id}>
+          <PrintCell>{index + 1}</PrintCell>
+          <PrintCell>{getTokenCategory(person.token)}</PrintCell>
+          <PrintCell>{person.token || "-"}</PrintCell>
+          <PrintCell>
+            <strong>{person.full_name || "-"}</strong>
+          </PrintCell>
+          <PrintCell>{getGenderShort(person.gender)}</PrintCell>
+          <PrintCell>{person.city || "-"}</PrintCell>
+          <PrintCell>{getMaritalStatusShort(person.marital_status)}</PrintCell>
+          <PrintCell>{person.family_relation || "-"}</PrintCell>
+          <PrintCell>{person.referred_to || "-"}</PrintCell>
+          <PrintCell>
+            {person.remarks_by ||
+              person.evaluator_name ||
+              person.admin_remarks ||
+              "-"}
+          </PrintCell>
+        </tr>
+      ))}
     </Fragment>
   ))}
 </tbody>
         </table>
 
-       
+        <div className="mt-3 text-sm font-extrabold">
+          MALE:{" "}
+          {
+            filteredRegistrations.filter((person) => person.gender === "Male")
+              .length
+          }{" "}
+          | FEMALE:{" "}
+          {
+            filteredRegistrations.filter((person) => person.gender === "Female")
+              .length
+          }{" "}
+          | TOTAL: {filteredRegistrations.length}
+        </div>
 
         <div className="mt-10 grid grid-cols-2 gap-10 text-sm">
           <div>
@@ -4731,6 +4753,44 @@ function isDikshaCandidate(person: Registration) {
     status === "Diksha Completed"
   );
 }
+
+function getGenderShort(gender: string | null) {
+  if (gender === "Male") return "M";
+  if (gender === "Female") return "F";
+  return "-";
+}
+
+function getMaritalStatusShort(status: string | null) {
+  if (status === "Married") return "M";
+  if (status === "Single") return "U";
+  if (status === "Widowed") return "W";
+  if (status === "Divorced") return "D";
+  if (status === "Virakt") return "V";
+  return "-";
+}
+
+function getTokenCategory(token: string | null) {
+  const safeToken = (token || "").toUpperCase();
+
+  if (safeToken.startsWith("CP")) return safeToken;
+  if (safeToken.startsWith("FAM")) return safeToken;
+  if (safeToken.startsWith("M")) return safeToken;
+  if (safeToken.startsWith("F")) return safeToken;
+
+  return safeToken || "-";
+}
+
+function getPrintGroupTitle(token: string | null, gender: string | null) {
+  const safeToken = (token || "").toUpperCase();
+
+  if (safeToken.startsWith("CP")) return "COUPLES";
+  if (safeToken.startsWith("FAM")) return "FAMILY";
+  if (gender === "Female") return "FEMALES";
+  if (gender === "Male") return "MALES";
+
+  return "OTHERS";
+}
+
 function getTokenParts(token: string | null) {
   const safeToken = token || "";
 
