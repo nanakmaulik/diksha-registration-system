@@ -255,6 +255,36 @@ const { data, error } = await supabase
 
       return;
     }
+
+    if (name === "idType") {
+      setFormData((prev) => ({
+        ...prev,
+        idType: value,
+        idNumber:
+          value === "aadhaar" ? formatAadhaarInput(prev.idNumber) : prev.idNumber,
+      }));
+    
+      return;
+    }
+    
+    if (name === "idNumber") {
+      setFormData((prev) => ({
+        ...prev,
+        idNumber: prev.idType === "aadhaar" ? formatAadhaarInput(value) : value,
+      }));
+    
+      return;
+    }
+    
+    if (name === "whatsapp" || name === "familyMobile") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formatPhoneInput(value),
+      }));
+    
+      return;
+    }
+
     if (name === "country") {
       setFormData((prev) => ({
         ...prev,
@@ -281,12 +311,14 @@ const { data, error } = await supabase
       return;
     }
     if (name === "mobile") {
+      const formattedMobile = formatPhoneInput(value);
+    
       setFormData((prev) => ({
         ...prev,
-        mobile: value,
-        whatsapp: prev.sameWhatsapp ? value : prev.whatsapp,
+        mobile: formattedMobile,
+        whatsapp: prev.sameWhatsapp ? formattedMobile : prev.whatsapp,
       }));
-
+    
       return;
     }
 
@@ -1626,4 +1658,34 @@ function getTodayDateString() {
   const day = String(today.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+}
+function formatAadhaarInput(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 12);
+  return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+}
+
+function formatPhoneInput(value: string) {
+  const cleanValue = value.trim();
+
+  if (!cleanValue) return "";
+
+  const hasPlus = cleanValue.startsWith("+");
+  const digits = cleanValue.replace(/\D/g, "");
+
+  if (hasPlus && digits.startsWith("91")) {
+    const nationalNumber = digits.slice(2, 12);
+    const firstPart = nationalNumber.slice(0, 5);
+    const secondPart = nationalNumber.slice(5, 10);
+
+    return `+91 ${firstPart}${secondPart ? ` ${secondPart}` : ""}`.trim();
+  }
+
+  if (!hasPlus && digits.length <= 10) {
+    const firstPart = digits.slice(0, 5);
+    const secondPart = digits.slice(5, 10);
+
+    return `${firstPart}${secondPart ? ` ${secondPart}` : ""}`.trim();
+  }
+
+  return `${hasPlus ? "+" : ""}${digits}`;
 }
