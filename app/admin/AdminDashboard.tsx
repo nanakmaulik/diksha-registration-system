@@ -1673,8 +1673,8 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
         person.full_name || "-",
         person.age || "-",
         person.gender || "-",
-        csvTextValue(person.mobile),
-csvTextValue(person.whatsapp),
+        csvTextValue(formatPhoneDisplay(person.mobile)),
+        csvTextValue(formatPhoneDisplay(person.whatsapp)),
         person.city || "-",
         person.state || "-",
         person.slots?.slot_date ? formatDate(person.slots.slot_date) : "-",
@@ -1923,16 +1923,17 @@ csvTextValue(person.whatsapp),
 
     <div className="mt-3 grid gap-2">
     <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold uppercase text-stone-800 shadow-sm">
-        Mobile: {request.mobile || "-"}
+    Mobile: {formatPhoneDisplay(request.mobile)}
         {request.whatsapp ? (
           <span className="block text-sm font-semibold text-stone-600">
-            WhatsApp: {request.whatsapp}
+            WhatsApp: {formatPhoneDisplay(request.whatsapp)}
           </span>
         ) : null}
       </div>
 
       <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold uppercase text-orange-900 shadow-sm">
-        ID Proof: {formatIdType(request.id_type)} - {request.id_number || "-"}
+      ID Proof: {formatIdType(request.id_type)} -{" "}
+      {formatIdNumberDisplay(request.id_type, request.id_number)} 
       </div>
 
       <div className="rounded-2xl bg-white px-4 py-3 text-sm font-bold uppercase text-stone-800 shadow-sm">
@@ -2537,7 +2538,9 @@ titleHi="स्थगित"
             </p>
 
             <p className="font-bold text-stone-700">
-              {showFullMobile ? person.mobile : maskMobile(person.mobile)}
+            {showFullMobile
+  ? formatPhoneDisplay(person.mobile)
+  : maskMobile(person.mobile)}
             </p>
 
             <span
@@ -3055,9 +3058,9 @@ titleHi="स्थगित"
                       </TableCell>
 
                       <TableCell>
-                        {showFullMobile
-                          ? person.mobile
-                          : maskMobile(person.mobile)}
+                      {showFullMobile
+  ? formatPhoneDisplay(person.mobile)
+  : maskMobile(person.mobile)}
                       </TableCell>
 
                       <TableCell>{person.city || "-"}</TableCell>
@@ -3277,7 +3280,7 @@ titleHi="स्थगित"
             </PrintCell>
             <PrintCell>{person.age || "-"}</PrintCell>
             <PrintCell>{person.gender || "-"}</PrintCell>
-            <PrintCell>{person.mobile || "-"}</PrintCell>
+            <PrintCell>{formatPhoneDisplay(person.mobile)}</PrintCell>
             <PrintCell>{person.city || "-"}</PrintCell>
             <PrintCell>{familyApproval}</PrintCell>
           </tr>
@@ -3976,14 +3979,14 @@ titleHi="स्थगित"
                     label="Occupation"
                     value={person.occupation || "-"}
                   />
-                  <DevoteeLine label="Mobile No" value={person.mobile || "-"} />
+                  <DevoteeLine label="Mobile No" value={formatPhoneDisplay(person.mobile)} />
                   <DevoteeLine
                     label="WhatsApp No"
-                    value={person.whatsapp || "-"}
+                    value={formatPhoneDisplay(person.whatsapp)}
                   />
                   <DevoteeLine
                     label="ID / Aadhaar No"
-                    value={person.id_number || "-"}
+                    value={formatIdNumberDisplay(person.id_type, person.id_number)}
                   />
                 </div>
 
@@ -4029,9 +4032,9 @@ titleHi="स्थगित"
                     value={person.family_relation || "-"}
                   />
                   <DevoteeLine
-                    label="Mobile"
-                    value={person.family_mobile || "-"}
-                  />
+  label="Mobile"
+  value={formatPhoneDisplay(person.family_mobile)}
+/>
                 </div>
               </div>
 
@@ -4664,6 +4667,47 @@ function formatIdType(idType: string | null) {
 
   return idType;
 }
+
+function formatAadhaarDisplay(value: string | null | undefined) {
+  const digits = String(value || "").replace(/\D/g, "");
+
+  if (!digits) return "-";
+
+  if (digits.length === 12) {
+    return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+  }
+
+  return String(value || "-");
+}
+
+function formatPhoneDisplay(value: string | null | undefined) {
+  const cleanValue = String(value || "").trim();
+
+  if (!cleanValue || cleanValue === "-") return "-";
+
+  const hasPlus = cleanValue.startsWith("+");
+  const digits = cleanValue.replace(/\D/g, "");
+
+  if (hasPlus && digits.startsWith("91")) {
+    const nationalNumber = digits.slice(2, 12);
+    return `+91 ${nationalNumber.slice(0, 5)} ${nationalNumber.slice(5, 10)}`.trim();
+  }
+
+  if (!hasPlus && digits.length === 10) {
+    return `${digits.slice(0, 5)} ${digits.slice(5, 10)}`;
+  }
+
+  return cleanValue;
+}
+
+function formatIdNumberDisplay(idType: string | null, idNumber: string | null) {
+  if (idType === "aadhaar") {
+    return formatAadhaarDisplay(idNumber);
+  }
+
+  return idNumber || "-";
+}
+
 function isFinalMeetingCandidate(person: Registration) {
   const status = person.candidate_status || person.status || "";
 
