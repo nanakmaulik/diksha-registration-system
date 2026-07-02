@@ -2825,6 +2825,17 @@ titleHi="स्थगित"
     अगले दिन की दीक्षा शेड्यूल करें
   </span>
 </button>
+<button
+  type="button"
+  onClick={handleBulkScheduleNextDayDiksha}
+  disabled={isBulkScheduling}
+  className="rounded-2xl bg-orange-700 px-5 py-3 font-bold text-white disabled:opacity-60"
+>
+  {isBulkScheduling ? "Updating..." : "Diksha Completed"}
+  <span className="block text-sm font-normal">
+    दीक्षा पूर्ण करें
+  </span>
+</button>
   <button
     type="button"
     onClick={handlePrintDevoteeForms}
