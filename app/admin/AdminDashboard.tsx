@@ -205,6 +205,10 @@ const [editRequestFormData, setEditRequestFormData] = useState({
   family_mobile: "",
   id_type: "",
   id_number: "",
+  vrindavan_stay_days: "",
+  video_proof_attached: "",
+  video_proof_other: "",
+  referred_to: "",
 });
 
 const [isSavingRequestEdit, setIsSavingRequestEdit] = useState(false);
@@ -713,6 +717,10 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
       family_mobile: request.family_mobile || "",
       id_type: request.id_type || "",
       id_number: request.id_number || "",
+      vrindavan_stay_days: request.vrindavan_stay_days || "",
+      video_proof_attached: request.video_proof_attached || "",
+      video_proof_other: request.video_proof_other || "",
+      referred_to: request.referred_to || "",
     });
   }
   
@@ -726,9 +734,12 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     setEditRequestFormData((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === "video_proof_attached" && value !== "Others"
+        ? { video_proof_other: "" }
+        : {}),
     }));
   }
-  
+
   async function handleSaveRequestEdit() {
     if (!editingRequest) return;
   
@@ -772,6 +783,13 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
         family_mobile: editRequestFormData.family_mobile.trim() || null,
         id_type: editRequestFormData.id_type || null,
         id_number: editRequestFormData.id_number.trim() || null,
+        vrindavan_stay_days:
+        editRequestFormData.vrindavan_stay_days.trim() || null,
+      video_proof_attached:
+        editRequestFormData.video_proof_attached || null,
+      video_proof_other:
+        editRequestFormData.video_proof_other.trim() || null,
+      referred_to: editRequestFormData.referred_to || null,
       })
       .eq("id", editingRequest.id);
   
@@ -3860,6 +3878,56 @@ titleHi="स्थगित"
             value={editRequestFormData.address}
             onChange={handleEditRequestFormChange}
           />
+        <EditInput
+          label="Vrindavan Stay Days / वृंदावन में कितने दिन"
+          name="vrindavan_stay_days"
+          value={editRequestFormData.vrindavan_stay_days}
+          onChange={handleEditRequestFormChange}
+        />
+
+        <EditSelect
+          label="Video Proof Attached / वीडियो प्रमाण"
+          name="video_proof_attached"
+          value={editRequestFormData.video_proof_attached}
+          onChange={handleEditRequestFormChange}
+          options={[
+            ["", "Select video proof"],
+            ["Father", "Father / पिता"],
+            ["Mother", "Mother / माता"],
+            ["Both", "Both / दोनों"],
+            ["Husband", "Husband / पति"],
+            ["Wife", "Wife / पत्नी"],
+            ["Not Reqd.", "Not Reqd. / आवश्यक नहीं"],
+            ["Others", "Others / अन्य"],
+          ]}
+        />
+
+        {editRequestFormData.video_proof_attached === "Others" && (
+          <EditInput
+            label="Other Video Proof Details / अन्य वीडियो प्रमाण"
+            name="video_proof_other"
+            value={editRequestFormData.video_proof_other}
+            onChange={handleEditRequestFormChange}
+          />
+        )}
+
+        <EditSelect
+          label="Referred To / किसके पास भेजा गया"
+          name="referred_to"
+          value={editRequestFormData.referred_to}
+          onChange={handleEditRequestFormChange}
+          options={[
+            ["", "Select referred to"],
+            ["ALB", "ALB"],
+            ["SS", "SS"],
+            ["SSB", "SSB"],
+            ["PS", "PS"],
+            ["GSB", "GSB"],
+            ["NNB", "NNB"],
+            ["MMB", "MMB"],
+          ]}
+        />
+
         </div>
       </div>
 
