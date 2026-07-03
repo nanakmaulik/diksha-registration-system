@@ -1169,6 +1169,68 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     setIsBulkScheduling(false);
     window.location.reload();
   }
+
+  async function handleBulkDikshaCompleted() {
+    if (selectedRegistrationIds.length === 0) {
+      alert(
+        "Please select candidates first.\nकृपया पहले candidates select करें।"
+      );
+      return;
+    }
+  
+    const confirmed = window.confirm(
+      `Mark Diksha Completed for ${selectedRegistrationIds.length} selected candidate(s)?\n\nSelected candidates की Diksha Completed mark हो जाएगी.`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsBulkScheduling(true);
+  
+    for (const registrationId of selectedRegistrationIds) {
+      const { error: attendanceError } = await supabase.rpc(
+        "update_candidate_attendance",
+        {
+          p_registration_id: registrationId,
+          p_attendance_type: "Diksha",
+          p_attendance_value: "Present",
+          p_notes: "Marked from bulk Diksha Completed button",
+          p_updated_by: "Sadhak",
+        }
+      );
+  
+      if (attendanceError) {
+        alert("Diksha attendance error: " + attendanceError.message);
+        setIsBulkScheduling(false);
+        return;
+      }
+  
+      const { error: statusError } = await supabase.rpc(
+        "update_candidate_status",
+        {
+          p_registration_id: registrationId,
+          p_new_status: "Diksha Completed",
+          p_action_type: "Bulk Diksha Completed",
+          p_notes: "Marked from bulk Diksha Completed button",
+          p_updated_by: "Sadhak",
+        }
+      );
+  
+      if (statusError) {
+        alert("Diksha completed error: " + statusError.message);
+        setIsBulkScheduling(false);
+        return;
+      }
+    }
+  
+    alert(
+      `Diksha Completed successfully.\nUpdated candidates: ${selectedRegistrationIds.length}\n\nचुने हुए candidates की दीक्षा पूर्ण mark हो गई।`
+    );
+  
+    setSelectedRegistrationIds([]);
+    setIsBulkScheduling(false);
+    window.location.reload();
+  }
+
   const filteredRegistrations = useMemo(() => {
     return registrations.filter((person) => {
       const searchText = search.toLowerCase().trim();
@@ -2827,7 +2889,7 @@ titleHi="स्थगित"
 </button>
 <button
   type="button"
-  onClick={handleBulkScheduleNextDayDiksha}
+  onClick={handleBulkDikshaCompleted}
   disabled={isBulkScheduling}
   className="rounded-2xl bg-orange-700 px-5 py-3 font-bold text-white disabled:opacity-60"
 >
