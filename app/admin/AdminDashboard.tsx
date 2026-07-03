@@ -549,11 +549,11 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
       return;
     }
   
-    const confirmed = window.confirm(
-      `Accept this request and generate token for ${
-        request.full_name || "-"
-      }?\n\nक्या आप इस request को accept करके token generate करना चाहते हैं?`
-    );
+    const candidateName = (request.full_name || "-").toUpperCase();
+
+const confirmed = window.confirm(
+  `Accept this request and generate token for:\n\n${candidateName}\n\nक्या आप इस request को accept करके token generate करना चाहते हैं?`
+);
   
     if (!confirmed) return;
 
@@ -3343,13 +3343,12 @@ titleHi="स्थगित"
             <tr>
             <PrintHead>ROW</PrintHead>
 <PrintHead>CAT</PrintHead>
-<PrintHead>ROLL</PrintHead>
+<PrintHead>APPR</PrintHead>
 <PrintHead>NAME</PrintHead>
 <PrintHead>G</PrintHead>
 <PrintHead>CITY</PrintHead>
 <PrintHead>MS</PrintHead>
 <PrintHead>FAMILY REL</PrintHead>
-<PrintHead>APPR</PrintHead>
 <PrintHead>REMARKS BY</PrintHead>
             </tr>
           </thead>
@@ -3359,7 +3358,7 @@ titleHi="स्थगित"
     <Fragment key={group.title}>
       <tr>
         <td
-          colSpan={10}
+          colSpan={9}
           className="border border-black bg-stone-100 px-2 py-2 text-left text-sm font-extrabold"
         >
           {group.title} ({group.records.length})
@@ -3367,26 +3366,25 @@ titleHi="स्थगित"
       </tr>
 
       {group.records.map((person, index) => (
-        <tr key={person.id}>
-          <PrintCell>{index + 1}</PrintCell>
-          <PrintCell>{getTokenCategory(person.token)}</PrintCell>
-          <PrintCell>{person.token || "-"}</PrintCell>
-          <PrintCell>
-            <strong>{person.full_name || "-"}</strong>
-          </PrintCell>
-          <PrintCell>{getGenderShort(person.gender)}</PrintCell>
-          <PrintCell>{person.city || "-"}</PrintCell>
-          <PrintCell>{getMaritalStatusShort(person.marital_status)}</PrintCell>
-          <PrintCell>{person.family_relation || "-"}</PrintCell>
-          <PrintCell>{person.referred_to || "-"}</PrintCell>
-          <PrintCell>
-            {person.remarks_by ||
-              person.evaluator_name ||
-              person.admin_remarks ||
-              "-"}
-          </PrintCell>
-        </tr>
-      ))}
+  <tr key={person.id}>
+    <PrintCell>{index + 1}</PrintCell>
+    <PrintCell>{getTokenWithMemberLetter(person, group.records)}</PrintCell>
+    <PrintCell>{person.referred_to || "-"}</PrintCell>
+    <PrintCell>
+      <strong>{person.full_name || "-"}</strong>
+    </PrintCell>
+    <PrintCell>{getGenderShort(person.gender)}</PrintCell>
+    <PrintCell>{person.city || "-"}</PrintCell>
+    <PrintCell>{getMaritalStatusShort(person.marital_status)}</PrintCell>
+    <PrintCell>{person.family_relation || "-"}</PrintCell>
+    <PrintCell>
+      {person.remarks_by ||
+        person.evaluator_name ||
+        person.admin_remarks ||
+        "-"}
+    </PrintCell>
+  </tr>
+))}
     </Fragment>
   ))}
 </tbody>
@@ -4919,6 +4917,37 @@ function getTokenCategory(token: string | null) {
   if (safeToken.startsWith("F")) return safeToken;
 
   return safeToken || "-";
+}
+
+function getTokenWithMemberLetter(
+  person: Registration,
+  groupRecords: Registration[]
+) {
+  const token = (person.token || "").toUpperCase();
+
+  if (!token) return "-";
+
+  const isSharedToken = token.startsWith("CP") || token.startsWith("FAM");
+
+  if (!isSharedToken) {
+    return token;
+  }
+
+  const sameTokenPeople = groupRecords.filter(
+    (record) => (record.token || "").toUpperCase() === token
+  );
+
+  if (sameTokenPeople.length <= 1) {
+    return token;
+  }
+
+  const memberIndex = sameTokenPeople.findIndex(
+    (record) => record.id === person.id
+  );
+
+  const letter = String.fromCharCode(65 + Math.max(memberIndex, 0));
+
+  return `${token} ${letter}`;
 }
 
 function getPrintGroupTitle(token: string | null, gender: string | null) {
