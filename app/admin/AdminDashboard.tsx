@@ -119,21 +119,35 @@ export default function AdminDashboard({
   activityLogs,
   registrationRequests,
   accessMode = "admin",
-}: {
+}:
+ {
   registrations: Registration[];
   slots: Slot[];
   activityLogs: ActivityLog[];
   registrationRequests: RegistrationRequest[];
   accessMode?: "admin" | "sadhak";
 }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const savedSlotDate = localStorage.getItem("adminSlotDate");
+    const savedAttendanceDate = localStorage.getItem("adminAttendanceDate");
+  
+    if (savedSlotDate) {
+      setSlotDate(savedSlotDate);
+    }
+  
+    if (savedAttendanceDate) {
+      setAttendanceDate(savedAttendanceDate);
+    }
+  
+    setIsMounted(true);
+  }, []);
   const router = useRouter();
   const isSadhakAccess = accessMode === "sadhak";
 
   const [search, setSearch] = useState("");
-  const [slotDate, setSlotDate] = useState(() => {
-  if (typeof window === "undefined") return "all";
-  return localStorage.getItem("adminSlotDate") || "all";
-});
+  const [slotDate, setSlotDate] = useState("all");
   const [showFullMobile, setShowFullMobile] = useState(false);
   const [showAllSlots, setShowAllSlots] = useState(false);
   const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
@@ -148,10 +162,7 @@ const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
   useState(false);
   const [printMode, setPrintMode] = useState<"list" | "forms">("list");
   const [isBulkScheduling, setIsBulkScheduling] = useState(false);
-  const [attendanceDate, setAttendanceDate] = useState(() => {
-    if (typeof window === "undefined") return getTodayDateString();
-    return localStorage.getItem("adminAttendanceDate") || getTodayDateString();
-  });
+  const [attendanceDate, setAttendanceDate] = useState(getTodayDateString());
   const [selectedAttendanceIds, setSelectedAttendanceIds] = useState<string[]>([]);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [attendanceUpdatedBy, setAttendanceUpdatedBy] = useState("Sadhak");
@@ -340,7 +351,6 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
       supabase.removeChannel(channel);
     };
   }, [router]);
-  
 
   const todayDate = getTodayDateString();
   const availableFinalMeetingSlots = slots.filter(
@@ -1814,7 +1824,20 @@ const confirmed = window.confirm(
 
     URL.revokeObjectURL(url);
   }
-
+  if (!isMounted) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#fff8ed]">
+        <div className="rounded-3xl bg-white px-8 py-6 text-center shadow-sm">
+          <p className="font-extrabold text-orange-800">
+            Loading Dashboard...
+          </p>
+          <p className="mt-1 text-sm text-stone-600">
+            डैशबोर्ड लोड हो रहा है...
+          </p>
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="min-h-screen bg-[#fff8ed] px-4 py-6 text-[#2d2418] md:py-10">
       <div className="admin-screen mx-auto max-w-7xl">

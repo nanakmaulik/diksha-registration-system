@@ -377,14 +377,14 @@ function AdminLoginPage({ error }: { error: string }) {
           </div>
 
           <button
-            type="submit"
-            className="w-full rounded-2xl bg-orange-700 px-5 py-3 font-bold text-white"
-          >
-            Login
-            <span className="block text-sm font-normal">
-              लॉगिन करें
-            </span>
-          </button>
+  type="submit"
+  className="w-full cursor-pointer rounded-2xl bg-orange-700 px-5 py-3 font-bold text-white"
+>
+  Login
+  <span className="block text-sm font-normal">
+    लॉगिन करें
+  </span>
+</button>
         </form>
 
         <p className="mt-5 text-center text-xs text-stone-500">
