@@ -1436,15 +1436,22 @@ const confirmed = window.confirm(
   const finalMeetingAttendanceList = useMemo(() => {
     return registrations
       .filter((person) => {
-        const meetingDate = person.slots?.slot_date || person.final_meeting_date;
+        const meetingDate =
+          person.final_meeting_date || person.slots?.slot_date || "";
+  
         const statusValue = person.candidate_status || person.status || "";
+        const wasPresent =
+          person.final_meeting_attendance === "Present";
+  
+        const isPendingFinalMeeting =
+          statusValue === "Scheduled for Final Meeting" ||
+          statusValue === "Pending" ||
+          statusValue === "Rejected" ||
+          statusValue === "Final Meeting Attended";
   
         return (
           meetingDate === attendanceDate &&
-          (statusValue === "Scheduled for Final Meeting" ||
-            statusValue === "Pending" ||
-            statusValue === "Rejected" ||
-            statusValue === "Final Meeting Attended")
+          (wasPresent || isPendingFinalMeeting)
         );
       })
       .filter((person) => {
