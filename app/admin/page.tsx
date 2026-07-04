@@ -106,6 +106,49 @@ export default async function AdminPage({
     .select("*")
     .eq("user_id", user.id)
     .maybeSingle<AdminPermissions>();
+    const dashboardPermissions: Record<string, boolean> | null = permissions
+    ? {
+        view_dashboard: permissions.view_dashboard,
+  
+        view_pending_requests: permissions.view_pending_requests,
+        approve_pending_requests: permissions.approve_pending_requests,
+        defer_pending_requests: permissions.defer_pending_requests,
+        edit_pending_requests: permissions.edit_pending_requests,
+        delete_pending_requests: permissions.delete_pending_requests,
+        view_pending_id_proof: permissions.view_pending_id_proof,
+  
+        view_final_meeting_attendance:
+          permissions.view_final_meeting_attendance,
+        mark_final_meeting_attendance:
+          permissions.mark_final_meeting_attendance,
+        undo_final_meeting_attendance:
+          permissions.undo_final_meeting_attendance,
+  
+        view_registrations: permissions.view_registrations,
+        edit_registrations: permissions.edit_registrations,
+        delete_registrations: permissions.delete_registrations,
+        convert_group_tokens: permissions.convert_group_tokens,
+        view_registration_id_proof:
+          permissions.view_registration_id_proof,
+  
+        view_reports: permissions.view_reports,
+        export_registrations: permissions.export_registrations,
+        print_registration_list: permissions.print_registration_list,
+        print_devotee_forms: permissions.print_devotee_forms,
+  
+        manage_final_meeting: permissions.manage_final_meeting,
+        manage_diksha: permissions.manage_diksha,
+        mark_diksha_completed: permissions.mark_diksha_completed,
+        view_diksha_completed: permissions.view_diksha_completed,
+  
+        view_slots: permissions.view_slots,
+        edit_slot_capacity: permissions.edit_slot_capacity,
+  
+        view_candidate_history: permissions.view_candidate_history,
+        view_user_activity: permissions.view_user_activity,
+        manage_users: permissions.manage_users,
+      }
+    : null;
 
   const isSuperAdmin = adminProfile.role === "super_admin";
 
@@ -266,12 +309,13 @@ export default async function AdminPage({
       </div>
 
       <AdminDashboard
-        registrations={cleanedRegistrations}
-        slots={slots || []}
-        activityLogs={activityLogs || []}
-        registrationRequests={registrationRequests || []}
-        accessMode={isSuperAdmin ? "admin" : "sadhak"}
-      />
+  registrations={cleanedRegistrations}
+  slots={slots || []}
+  activityLogs={activityLogs || []}
+  registrationRequests={registrationRequests || []}
+  accessMode={isSuperAdmin ? "admin" : "sadhak"}
+  permissions={dashboardPermissions}
+/>
     </>
   );
 }

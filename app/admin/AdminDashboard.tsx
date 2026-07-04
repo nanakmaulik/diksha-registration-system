@@ -119,13 +119,14 @@ export default function AdminDashboard({
   activityLogs,
   registrationRequests,
   accessMode = "admin",
-}:
- {
+  permissions,
+}: {
   registrations: Registration[];
   slots: Slot[];
   activityLogs: ActivityLog[];
   registrationRequests: RegistrationRequest[];
   accessMode?: "admin" | "sadhak";
+  permissions?: Record<string, boolean> | null;
 }) {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -145,6 +146,11 @@ export default function AdminDashboard({
   }, []);
   const router = useRouter();
   const isSadhakAccess = accessMode === "sadhak";
+  const isSuperAdminAccess = accessMode === "admin";
+
+  function can(permissionName: string) {
+    return isSuperAdminAccess || Boolean(permissions?.[permissionName]);
+  }
 
   const [search, setSearch] = useState("");
   const [slotDate, setSlotDate] = useState("all");
@@ -1891,7 +1897,7 @@ const confirmed = window.confirm(
             </Link>
           </div>
         </header>
-
+        {can("view_pending_requests") && (
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
   <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <div>
@@ -2179,7 +2185,10 @@ const confirmed = window.confirm(
   </div>
 
   <div className="flex flex-col gap-2">
+  {can("approve_pending_requests") && (
+
     <button
+
       type="button"
       onClick={() => handleApproveRequest(request)}
       disabled={processingRequestId === request.id}
@@ -2190,7 +2199,8 @@ const confirmed = window.confirm(
         Accept करके token बनाएं
       </span>
     </button>
-
+    )}
+{can("defer_pending_requests") && (
     <button
       type="button"
       onClick={() => handleRejectRequest(request)}
@@ -2202,7 +2212,8 @@ const confirmed = window.confirm(
         अनुरोध Deferred करें
       </span>
     </button>
-
+)}
+{can("edit_pending_requests") && (
     <button
   type="button"
   onClick={() => openEditRequest(request)}
@@ -2213,8 +2224,9 @@ const confirmed = window.confirm(
     विवरण बदलें
   </span>
 </button>
+)}
 
-    {request.aadhaar_file_url && (
+{can("view_pending_id_proof") && request.aadhaar_file_url && (
       <button
         type="button"
         onClick={() =>
@@ -2368,6 +2380,7 @@ const confirmed = window.confirm(
     </div>
   )}
 </section>
+)}
 
 {!isSadhakAccess && (
         <section className="mb-8 space-y-4">
@@ -2514,6 +2527,7 @@ titleHi="स्थगित"
           </div>
         </section>
         )}
+        {can("view_final_meeting_attendance") && (
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
   <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
     <div>
@@ -2701,6 +2715,7 @@ titleHi="स्थगित"
     </div>
   )}
 </section>
+)}
 {!isSadhakAccess && (
 
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
