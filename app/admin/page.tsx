@@ -13,7 +13,7 @@ type AdminProfile = {
   id: string;
   username: string;
   full_name: string;
-  role: "super_admin" | "sadhak";
+  role: "super_admin" | "admin" | "sadhak";
   is_active: boolean;
 };
 
@@ -151,6 +151,9 @@ export default async function AdminPage({
     : null;
 
   const isSuperAdmin = adminProfile.role === "super_admin";
+  const isAdminAccess =
+  adminProfile.role === "super_admin" ||
+  adminProfile.role === "admin";
 
   if (!isSuperAdmin && !permissions?.view_dashboard) {
     return (
@@ -279,7 +282,11 @@ export default async function AdminPage({
 
           <p className="text-xs font-semibold text-orange-700">
             @{adminProfile.username} ·{" "}
-            {isSuperAdmin ? "Super Admin" : "Sadhak"}
+            {adminProfile.role === "super_admin"
+  ? "Super Admin"
+  : adminProfile.role === "admin"
+  ? "Admin"
+  : "Sadhak"}
           </p>
         </div>
 
@@ -313,7 +320,7 @@ export default async function AdminPage({
   slots={slots || []}
   activityLogs={activityLogs || []}
   registrationRequests={registrationRequests || []}
-  accessMode={isSuperAdmin ? "admin" : "sadhak"}
+  accessMode={isAdminAccess ? "admin" : "sadhak"}
   permissions={dashboardPermissions}
 />
     </>

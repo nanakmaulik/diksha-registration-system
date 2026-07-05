@@ -240,7 +240,8 @@ export default async function UsersPage({
                   className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none"
                 >
                   <option value="sadhak">Sadhak</option>
-                  <option value="super_admin">Super Admin</option>
+<option value="admin">Admin</option>
+<option value="super_admin">Super Admin</option>
                 </select>
               </div>
             </div>
@@ -284,9 +285,11 @@ export default async function UsersPage({
 
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-800">
-                        {dashboardUser.role === "super_admin"
-                          ? "Super Admin"
-                          : "Sadhak"}
+                      {dashboardUser.role === "super_admin"
+  ? "Super Admin"
+  : dashboardUser.role === "admin"
+  ? "Admin"
+  : "Sadhak"}
                       </span>
 
                       <span
@@ -360,8 +363,9 @@ export default async function UsersPage({
                         defaultValue={dashboardUser.role}
                         className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none"
                       >
-                        <option value="sadhak">Sadhak</option>
-                        <option value="super_admin">Super Admin</option>
+                     <option value="sadhak">Sadhak</option>
+<option value="admin">Admin</option>
+<option value="super_admin">Super Admin</option>
                       </select>
                     </div>
                   </div>

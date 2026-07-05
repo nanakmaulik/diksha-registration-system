@@ -110,7 +110,7 @@ export async function createDashboardUserAction(formData: FormData) {
     redirect("/admin/users?error=short-password");
   }
 
-  if (!["super_admin", "sadhak"].includes(role)) {
+  if (!["super_admin", "admin", "sadhak"].includes(role)) {
     redirect("/admin/users?error=invalid-role");
   }
 
@@ -169,11 +169,16 @@ export async function createDashboardUserAction(formData: FormData) {
   }
 
   const permissionValues =
-    role === "super_admin"
-      ? Object.fromEntries(
-          permissionNames.map((permission) => [permission, true])
-        )
-      : getPermissionValues(formData);
+  role === "super_admin" || role === "admin"
+    ? Object.fromEntries(
+        permissionNames.map((permission) => [
+          permission,
+          permission === "manage_users"
+            ? role === "super_admin"
+            : true,
+        ])
+      )
+    : getPermissionValues(formData);
 
   const { error: permissionError } = await supabaseAdmin
     .from("admin_user_permissions")
@@ -236,11 +241,16 @@ export async function updateUserPermissionsAction(formData: FormData) {
   }
 
   const permissionValues =
-    role === "super_admin"
-      ? Object.fromEntries(
-          permissionNames.map((permission) => [permission, true])
-        )
-      : getPermissionValues(formData);
+  role === "super_admin" || role === "admin"
+    ? Object.fromEntries(
+        permissionNames.map((permission) => [
+          permission,
+          permission === "manage_users"
+            ? role === "super_admin"
+            : true,
+        ])
+      )
+    : getPermissionValues(formData);
 
   const { error: profileError } = await supabaseAdmin
     .from("admin_users")
