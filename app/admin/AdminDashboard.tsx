@@ -2269,9 +2269,12 @@ referred_to:
   Mother: {request.mother_name || "-"}
 </p>
 
-{request.marital_status === "Married" && (
+{["Married", "Widowed"].includes(request.marital_status || "") && (
   <p className="mt-1 text-base font-extrabold text-stone-800">
-    Husband / Wife: {request.spouse_name || "-"}
+    {request.marital_status === "Widowed"
+      ? "Late Husband / Wife"
+      : "Husband / Wife"}
+    : {request.spouse_name || "-"}
   </p>
 )}
     </div>
@@ -3718,8 +3721,7 @@ titleHi="स्थगित"
   onChange={handleEditFormChange}
   options={[
     ["", "Select video proof"],
-    ["Father", "Father / पिता"],
-    ["Mother", "Mother / माता"],
+    ["Mother Father", "Mother Father / माता-पिता"],
     ["Both", "Both / दोनों"],
     ["Husband", "Husband / पति"],
     ["Wife", "Wife / पत्नी"],
@@ -4260,17 +4262,19 @@ titleHi="स्थगित"
             ? formatDate(person.final_meeting_date)
             : "-";
 
-          const guardianLabel =
+            const guardianLabel =
             person.marital_status === "Married"
               ? "Husband / Wife Name"
+              : person.marital_status === "Widowed"
+              ? "Late Husband / Wife Name"
               : "Father / Mother Name";
-
-          const guardianValue =
-            person.marital_status === "Married"
-              ? person.spouse_name || "-"
-              : `Father: ${person.father_name || "-"} / Mother: ${
-                  person.mother_name || "-"
-                }`;
+              const guardianValue =
+              person.marital_status === "Married" ||
+              person.marital_status === "Widowed"
+                ? person.spouse_name || "-"
+                : `Father: ${person.father_name || "-"} / Mother: ${
+                    person.mother_name || "-"
+                  }`;
 
           return (
             <div key={person.id} className="devotee-form-page">
