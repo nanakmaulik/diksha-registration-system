@@ -632,9 +632,15 @@ const confirmed = window.confirm(
       return;
     }
   
-    const confirmed = window.confirm(
-      `Generate one shared ${groupType} token for ${selectedRequestIds.length} selected request(s)?\n\nSab selected candidates ko same token milega, but forms separate rahenge.`
-    );
+    const selectedNames = selectedRequests
+  .map((request, index) => `${index + 1}. ${request.full_name || "-"}`)
+  .join("\n");
+
+const confirmed = window.confirm(
+  `Generate one shared ${groupType} token for ${
+    selectedRequestIds.length
+  } selected request(s)?\n\nSelected Devotees:\n${selectedNames}\n\nSab selected candidates ko same token milega, but forms separate rahenge.`
+);
   
     if (!confirmed) return;
   
@@ -1995,14 +2001,84 @@ const confirmed = window.confirm(
 </div>
 
 {selectedRequestIds.length > 0 && (
-  <div className="mb-5 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">
-    Selected pending requests: {selectedRequestIds.length}
-    <span className="block font-normal">
-  2 selected होने पर Couple token बना सकते हैं। 2 या उससे ज्यादा selected होने पर Family token बना सकते हैं।
-</span>
-    <span className="block font-normal">
-    Same token मिलेगा, लेकिन हर candidate का form अलग print होगा।
-    </span>
+  <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p className="font-extrabold">
+          Selected pending requests: {selectedRequestIds.length}
+        </p>
+
+        <p className="font-normal">
+          चुने हुए pending requests: {selectedRequestIds.length}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setSelectedRequestIds([])}
+        className="rounded-xl bg-white px-4 py-2 text-xs font-bold text-red-700 shadow-sm"
+      >
+        Clear Selection
+        <span className="block text-[10px] font-normal">
+          चयन हटाएं
+        </span>
+      </button>
+    </div>
+
+    <div className="mt-4 rounded-2xl bg-white p-4 text-stone-800 shadow-sm">
+      <p className="mb-3 font-extrabold text-orange-900">
+        Selected Devotees / चुने हुए श्रद्धालु
+      </p>
+
+      <div className="space-y-2">
+        {pendingRequests
+          .filter((request) => selectedRequestIds.includes(request.id))
+          .map((request, index) => (
+            <div
+              key={request.id}
+              className="flex flex-col gap-1 rounded-xl border border-orange-100 bg-orange-50 px-4 py-3 md:flex-row md:items-center md:justify-between"
+            >
+              <div>
+                <p className="font-extrabold text-stone-900">
+                  {index + 1}. {request.full_name || "-"}
+                </p>
+
+                <p className="text-xs font-semibold text-stone-600">
+                  {request.mobile
+                    ? formatPhoneDisplay(request.mobile)
+                    : "No mobile"}
+                </p>
+              </div>
+
+              <div className="text-left text-xs font-bold text-orange-800 md:text-right">
+                <p>
+                  {request.requested_meeting_date
+                    ? formatDate(request.requested_meeting_date)
+                    : "-"}
+                </p>
+
+                <p className="font-semibold text-stone-600">
+                  {request.requested_meeting_time || "-"}
+                </p>
+              </div>
+            </div>
+          ))}
+      </div>
+    </div>
+
+    <div className="mt-4 space-y-1 font-normal">
+      <p>
+        2 selected होने पर Couple token बना सकते हैं।
+      </p>
+
+      <p>
+        2 या उससे ज्यादा selected होने पर Family token बना सकते हैं।
+      </p>
+
+      <p>
+        Same token मिलेगा, लेकिन हर candidate का form अलग print होगा।
+      </p>
+    </div>
   </div>
 )}
 
