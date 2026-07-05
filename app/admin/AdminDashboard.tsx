@@ -45,6 +45,8 @@ pin_code: string | null;
   created_at: string;
   aadhaar_file_url: string | null;
   aadhaar_file_name: string | null;
+  video_proof_attached: string | null;
+video_proof_other: string | null;
   referred_to: string | null;
   slots: {
     slot_date: string;
@@ -265,6 +267,9 @@ const [editFormData, setEditFormData] = useState({
   family_mobile: "",
   id_type: "",
   id_number: "",
+  video_proof_attached: "",
+  video_proof_other: "",
+  referred_to: "",
 });
 
 const [isSavingRegistrationEdit, setIsSavingRegistrationEdit] = useState(false);
@@ -1653,18 +1658,26 @@ const confirmed = window.confirm(
         family_relation: person.family_relation || "",
         family_mobile: person.family_mobile || "",
         id_type: person.id_type || "",
-        id_number: person.id_number || "",
+id_number: person.id_number || "",
+video_proof_attached: person.video_proof_attached || "",
+video_proof_other: person.video_proof_other || "",
+referred_to: person.referred_to || "",
       });
     }
     
     function handleEditFormChange(
-      event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+      event: React.ChangeEvent<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >
     ) {
       const { name, value } = event.target;
     
       setEditFormData((prev) => ({
         ...prev,
         [name]: value,
+        ...(name === "video_proof_attached" && value !== "Others"
+          ? { video_proof_other: "" }
+          : {}),
       }));
     }
     
@@ -1711,6 +1724,12 @@ const confirmed = window.confirm(
           family_mobile: editFormData.family_mobile.trim() || null,
           id_type: editFormData.id_type || null,
           id_number: editFormData.id_number.trim() || null,
+          video_proof_attached:
+  editFormData.video_proof_attached || null,
+video_proof_other:
+  editFormData.video_proof_other.trim() || null,
+referred_to:
+  editFormData.referred_to || null,
         })
         .eq("id", editingRegistration.id);
     
@@ -3692,7 +3711,48 @@ titleHi="स्थगित"
           onChange={handleEditFormChange}
           required
         />
+<EditSelect
+  label="Video Proof Attached / वीडियो प्रमाण"
+  name="video_proof_attached"
+  value={editFormData.video_proof_attached}
+  onChange={handleEditFormChange}
+  options={[
+    ["", "Select video proof"],
+    ["Father", "Father / पिता"],
+    ["Mother", "Mother / माता"],
+    ["Both", "Both / दोनों"],
+    ["Husband", "Husband / पति"],
+    ["Wife", "Wife / पत्नी"],
+    ["Not Reqd.", "Not Reqd. / आवश्यक नहीं"],
+    ["Others", "Others / अन्य"],
+  ]}
+/>
 
+{editFormData.video_proof_attached === "Others" && (
+  <EditInput
+    label="Other Video Proof Details / अन्य वीडियो प्रमाण"
+    name="video_proof_other"
+    value={editFormData.video_proof_other}
+    onChange={handleEditFormChange}
+  />
+)}
+
+<EditSelect
+  label="Referred To / किसके पास भेजा गया"
+  name="referred_to"
+  value={editFormData.referred_to}
+  onChange={handleEditFormChange}
+  options={[
+    ["", "Select referred to"],
+    ["ALB", "ALB"],
+    ["SS", "SS"],
+    ["SSB", "SSB"],
+    ["PS", "PS"],
+    ["GSB", "GSB"],
+    ["NNB", "NNB"],
+    ["MMB", "MMB"],
+  ]}
+/>
         <EditInput
           label="Husband / Wife Name"
           name="spouse_name"
