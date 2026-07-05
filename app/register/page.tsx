@@ -756,14 +756,14 @@ export default function RegisterPage() {
               subtitleHi="कृपया उम्मीदवार की जानकारी भरें।"
             >
               <InputField
-                labelEn="Full Name"
-                labelHi="पूरा नाम"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                placeholder="Enter full name"
-                required
-              />
+  labelEn="Full Name (As Per Aadhaar)"
+  labelHi="पूरा नाम (आधार के अनुसार)"
+  name="fullName"
+  value={formData.fullName}
+  onChange={handleChange}
+  placeholder="Enter full name as per Aadhaar / आधार के अनुसार पूरा नाम भरें"
+  required
+/>
 
               <InputField
                 labelEn="Age"
@@ -1013,12 +1013,12 @@ export default function RegisterPage() {
               </div>
 
               <InputField
-                labelEn="Present Family Representative Name"
-                labelHi="उपस्थित पारिवारिक प्रतिनिधि का नाम"
+                labelEn="Present Family Representative Name (As Per Aadhaar)"
+                labelHi="उपस्थित पारिवारिक प्रतिनिधि का नाम (आधार के अनुसार)"
                 name="familyName"
                 value={formData.familyName}
                 onChange={handleChange}
-                placeholder="Enter family member name"
+                placeholder="Enter name as per Aadhaar / आधार के अनुसार नाम भरें"
                 required
               />
 
