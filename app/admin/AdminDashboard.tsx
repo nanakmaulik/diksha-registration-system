@@ -3530,7 +3530,8 @@ titleHi="स्थगित"
             <tr>
             <PrintHead>ROW</PrintHead>
 <PrintHead>CAT</PrintHead>
-<PrintHead>APPR</PrintHead>
+<PrintHead>REF TO</PrintHead>
+<PrintHead>REF BY</PrintHead>
 <PrintHead>NAME</PrintHead>
 <PrintHead>G</PrintHead>
 <PrintHead>CITY</PrintHead>
@@ -3545,7 +3546,7 @@ titleHi="स्थगित"
     <Fragment key={group.title}>
       <tr>
         <td
-          colSpan={9}
+          colSpan={10}
           className="border border-black bg-stone-100 px-2 py-2 text-left text-sm font-extrabold"
         >
           {group.title} ({group.records.length})
@@ -3555,11 +3556,18 @@ titleHi="स्थगित"
       {group.records.map((person, index) => (
   <tr key={person.id}>
     <PrintCell>{index + 1}</PrintCell>
-    <PrintCell>{getTokenWithMemberLetter(person, group.records)}</PrintCell>
-    <PrintCell>{person.referred_to || "-"}</PrintCell>
-    <PrintCell>
-      <strong>{person.full_name || "-"}</strong>
-    </PrintCell>
+
+<PrintCell>
+  {getTokenWithMemberLetter(person, group.records)}
+</PrintCell>
+
+<PrintCell>{person.referred_to || "-"}</PrintCell>
+
+<PrintCell>{person.referred_by || "-"}</PrintCell>
+
+<PrintCell>
+  <strong>{person.full_name || "-"}</strong>
+</PrintCell>
     <PrintCell>{getGenderShort(person.gender)}</PrintCell>
     <PrintCell>{person.city || "-"}</PrintCell>
     <PrintCell>{getMaritalStatusShort(person.marital_status)}</PrintCell>
