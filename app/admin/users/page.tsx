@@ -115,10 +115,13 @@ export default async function UsersPage({
   if (
     !currentProfile ||
     !currentProfile.is_active ||
-    currentProfile.role !== "super_admin"
+    !["super_admin", "admin"].includes(currentProfile.role)
   ) {
-    redirect("/admin");
+    redirect("/admin?error=access-denied");
   }
+
+  const currentUserIsSuperAdmin =
+    currentProfile.role === "super_admin";
 
   const { data: users, error: usersError } = await supabaseAdmin
     .from("admin_users")
@@ -190,6 +193,12 @@ export default async function UsersPage({
 
             {params.success === "password-updated" &&
               "User password updated successfully."}
+
+            {params.success === "user-enabled" &&
+              "User enabled successfully."}
+
+            {params.success === "user-disabled" &&
+              "User disabled successfully."}
           </div>
         )}
 
@@ -240,8 +249,13 @@ export default async function UsersPage({
                   className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none"
                 >
                   <option value="sadhak">Sadhak</option>
-<option value="admin">Admin</option>
-<option value="super_admin">Super Admin</option>
+                  <option value="admin">Admin</option>
+
+                  {currentUserIsSuperAdmin && (
+                    <option value="super_admin">
+                      Super Admin
+                    </option>
+                  )}
                 </select>
               </div>
             </div>
@@ -268,8 +282,12 @@ export default async function UsersPage({
               ? dashboardUser.admin_user_permissions[0] || {}
               : dashboardUser.admin_user_permissions || {};
 
+            const isProtectedSuperAdmin =
+              dashboardUser.role === "super_admin" &&
+              !currentUserIsSuperAdmin;
+
             return (
-              <article
+              <div
                 key={dashboardUser.id}
                 className="rounded-3xl bg-white p-6 shadow-sm"
               >
@@ -284,12 +302,12 @@ export default async function UsersPage({
                     </p>
 
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-800">
-                      {dashboardUser.role === "super_admin"
-  ? "Super Admin"
-  : dashboardUser.role === "admin"
-  ? "Admin"
-  : "Sadhak"}
+                      <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-800">
+                        {dashboardUser.role === "super_admin"
+                          ? "Super Admin"
+                          : dashboardUser.role === "admin"
+                          ? "Admin"
+                          : "Sadhak"}
                       </span>
 
                       <span
@@ -299,119 +317,154 @@ export default async function UsersPage({
                             : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {dashboardUser.is_active ? "Active" : "Disabled"}
+                        {dashboardUser.is_active
+                          ? "Active"
+                          : "Disabled"}
                       </span>
                     </div>
                   </div>
 
-                  {dashboardUser.id !== currentProfile.id && (
-                    <form action={toggleUserStatusAction}>
+                  {dashboardUser.id !== currentProfile.id &&
+                    !isProtectedSuperAdmin && (
+                      <form action={toggleUserStatusAction}>
+                        <input
+                          type="hidden"
+                          name="user_id"
+                          value={dashboardUser.id}
+                        />
+
+                        <input
+                          type="hidden"
+                          name="new_status"
+                          value={
+                            dashboardUser.is_active
+                              ? "false"
+                              : "true"
+                          }
+                        />
+
+                        <button
+                          type="submit"
+                          className={`rounded-2xl px-5 py-3 text-sm font-bold ${
+                            dashboardUser.is_active
+                              ? "bg-red-100 text-red-700"
+                              : "bg-green-100 text-green-700"
+                          }`}
+                        >
+                          {dashboardUser.is_active
+                            ? "Disable User"
+                            : "Enable User"}
+                        </button>
+                      </form>
+                    )}
+                </div>
+
+                {isProtectedSuperAdmin ? (
+                  <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4">
+                    <p className="font-extrabold text-red-700">
+                      Protected Super Admin Account
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-red-600">
+                      केवल Super Admin इस account को edit या manage कर सकता है।
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <form
+                      action={updateUserPermissionsAction}
+                      className="mt-6"
+                    >
                       <input
                         type="hidden"
                         name="user_id"
                         value={dashboardUser.id}
                       />
 
-                      <input
-                        type="hidden"
-                        name="new_status"
-                        value={
-                          dashboardUser.is_active ? "false" : "true"
-                        }
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <Field
+                          label="Full Name / पूरा नाम"
+                          name="full_name"
+                          defaultValue={dashboardUser.full_name}
+                        />
+
+                        <div>
+                          <label className="mb-2 block text-sm font-bold">
+                            Role / भूमिका
+                          </label>
+
+                          <select
+                            name="role"
+                            defaultValue={dashboardUser.role}
+                            className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none"
+                          >
+                            <option value="sadhak">
+                              Sadhak
+                            </option>
+
+                            <option value="admin">
+                              Admin
+                            </option>
+
+                            {currentUserIsSuperAdmin && (
+                              <option value="super_admin">
+                                Super Admin
+                              </option>
+                            )}
+                          </select>
+                        </div>
+                      </div>
+
+                      <PermissionsEditor
+                        permissions={permissions}
                       />
 
                       <button
                         type="submit"
-                        className={`rounded-2xl px-5 py-3 text-sm font-bold ${
-                          dashboardUser.is_active
-                            ? "bg-red-100 text-red-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
+                        className="mt-6 w-full rounded-2xl bg-orange-700 px-6 py-3 font-extrabold text-white"
                       >
-                        {dashboardUser.is_active
-                          ? "Disable User"
-                          : "Enable User"}
+                        Save User Permissions
+                        <span className="block text-sm font-normal">
+                          अनुमतियां सेव करें
+                        </span>
                       </button>
                     </form>
-                  )}
-                </div>
 
-                <form
-                  action={updateUserPermissionsAction}
-                  className="mt-6"
-                >
-                  <input
-                    type="hidden"
-                    name="user_id"
-                    value={dashboardUser.id}
-                  />
+                    <form
+                      action={resetUserPasswordAction}
+                      className="mt-6 flex flex-col gap-3 rounded-2xl bg-orange-50 p-4 md:flex-row md:items-end"
+                    >
+                      <input
+                        type="hidden"
+                        name="user_id"
+                        value={dashboardUser.id}
+                      />
 
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <Field
-                      label="Full Name"
-                      name="full_name"
-                      defaultValue={dashboardUser.full_name}
-                    />
+                      <div className="flex-1">
+                        <label className="mb-2 block text-sm font-bold">
+                          New Password / नया पासवर्ड
+                        </label>
 
-                    <div>
-                      <label className="mb-2 block text-sm font-bold">
-                        Role
-                      </label>
+                        <input
+                          type="password"
+                          name="new_password"
+                          minLength={8}
+                          placeholder="Minimum 8 characters"
+                          className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none"
+                          required
+                        />
+                      </div>
 
-                      <select
-                        name="role"
-                        defaultValue={dashboardUser.role}
-                        className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none"
+                      <button
+                        type="submit"
+                        className="rounded-2xl bg-purple-700 px-5 py-3 font-bold text-white"
                       >
-                     <option value="sadhak">Sadhak</option>
-<option value="admin">Admin</option>
-<option value="super_admin">Super Admin</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <PermissionsEditor permissions={permissions} />
-
-                  <button
-                    type="submit"
-                    className="mt-5 rounded-2xl bg-blue-700 px-6 py-3 font-bold text-white"
-                  >
-                    Save User Permissions
-                  </button>
-                </form>
-
-                <form
-                  action={resetUserPasswordAction}
-                  className="mt-6 flex flex-col gap-3 rounded-2xl bg-orange-50 p-4 md:flex-row md:items-end"
-                >
-                  <input
-                    type="hidden"
-                    name="user_id"
-                    value={dashboardUser.id}
-                  />
-
-                  <div className="flex-1">
-                    <label className="mb-2 block text-sm font-bold">
-                      New Password for @{dashboardUser.username}
-                    </label>
-
-                    <input
-                      type="password"
-                      name="new_password"
-                      placeholder="Minimum 8 characters"
-                      className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none"
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="rounded-2xl bg-stone-800 px-6 py-3 font-bold text-white"
-                  >
-                    Reset Password
-                  </button>
-                </form>
-              </article>
+                        Reset Password
+                      </button>
+                    </form>
+                  </>
+                )}
+              </div>
             );
           })}
         </section>
@@ -438,7 +491,9 @@ function PermissionsEditor({
           key={group.title}
           className="rounded-2xl border border-orange-100 bg-orange-50 p-4"
         >
-          <h4 className="font-extrabold">{group.title}</h4>
+          <h4 className="font-extrabold">
+            {group.title}
+          </h4>
 
           <p className="text-sm font-semibold text-orange-800">
             {group.titleHi}
@@ -453,7 +508,9 @@ function PermissionsEditor({
                 <input
                   type="checkbox"
                   name={name}
-                  defaultChecked={Boolean(permissions[name])}
+                  defaultChecked={Boolean(
+                    permissions[name]
+                  )}
                   className="mt-0.5 h-5 w-5 accent-orange-700"
                 />
 
@@ -498,7 +555,10 @@ function Field({
   );
 }
 
-function getErrorMessage(error: string, message?: string) {
+function getErrorMessage(
+  error: string,
+  message?: string
+) {
   if (error === "missing-fields") {
     return "Please complete all required fields.";
   }
@@ -516,11 +576,27 @@ function getErrorMessage(error: string, message?: string) {
   }
 
   if (error === "cannot-disable-self") {
-    return "You cannot disable your own Super Admin account.";
+    return "You cannot disable your own account.";
   }
 
   if (error === "user-not-found") {
     return "Dashboard user was not found.";
+  }
+
+  if (error === "super-admin-protected") {
+    return "Admin cannot edit, disable or reset a Super Admin account.";
+  }
+
+  if (error === "admin-cannot-create-super-admin") {
+    return "Admin cannot create a Super Admin account.";
+  }
+
+  if (error === "admin-cannot-promote-super-admin") {
+    return "Admin cannot promote another user to Super Admin.";
+  }
+
+  if (error === "access-denied") {
+    return "You do not have permission to access this page.";
   }
 
   return message || "Something went wrong. Please try again.";
