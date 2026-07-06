@@ -44,7 +44,9 @@ const permissionNames = [
   "manage_users",
 ] as const;
 
-async function requireSuperAdmin() {
+type ManagerRole = "super_admin" | "admin";
+
+async function requireUserManager() {
   const supabase = await createSupabaseServerClient();
 
   const {
@@ -52,24 +54,54 @@ async function requireSuperAdmin() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/admin");
+    redirect("/admin?error=login-required");
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from("admin_users")
     .select("id, username, full_name, role, is_active")
     .eq("id", user.id)
-    .maybeSingle();
+    .single();
 
   if (
+    error ||
     !profile ||
     !profile.is_active ||
-    profile.role !== "super_admin"
+    !["super_admin", "admin"].includes(profile.role)
   ) {
-    redirect("/admin");
+    redirect("/admin?error=access-denied");
   }
 
-  return profile;
+  return {
+    id: profile.id as string,
+    username: profile.username as string,
+    full_name: profile.full_name as string,
+    role: profile.role as ManagerRole,
+    is_active: profile.is_active as boolean,
+  };
+}
+
+async function protectSuperAdminTarget(
+  actorRole: ManagerRole,
+  targetUserId: string
+) {
+  if (actorRole === "super_admin") {
+    return;
+  }
+
+  const { data: targetUser, error } = await supabaseAdmin
+    .from("admin_users")
+    .select("id, role")
+    .eq("id", targetUserId)
+    .single();
+
+  if (error || !targetUser) {
+    redirect("/admin/users?error=user-not-found");
+  }
+
+  if (targetUser.role === "super_admin") {
+    redirect("/admin/users?error=super-admin-protected");
+  }
 }
 
 function normalizeUsername(username: string) {
@@ -88,8 +120,18 @@ function getPermissionValues(formData: FormData) {
   );
 }
 
+function getRolePermissionValues(role: string, formData: FormData) {
+  if (role === "super_admin" || role === "admin") {
+    return Object.fromEntries(
+      permissionNames.map((permission) => [permission, true])
+    );
+  }
+
+  return getPermissionValues(formData);
+}
+
 export async function createDashboardUserAction(formData: FormData) {
-  const currentAdmin = await requireSuperAdmin();
+  const currentAdmin = await requireUserManager();
 
   const fullName = String(formData.get("full_name") || "").trim();
   const username = normalizeUsername(
@@ -112,6 +154,10 @@ export async function createDashboardUserAction(formData: FormData) {
 
   if (!["super_admin", "admin", "sadhak"].includes(role)) {
     redirect("/admin/users?error=invalid-role");
+  }
+
+  if (currentAdmin.role === "admin" && role === "super_admin") {
+    redirect("/admin/users?error=admin-cannot-create-super-admin");
   }
 
   const loginEmail = `${username}@diksha.local`;
@@ -168,17 +214,7 @@ export async function createDashboardUserAction(formData: FormData) {
     );
   }
 
-  const permissionValues =
-  role === "super_admin" || role === "admin"
-    ? Object.fromEntries(
-        permissionNames.map((permission) => [
-          permission,
-          permission === "manage_users"
-            ? role === "super_admin"
-            : true,
-        ])
-      )
-    : getPermissionValues(formData);
+  const permissionValues = getRolePermissionValues(role, formData);
 
   const { error: permissionError } = await supabaseAdmin
     .from("admin_user_permissions")
@@ -220,7 +256,7 @@ export async function createDashboardUserAction(formData: FormData) {
 }
 
 export async function updateUserPermissionsAction(formData: FormData) {
-  const currentAdmin = await requireSuperAdmin();
+  const currentAdmin = await requireUserManager();
 
   const userId = String(formData.get("user_id") || "");
   const fullName = String(formData.get("full_name") || "").trim();
@@ -228,6 +264,16 @@ export async function updateUserPermissionsAction(formData: FormData) {
 
   if (!userId || !fullName) {
     redirect("/admin/users?error=missing-fields");
+  }
+
+  if (!["super_admin", "admin", "sadhak"].includes(role)) {
+    redirect("/admin/users?error=invalid-role");
+  }
+
+  await protectSuperAdminTarget(currentAdmin.role, userId);
+
+  if (currentAdmin.role === "admin" && role === "super_admin") {
+    redirect("/admin/users?error=admin-cannot-promote-super-admin");
   }
 
   const { data: oldProfile } = await supabaseAdmin
@@ -240,17 +286,7 @@ export async function updateUserPermissionsAction(formData: FormData) {
     redirect("/admin/users?error=user-not-found");
   }
 
-  const permissionValues =
-  role === "super_admin" || role === "admin"
-    ? Object.fromEntries(
-        permissionNames.map((permission) => [
-          permission,
-          permission === "manage_users"
-            ? role === "super_admin"
-            : true,
-        ])
-      )
-    : getPermissionValues(formData);
+  const permissionValues = getRolePermissionValues(role, formData);
 
   const { error: profileError } = await supabaseAdmin
     .from("admin_users")
@@ -319,7 +355,7 @@ export async function updateUserPermissionsAction(formData: FormData) {
 }
 
 export async function toggleUserStatusAction(formData: FormData) {
-  const currentAdmin = await requireSuperAdmin();
+  const currentAdmin = await requireUserManager();
 
   const userId = String(formData.get("user_id") || "");
   const newStatus = String(formData.get("new_status") || "") === "true";
@@ -327,6 +363,8 @@ export async function toggleUserStatusAction(formData: FormData) {
   if (!userId || userId === currentAdmin.id) {
     redirect("/admin/users?error=cannot-disable-self");
   }
+
+  await protectSuperAdminTarget(currentAdmin.role, userId);
 
   const { data: targetUser } = await supabaseAdmin
     .from("admin_users")
@@ -370,10 +408,13 @@ export async function toggleUserStatusAction(formData: FormData) {
   });
 
   revalidatePath("/admin/users");
+  redirect(
+    `/admin/users?success=${newStatus ? "user-enabled" : "user-disabled"}`
+  );
 }
 
 export async function resetUserPasswordAction(formData: FormData) {
-  const currentAdmin = await requireSuperAdmin();
+  const currentAdmin = await requireUserManager();
 
   const userId = String(formData.get("user_id") || "");
   const newPassword = String(formData.get("new_password") || "");
@@ -381,6 +422,8 @@ export async function resetUserPasswordAction(formData: FormData) {
   if (!userId || newPassword.length < 8) {
     redirect("/admin/users?error=short-password");
   }
+
+  await protectSuperAdminTarget(currentAdmin.role, userId);
 
   const { data: targetUser } = await supabaseAdmin
     .from("admin_users")

@@ -290,7 +290,8 @@ export default async function AdminPage({
           </p>
         </div>
 
-        {isSuperAdmin && (
+        {(adminProfile.role === "super_admin" ||
+  adminProfile.role === "admin") && (
   <Link
     href="/admin/users"
     className="rounded-2xl bg-purple-700 px-4 py-3 text-center text-xs font-bold text-white shadow-sm"
