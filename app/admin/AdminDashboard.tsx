@@ -48,6 +48,7 @@ pin_code: string | null;
   video_proof_attached: string | null;
 video_proof_other: string | null;
   referred_to: string | null;
+  referred_by: string | null;
   slots: {
     slot_date: string;
     slot_time: string;
@@ -112,6 +113,7 @@ type RegistrationRequest = {
 video_proof_attached: string | null;
 video_proof_other: string | null;
 referred_to: string | null;
+referred_by: string | null;
   created_at: string;
 };
 
@@ -194,6 +196,7 @@ const [pendingQuestionAnswers, setPendingQuestionAnswers] = useState<
       video_proof_attached: string;
       video_proof_other: string;
       referred_to: string;
+      referred_by: string;
     }
   >
 >({});
@@ -228,6 +231,7 @@ const [editRequestFormData, setEditRequestFormData] = useState({
   video_proof_attached: "",
   video_proof_other: "",
   referred_to: "",
+  referred_by: "",
 });
 
 const [isSavingRequestEdit, setIsSavingRequestEdit] = useState(false);
@@ -270,6 +274,7 @@ const [editFormData, setEditFormData] = useState({
   video_proof_attached: "",
   video_proof_other: "",
   referred_to: "",
+  referred_by: "",
 });
 
 const [isSavingRegistrationEdit, setIsSavingRegistrationEdit] = useState(false);
@@ -496,6 +501,8 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
         video_proof_attached: request.video_proof_attached || "",
         video_proof_other: request.video_proof_other || "",
         referred_to: request.referred_to || "",
+        referred_by: request.referred_by || "",
+        
       }
     );
   }
@@ -506,7 +513,8 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
       | "vrindavan_stay_days"
       | "video_proof_attached"
       | "video_proof_other"
-      | "referred_to",
+      | "referred_to"
+| "referred_by",
     value: string
   ) {
     const currentAnswers = getPendingQuestionAnswers(request);
@@ -546,6 +554,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
         video_proof_attached: answers.video_proof_attached || null,
         video_proof_other: answers.video_proof_other.trim() || null,
         referred_to: answers.referred_to || null,
+        referred_by: answers.referred_by || null,
       })
       .eq("id", request.id);
   
@@ -746,8 +755,9 @@ const confirmed = window.confirm(
       id_number: request.id_number || "",
       vrindavan_stay_days: request.vrindavan_stay_days || "",
       video_proof_attached: request.video_proof_attached || "",
-      video_proof_other: request.video_proof_other || "",
-      referred_to: request.referred_to || "",
+video_proof_other: request.video_proof_other || "",
+referred_to: request.referred_to || "",
+referred_by: request.referred_by || "",
     });
   }
   
@@ -817,6 +827,7 @@ const confirmed = window.confirm(
       video_proof_other:
         editRequestFormData.video_proof_other.trim() || null,
       referred_to: editRequestFormData.referred_to || null,
+      referred_by: editRequestFormData.referred_by || null,
       })
       .eq("id", editingRequest.id);
   
@@ -1662,6 +1673,7 @@ id_number: person.id_number || "",
 video_proof_attached: person.video_proof_attached || "",
 video_proof_other: person.video_proof_other || "",
 referred_to: person.referred_to || "",
+referred_by: person.referred_by || "",
       });
     }
     
@@ -1730,6 +1742,8 @@ video_proof_other:
   editFormData.video_proof_other.trim() || null,
 referred_to:
   editFormData.referred_to || null,
+  referred_by:
+  editFormData.referred_by || null,
         })
         .eq("id", editingRegistration.id);
     
@@ -2373,7 +2387,7 @@ referred_to:
     </button>
   </div>
 
-  <div className="grid gap-4 md:grid-cols-3">
+  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
     <div>
       <label className="mb-2 block text-sm font-bold text-stone-700">
         For how many days you are here in Vrindavan?
@@ -2473,6 +2487,36 @@ referred_to:
         <option value="MMB">MMB</option>
       </select>
     </div>
+    <div>
+  <label className="mb-2 block text-sm font-bold text-stone-700">
+    Referred By
+    <span className="block text-xs font-semibold text-orange-800">
+      भेजा किसने
+    </span>
+  </label>
+
+  <select
+    value={getPendingQuestionAnswers(request).referred_by}
+    onChange={(event) =>
+      handlePendingQuestionChange(
+        request,
+        "referred_by",
+        event.target.value
+      )
+    }
+    className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
+  >
+    <option value="">Select referred by</option>
+    <option value="SJS">SJS</option>
+    <option value="PAS">PAS</option>
+    <option value="VRS">VRS</option>
+    <option value="BBS">BBS</option>
+    <option value="MS">MS</option>
+    <option value="PRN">PRN</option>
+    <option value="SS">SS</option>
+    <option value="SRS">SRS</option>
+  </select>
+</div>
   </div>
 </div>
 
@@ -4109,6 +4153,40 @@ titleHi="स्थगित"
           ]}
         />
 
+<EditSelect
+  label="Referred To / किसके पास भेजा गया"
+  name="referred_to"
+  value={editFormData.referred_to}
+  onChange={handleEditFormChange}
+  options={[
+    ["", "Select referred to"],
+    ["ALB", "ALB"],
+    ["SS", "SS"],
+    ["SSB", "SSB"],
+    ["PS", "PS"],
+    ["GSB", "GSB"],
+    ["NNB", "NNB"],
+    ["MMB", "MMB"],
+  ]}
+/>
+
+<EditSelect
+  label="Referred By / भेजा किसने"
+  name="referred_by"
+  value={editRequestFormData.referred_by}
+  onChange={handleEditRequestFormChange}
+  options={[
+    ["", "Select referred by"],
+    ["SJS", "SJS"],
+    ["PAS", "PAS"],
+    ["VRS", "VRS"],
+    ["BBS", "BBS"],
+    ["MS", "MS"],
+    ["PRN", "PRN"],
+    ["SS", "SS"],
+    ["SRS", "SRS"],
+  ]}
+/>
         </div>
       </div>
 
