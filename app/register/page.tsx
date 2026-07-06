@@ -85,12 +85,33 @@ export default function RegisterPage() {
   const [isPincodeLoading, setIsPincodeLoading] = useState(false);
   const [pincodeMessage, setPincodeMessage] = useState("");
 
-  const needsHusbandName =
-    formData.gender === "Female" &&
-    (formData.maritalStatus === "Married" ||
-      formData.maritalStatus === "Widowed");
+  const needsSpouseName =
+  formData.maritalStatus === "Married" ||
+  formData.maritalStatus === "Widowed";
 
-  const needsFatherName = !needsHusbandName;
+const needsFatherName = !needsSpouseName;
+
+const spouseLabelEn =
+  formData.gender === "Male"
+    ? formData.maritalStatus === "Widowed"
+      ? "Late Wife Name"
+      : "Wife Name"
+    : formData.gender === "Female"
+    ? formData.maritalStatus === "Widowed"
+      ? "Late Husband Name"
+      : "Husband Name"
+    : "Spouse Name";
+
+const spouseLabelHi =
+  formData.gender === "Male"
+    ? formData.maritalStatus === "Widowed"
+      ? "स्वर्गीय पत्नी का नाम"
+      : "पत्नी का नाम"
+    : formData.gender === "Female"
+    ? formData.maritalStatus === "Widowed"
+      ? "स्वर्गीय पति का नाम"
+      : "पति का नाम"
+    : "जीवनसाथी का नाम";
 
   const finalOccupation =
     formData.occupation === "Other"
@@ -501,10 +522,15 @@ export default function RegisterPage() {
     }
 
     if (currentStep === 3) {
-      if (needsHusbandName && !formData.spouseName.trim()) {
+      if (needsSpouseName && !formData.spouseName.trim()) {
         return {
           isValid: false,
-          message: "Please enter husband name.\nकृपया पति का नाम भरें।",
+          message:
+            formData.gender === "Male"
+              ? "Please enter wife name.\nकृपया पत्नी का नाम भरें।"
+              : formData.gender === "Female"
+              ? "Please enter husband name.\nकृपया पति का नाम भरें।"
+              : "Please enter spouse name.\nकृपया जीवनसाथी का नाम भरें।",
         };
       }
 
@@ -646,8 +672,8 @@ export default function RegisterPage() {
         p_state: formData.state,
         p_country: finalCountry,
         p_pin_code: formData.pinCode,
-        p_spouse_name: needsHusbandName ? formData.spouseName : "",
-        p_father_name: needsFatherName ? formData.fatherName : "",
+        p_spouse_name: needsSpouseName ? formData.spouseName.trim() : "",
+        p_father_name: needsFatherName ? formData.fatherName.trim() : "",
         p_mother_name: "",
         p_family_name: formData.familyName,
         p_family_relation: finalFamilyRelation,
@@ -979,17 +1005,27 @@ export default function RegisterPage() {
               subtitleEn="Please provide family approval details based on marital status."
               subtitleHi="कृपया वैवाहिक स्थिति के अनुसार परिवार की स्वीकृति जानकारी भरें।"
             >
-              {needsHusbandName && (
-                <InputField
-                  labelEn="Husband Name"
-                  labelHi="पति का नाम"
-                  name="spouseName"
-                  value={formData.spouseName}
-                  onChange={handleChange}
-                  placeholder="Enter husband name"
-                  required
-                />
-              )}
+            {needsSpouseName && (
+  <InputField
+    labelEn={spouseLabelEn}
+    labelHi={spouseLabelHi}
+    name="spouseName"
+    value={formData.spouseName}
+    onChange={handleChange}
+    placeholder={
+      formData.gender === "Male"
+        ? formData.maritalStatus === "Widowed"
+          ? "Enter late wife name / स्वर्गीय पत्नी का नाम भरें"
+          : "Enter wife name / पत्नी का नाम भरें"
+        : formData.gender === "Female"
+        ? formData.maritalStatus === "Widowed"
+          ? "Enter late husband name / स्वर्गीय पति का नाम भरें"
+          : "Enter husband name / पति का नाम भरें"
+        : "Enter spouse name / जीवनसाथी का नाम भरें"
+    }
+    required
+  />
+)}
 
               {needsFatherName && (
                 <InputField
@@ -1283,9 +1319,9 @@ export default function RegisterPage() {
                 <ReviewRow
                   label="Family Approval / परिवार स्वीकृति"
                   value={
-                    needsHusbandName
-                      ? `Husband: ${formData.spouseName || "-"}`
-                      : `Father: ${formData.fatherName || "-"}`
+                    needsSpouseName
+                    ? `${spouseLabelEn}: ${formData.spouseName || "-"}`
+                    : `Father: ${formData.fatherName || "-"}`
                   }
                 />
 
