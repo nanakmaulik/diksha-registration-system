@@ -270,51 +270,53 @@ export default async function AdminPage({
 
   return (
     <>
-      <div className="admin-screen fixed right-4 top-4 z-50 flex items-center gap-3">
-        <div className="hidden rounded-2xl bg-white px-4 py-2 text-right shadow-sm md:block">
-          <p className="text-xs font-bold text-stone-500">
-            Logged in as
-          </p>
+      <div className="admin-screen fixed right-4 top-4 z-50 flex items-start gap-3">
+  {(adminProfile.role === "super_admin" ||
+    adminProfile.role === "admin") && (
+    <Link
+      href="/admin/users"
+      className="rounded-2xl bg-purple-700 px-4 py-3 text-center text-xs font-bold text-white shadow-sm"
+    >
+      Users & Permissions
+      <span className="block text-[10px] font-normal">
+        उपयोगकर्ता बनाएं
+      </span>
+    </Link>
+  )}
 
-          <p className="text-sm font-extrabold text-stone-800">
-            {adminProfile.full_name}
-          </p>
+  <div className="flex flex-col items-end gap-2">
+    <form action={adminLogoutAction}>
+      <button
+        type="submit"
+        className="rounded-full bg-red-100 px-4 py-2 text-xs font-bold text-red-700 shadow-sm"
+      >
+        Logout
+        <span className="block text-[10px] font-normal">
+          लॉगआउट
+        </span>
+      </button>
+    </form>
 
-          <p className="text-xs font-semibold text-orange-700">
-            @{adminProfile.username} ·{" "}
-            {adminProfile.role === "super_admin"
-  ? "Super Admin"
-  : adminProfile.role === "admin"
-  ? "Admin"
-  : "Sadhak"}
-          </p>
-        </div>
+    <div className="hidden rounded-2xl bg-white px-4 py-2 text-right shadow-sm md:block">
+      <p className="text-xs font-bold text-stone-500">
+        Logged in as
+      </p>
 
-        {(adminProfile.role === "super_admin" ||
-  adminProfile.role === "admin") && (
-  <Link
-    href="/admin/users"
-    className="rounded-2xl bg-purple-700 px-4 py-3 text-center text-xs font-bold text-white shadow-sm"
-  >
-    Users & Permissions
-    <span className="block text-[10px] font-normal">
-      उपयोगकर्ता बनाएं
-    </span>
-  </Link>
-)}
+      <p className="text-sm font-extrabold text-stone-800">
+        {adminProfile.full_name}
+      </p>
 
-        <form action={adminLogoutAction}>
-          <button
-            type="submit"
-            className="rounded-full bg-red-100 px-4 py-2 text-xs font-bold text-red-700 shadow-sm"
-          >
-            Logout
-            <span className="block text-[10px] font-normal">
-              लॉगआउट
-            </span>
-          </button>
-        </form>
-      </div>
+      <p className="text-xs font-semibold text-orange-700">
+        @{adminProfile.username} ·{" "}
+        {adminProfile.role === "super_admin"
+          ? "Super Admin"
+          : adminProfile.role === "admin"
+          ? "Admin"
+          : "Sadhak"}
+      </p>
+    </div>
+  </div>
+</div>
 
       <AdminDashboard
   registrations={cleanedRegistrations}
