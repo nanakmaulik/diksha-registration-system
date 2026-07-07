@@ -4333,7 +4333,7 @@ titleHi="स्थगित"
           ]}
         />
 
-<EditSelect
+{/* <EditSelect
   label="Referred To / किसके पास भेजा गया"
   name="referred_to"
   value={editFormData.referred_to}
@@ -4348,7 +4348,7 @@ titleHi="स्थगित"
     ["NNB", "NNB"],
     ["MMB", "MMB"],
   ]}
-/>
+/> */}
 
 <EditSelect
   label="Referred By / भेजा किसने"
