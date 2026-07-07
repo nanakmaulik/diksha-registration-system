@@ -3240,10 +3240,10 @@ titleHi="स्थगित"
     onClick={handlePrintDevoteeForms}
     className="rounded-2xl bg-green-700 px-5 py-3 font-bold text-white"
   >
-    Print Devotee Forms
-    <span className="block text-sm font-normal">
-      सभी फॉर्म प्रिंट करें
-    </span>
+   Print Selected Devotee Form
+<span className="block text-sm font-normal">
+  चुने हुए श्रद्धालु का फॉर्म प्रिंट करें
+</span>
   </button>
 
   <button
