@@ -416,6 +416,40 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     setIsUpdatingAction(true);
 
     if (actionToSave.actionType === "status") {
+      if (actionToSave.newStatus === "Diksha Completed") {
+        const selectedPerson = registrations.find(
+          (person) =>
+            person.id === selectedAction.registrationId
+        );
+    
+        const effectiveDikshaDate = selectedPerson
+          ? getEffectiveDikshaDate(selectedPerson)
+          : "";
+    
+        if (
+          selectedPerson &&
+          !selectedPerson.diksha_date &&
+          effectiveDikshaDate
+        ) {
+          const { error: dikshaDateError } = await supabase
+            .from("registrations")
+            .update({
+              diksha_date: effectiveDikshaDate,
+            })
+            .eq("id", selectedAction.registrationId);
+    
+          if (dikshaDateError) {
+            alert(
+              "Diksha date save error: " +
+                dikshaDateError.message
+            );
+    
+            setIsUpdatingAction(false);
+            return;
+          }
+        }
+      }
+    
       const { error } = await supabase.rpc("update_candidate_status", {
         p_registration_id: selectedAction.registrationId,
         p_new_status: actionToSave.newStatus,
@@ -1243,6 +1277,37 @@ referred_by: request.referred_by || "",
     setIsBulkScheduling(true);
   
     for (const registrationId of selectedRegistrationIds) {
+      const selectedPerson = registrations.find(
+        (person) => person.id === registrationId
+      );
+    
+      const effectiveDikshaDate = selectedPerson
+        ? getEffectiveDikshaDate(selectedPerson)
+        : "";
+    
+      if (
+        selectedPerson &&
+        !selectedPerson.diksha_date &&
+        effectiveDikshaDate
+      ) {
+        const { error: dikshaDateError } = await supabase
+          .from("registrations")
+          .update({
+            diksha_date: effectiveDikshaDate,
+          })
+          .eq("id", registrationId);
+    
+        if (dikshaDateError) {
+          alert(
+            "Diksha date save error: " +
+              dikshaDateError.message
+          );
+    
+          setIsBulkScheduling(false);
+          return;
+        }
+      }
+    
       const { error: attendanceError } = await supabase.rpc(
         "update_candidate_attendance",
         {
@@ -1304,9 +1369,21 @@ referred_by: request.referred_by || "",
         (person.city || "").toLowerCase().includes(searchText) ||
         statusValue.toLowerCase().includes(searchText);
 
+        const effectiveDikshaDate =
+        getEffectiveDikshaDate(person);
+      
+      const isDikshaDateReport =
+        reportFilter === "scheduled_diksha" ||
+        reportFilter === "diksha_completed" ||
+        reportFilter === "today_diksha" ||
+        reportFilter === "rescheduled_diksha";
+      
       const matchesSlot =
-        slotDate === "all" || person.slots?.slot_date === slotDate;
-
+        slotDate === "all" ||
+        (isDikshaDateReport
+          ? effectiveDikshaDate === slotDate
+          : person.slots?.slot_date === slotDate);
+      
       let matchesReport = true;
 
       if (reportFilter === "scheduled_final_meetings") {
@@ -1346,7 +1423,8 @@ referred_by: request.referred_by || "",
       }
 
       if (reportFilter === "today_diksha") {
-        matchesReport = person.diksha_date === todayDate;
+        matchesReport =
+          effectiveDikshaDate === todayDate;
       }
       if (reportFilter === "rescheduled_diksha") {
         const defaultDikshaDate = person.slots?.slot_date
@@ -1500,6 +1578,22 @@ referred_by: request.referred_by || "",
     )
     .sort((a, b) => a.slot_date.localeCompare(b.slot_date))
     .slice(0, showAllSlots ? 100 : 8);
+
+    const isDikshaDateReport =
+    reportFilter === "scheduled_diksha" ||
+    reportFilter === "diksha_completed" ||
+    reportFilter === "today_diksha" ||
+    reportFilter === "rescheduled_diksha";
+  
+  const availableReportDates = useMemo(() => {
+    const dates = isDikshaDateReport
+      ? registrations
+          .map((person) => getEffectiveDikshaDate(person))
+          .filter((date): date is string => Boolean(date))
+      : slots.map((slot) => slot.slot_date);
+  
+    return Array.from(new Set(dates)).sort();
+  }, [registrations, slots, isDikshaDateReport]);
 
   const selectedDateLabel =
     slotDate === "all" ? "All Slots" : formatDate(slotDate);
@@ -3218,12 +3312,17 @@ titleHi="स्थगित"
               onChange={(event) => setSlotDate(event.target.value)}
               className="rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
             >
-              <option value="all">All Dates / सभी तारीखें</option>
-              {slots.map((slot) => (
-                <option key={slot.id} value={slot.slot_date}>
-                  {formatDate(slot.slot_date)}
-                </option>
-              ))}
+             <option value="all">
+  {isDikshaDateReport
+    ? "All Diksha Dates / सभी दीक्षा तारीखें"
+    : "All Meeting Dates / सभी मीटिंग तारीखें"}
+</option>
+
+{availableReportDates.map((date) => (
+  <option key={date} value={date}>
+    {formatDate(date)}
+  </option>
+))}
             </select>
 
             <button
@@ -3471,20 +3570,47 @@ titleHi="स्थगित"
                               {person.diksha_attendance || "Not Marked"}
                             </p>
 
-                            {person.diksha_date && (
-  <>
-    <p>
-    Diksha Date: {formatDate(person.diksha_date)}
-    </p>
+                            {(() => {
+  const meetingDate =
+    person.slots?.slot_date ||
+    person.final_meeting_date ||
+    "";
 
-    {person.slots?.slot_date &&
-    person.diksha_date !== addDaysToDateString(person.slots.slot_date, 1) ? (
-      <p className="font-bold text-purple-700">Rescheduled</p>
-    ) : (
-      <p className="font-bold text-green-700">Default Next-Day</p>
-    )}
-  </>
-)}
+  const defaultDikshaDate = meetingDate
+    ? addDaysToDateString(meetingDate, 1)
+    : "";
+
+  const effectiveDikshaDate =
+    getEffectiveDikshaDate(person);
+
+  if (!effectiveDikshaDate) {
+    return null;
+  }
+
+  const isRescheduled =
+    Boolean(person.diksha_date) &&
+    Boolean(defaultDikshaDate) &&
+    person.diksha_date !== defaultDikshaDate;
+
+  return (
+    <>
+      <p>
+        Diksha Date:{" "}
+        {formatDate(effectiveDikshaDate)}
+      </p>
+
+      {isRescheduled ? (
+        <p className="font-bold text-purple-700">
+          Rescheduled
+        </p>
+      ) : (
+        <p className="font-bold text-green-700">
+          Default Next-Day
+        </p>
+      )}
+    </>
+  );
+})()}
                           </div>
 
                           {person.evaluator_name && (
@@ -5085,7 +5211,22 @@ function addDaysToDateString(dateString: string, days: number) {
 
   return `${year}-${month}-${day}`;
 }
+function getEffectiveDikshaDate(person: Registration) {
+  if (person.diksha_date) {
+    return person.diksha_date;
+  }
 
+  const meetingDate =
+    person.slots?.slot_date ||
+    person.final_meeting_date ||
+    "";
+
+  if (!meetingDate) {
+    return "";
+  }
+
+  return addDaysToDateString(meetingDate, 1);
+}
 function maskMobile(mobile: string) {
   if (!mobile || mobile.length < 4) return mobile;
   return `${mobile.slice(0, 2)}xxxxxx${mobile.slice(-2)}`;
