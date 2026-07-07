@@ -3457,12 +3457,18 @@ titleHi="स्थगित"
                       <TableCell>{person.city || "-"}</TableCell>
 
                       <TableCell>
-                        {person.slots?.slot_date
-                          ? formatDate(person.slots.slot_date)
-                          : "-"}
-                      </TableCell>
+  {person.final_meeting_date
+    ? formatDate(person.final_meeting_date)
+    : person.slots?.slot_date
+    ? formatDate(person.slots.slot_date)
+    : "-"}
+</TableCell>
 
-                      <TableCell>{person.slots?.slot_time || "-"}</TableCell>
+<TableCell>
+  {person.final_meeting_time ||
+    person.slots?.slot_time ||
+    "-"}
+</TableCell>
 
                       <TableCell>
                         <div className="flex flex-wrap gap-2">
@@ -3571,10 +3577,10 @@ titleHi="स्थगित"
                             </p>
 
                             {(() => {
-  const meetingDate =
-    person.slots?.slot_date ||
-    person.final_meeting_date ||
-    "";
+ const meetingDate =
+ person.final_meeting_date ||
+ person.slots?.slot_date ||
+ "";
 
   const defaultDikshaDate = meetingDate
     ? addDaysToDateString(meetingDate, 1)
