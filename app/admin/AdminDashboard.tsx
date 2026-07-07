@@ -300,6 +300,10 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     name: string;
     meetingDate?: string;
     meetingTime?: string;
+    members?: {
+      name: string;
+      displayToken: string;
+    }[];
   } | null>(null);
 
   useEffect(() => {
@@ -609,28 +613,38 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
 
   async function handleApproveRequest(request: RegistrationRequest) {
     if (!requestUpdatedBy.trim()) {
-      alert("Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।");
+      alert(
+        "Please enter Sadhak name.\nकृपया Sadhak का नाम भरें।"
+      );
       return;
     }
   
-    const candidateName = (request.full_name || "-").toUpperCase();
-
-const confirmed = window.confirm(
-  `Accept this request and generate token for:\n\n${candidateName}\n\nक्या आप इस request को accept करके token generate करना चाहते हैं?`
-);
+    const candidateName = (
+      request.full_name || "-"
+    ).toUpperCase();
+  
+    const confirmed = window.confirm(
+      `Accept this request and generate token for:\n\n${candidateName}\n\nक्या आप इस request को accept करके token generate करना चाहते हैं?`
+    );
   
     if (!confirmed) return;
-
-    const answersSaved = await savePendingQuestionAnswers(request, false);
-    
+  
+    const answersSaved = await savePendingQuestionAnswers(
+      request,
+      false
+    );
+  
     if (!answersSaved) return;
-    
+  
     setProcessingRequestId(request.id);
   
-    const { data, error } = await supabase.rpc("approve_registration_request", {
-      p_request_id: request.id,
-      p_verified_by: requestUpdatedBy.trim(),
-    });
+    const { data, error } = await supabase.rpc(
+      "approve_registration_request",
+      {
+        p_request_id: request.id,
+        p_verified_by: requestUpdatedBy.trim(),
+      }
+    );
   
     if (error) {
       alert("Request approval error: " + error.message);
@@ -638,7 +652,9 @@ const confirmed = window.confirm(
       return;
     }
   
-    const generatedToken = Array.isArray(data) ? data[0]?.token : "";
+    const generatedToken = Array.isArray(data)
+      ? data[0]?.token
+      : "";
   
     setTokenSuccess({
       token: generatedToken || "-",
@@ -646,7 +662,7 @@ const confirmed = window.confirm(
       meetingDate: request.requested_meeting_date || "",
       meetingTime: request.requested_meeting_time || "",
     });
-    
+  
     setProcessingRequestId(null);
   }
   async function handleBulkApproveRequests(groupType: "Couple" | "Family") {
@@ -706,17 +722,31 @@ const confirmed = window.confirm(
       return;
     }
   
-    const generatedToken = Array.isArray(data) ? data[0]?.token : "";
-  
-    setTokenSuccess({
-      token: generatedToken || "-",
-      name: `${groupType} Token - ${selectedRequestIds.length} candidates`,
-      meetingDate: selectedRequests[0]?.requested_meeting_date || "",
-      meetingTime: selectedRequests[0]?.requested_meeting_time || "",
-    });
-  
-    setSelectedRequestIds([]);
-    setIsBulkApprovingRequests(false);
+    const generatedToken = Array.isArray(data)
+  ? data[0]?.token
+  : "";
+
+const tokenMembers = selectedRequests.map(
+  (selectedRequest, index) => ({
+    name: selectedRequest.full_name || "-",
+    displayToken: `${generatedToken || "-"}${String.fromCharCode(
+      65 + index
+    )}`,
+  })
+);
+
+setTokenSuccess({
+  token: generatedToken || "-",
+  name: `${groupType} Token - ${selectedRequestIds.length} candidates`,
+  meetingDate:
+    selectedRequests[0]?.requested_meeting_date || "",
+  meetingTime:
+    selectedRequests[0]?.requested_meeting_time || "",
+  members: tokenMembers,
+});
+
+setSelectedRequestIds([]);
+setIsBulkApprovingRequests(false);
   }
 
   async function handleRejectRequest(request: RegistrationRequest) {
@@ -1730,12 +1760,20 @@ referred_by: request.referred_by || "",
     
       const result = Array.isArray(data) ? data[0] : null;
     
-      setTokenSuccess({
-        token: result?.token || "-",
-        name: `${groupType} Token - ${selectedRegistrationIds.length} candidates`,
-        meetingDate: result?.slot_date || "",
-        meetingTime: result?.slot_time || "",
-      });
+      const generatedToken = result?.token || "-";
+
+const tokenMembers = selectedPeople.map((person, index) => ({
+  name: person.full_name || "-",
+  displayToken: `${generatedToken}${String.fromCharCode(65 + index)}`,
+}));
+
+setTokenSuccess({
+  token: generatedToken,
+  name: `${groupType} Token - ${selectedRegistrationIds.length} candidates`,
+  meetingDate: result?.slot_date || "",
+  meetingTime: result?.slot_time || "",
+  members: tokenMembers,
+});
     
       setSelectedRegistrationIds([]);
       setIsConvertingGroupToken(false);
@@ -3437,7 +3475,9 @@ titleHi="स्थगित"
     className="h-5 w-5 accent-orange-700"
   />
 </TableCell>
-                      <TableCell>{person.token}</TableCell>
+<TableCell>
+  {getTokenWithMemberLetter(person, registrations)}
+</TableCell>
 
                       <TableCell>
                         <div>
@@ -4363,7 +4403,8 @@ titleHi="स्थगित"
               <div>
                 <h3 className="text-2xl font-extrabold">Candidate History</h3>
                 <p className="mt-1 text-sm text-stone-600">
-                  {selectedHistory.token} - {selectedHistory.full_name || "-"}
+                {getTokenWithMemberLetter(selectedHistory, registrations)} -{" "}
+                {selectedHistory.full_name || "-"}
                 </p>
                 <p className="text-sm text-stone-600">
                   उम्मीदवार की पूरी कार्यवाही का इतिहास
@@ -4502,7 +4543,8 @@ titleHi="स्थगित"
                     <strong>Date Of Mantra Diksha :</strong> {mantraDate}
                   </p>
                   <p>
-                    <strong>Card No :</strong> {person.token || "-"}
+                  <strong>Card No :</strong>{" "}
+                  {getTokenWithMemberLetter(person, registrations)}
                   </p>
                 </div>
 
@@ -4976,25 +5018,66 @@ const isOverCapacity = slot ? slot.current_count >= slot.capacity : false;
       नया टोकन नंबर सफलतापूर्वक बन गया
       </p>
 
-      <p className="mt-5 text-sm font-semibold text-stone-600">
-        Candidate / उम्मीदवार
+      {tokenSuccess.members && tokenSuccess.members.length > 0 ? (
+  <div className="mt-6">
+    <p className="text-sm font-bold uppercase tracking-wide text-stone-600">
+      Devotee Tokens / श्रद्धालु टोकन
+    </p>
+
+    <div className="mt-4 space-y-3">
+      {tokenSuccess.members.map((member) => (
+        <div
+          key={`${member.displayToken}-${member.name}`}
+          className="flex flex-col gap-2 rounded-2xl border-2 border-orange-200 bg-orange-50 p-4 text-left md:flex-row md:items-center md:justify-between"
+        >
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
+              Devotee Name / श्रद्धालु का नाम
+            </p>
+
+            <p className="mt-1 text-xl font-extrabold text-stone-900">
+              {member.name}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
+            <p className="text-xs font-bold uppercase text-orange-700">
+              Token
+            </p>
+
+            <p className="mt-1 text-3xl font-black text-orange-900">
+              {member.displayToken}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+) : (
+  <>
+    <p className="mt-5 text-sm font-semibold text-stone-600">
+      Candidate / उम्मीदवार
+    </p>
+
+    <p className="mt-1 text-2xl font-extrabold text-stone-900">
+      {tokenSuccess.name}
+    </p>
+
+    <div className="mt-6 rounded-3xl border-2 border-orange-300 bg-orange-50 p-6">
+      <p className="text-sm font-bold uppercase tracking-wide text-orange-800">
+        Token Number / टोकन नंबर
       </p>
 
-      <p className="mt-1 text-2xl font-extrabold text-stone-900">
-        {tokenSuccess.name}
+      <p className="mt-3 text-sm font-bold uppercase tracking-wide text-stone-600">
+        This is your new token number
       </p>
 
-      <div className="mt-6 rounded-3xl border-2 border-orange-300 bg-orange-50 p-6">
-        <p className="text-sm font-bold uppercase tracking-wide text-orange-800">
-          Token Number / टोकन नंबर
-        </p>
-        <p className="mt-3 text-sm font-bold uppercase tracking-wide text-stone-600">
-  This is your new token number
-</p>
-        <p className="mt-3 text-6xl font-black text-orange-900 md:text-7xl">
-          {tokenSuccess.token}
-        </p>
-      </div>
+      <p className="mt-3 text-6xl font-black text-orange-900 md:text-7xl">
+        {tokenSuccess.token}
+      </p>
+    </div>
+  </>
+)}
       <div className="mt-4 rounded-3xl border border-green-200 bg-green-50 p-5">
   <p className="text-sm font-bold uppercase tracking-wide text-green-800">
     Meeting Date / मीटिंग तारीख
@@ -5365,7 +5448,7 @@ function getTokenWithMemberLetter(
 
   const letter = String.fromCharCode(65 + Math.max(memberIndex, 0));
 
-  return `${token} ${letter}`;
+  return `${token}${letter}`;
 }
 
 function getPrintGroupTitle(token: string | null, gender: string | null) {
