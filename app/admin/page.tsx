@@ -205,13 +205,14 @@ export default async function AdminPage({
       evaluator_notes,
       admin_remarks,
       created_at,
-      aadhaar_file_url,
-      aadhaar_file_name,
-      referred_to,
-      slots (
-        slot_date,
-        slot_time
-      )
+     aadhaar_file_url,
+aadhaar_file_name,
+referred_to,
+referred_by,
+slots (
+  slot_date,
+  slot_time
+)
     `
     )
     .order("final_meeting_date", { ascending: true })
