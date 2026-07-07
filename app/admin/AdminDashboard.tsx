@@ -1625,6 +1625,12 @@ referred_by: request.referred_by || "",
     return Array.from(new Set(dates)).sort();
   }, [registrations, slots, isDikshaDateReport]);
 
+  const selectedDevoteeForms = useMemo(() => {
+    return filteredRegistrations.filter((person) =>
+      selectedRegistrationIds.includes(person.id)
+    );
+  }, [filteredRegistrations, selectedRegistrationIds]);
+
   const selectedDateLabel =
     slotDate === "all" ? "All Slots" : formatDate(slotDate);
 
@@ -1690,14 +1696,9 @@ referred_by: request.referred_by || "",
     }
     
     function handlePrintDevoteeForms() {
-      if (slotDate === "all") {
-        alert("Please select one date first.\nकृपया पहले एक तारीख चुनें।");
-        return;
-      }
-    
-      if (filteredRegistrations.length === 0) {
+      if (selectedDevoteeForms.length === 0) {
         alert(
-          "No registrations found for this date.\nइस तारीख के लिए कोई पंजीकरण नहीं मिला।"
+          "Please select at least one devotee first.\nकृपया पहले कम से कम एक श्रद्धालु चुनें।"
         );
         return;
       }
@@ -3235,11 +3236,12 @@ titleHi="स्थगित"
     दीक्षा पूर्ण करें
   </span>
 </button>
-  <button
-    type="button"
-    onClick={handlePrintDevoteeForms}
-    className="rounded-2xl bg-green-700 px-5 py-3 font-bold text-white"
-  >
+<button
+  type="button"
+  onClick={handlePrintDevoteeForms}
+  disabled={selectedDevoteeForms.length === 0}
+  className="rounded-2xl bg-green-700 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+>
    Print Selected Devotee Form
 <span className="block text-sm font-normal">
   चुने हुए श्रद्धालु का फॉर्म प्रिंट करें
@@ -4510,7 +4512,7 @@ titleHi="स्थगित"
           printMode === "forms" ? "" : "print-hidden"
         } hidden`}
       >
-        {filteredRegistrations.map((person, index) => {
+        {selectedDevoteeForms.map((person, index) => {
           const mantraDate = person.diksha_date
             ? formatDate(person.diksha_date)
             : "____ / ____ / ______";
