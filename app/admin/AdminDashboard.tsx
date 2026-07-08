@@ -3981,6 +3981,24 @@ titleHi="स्थगित"
     ["MMB", "MMB"],
   ]}
 />
+
+<EditSelect
+  label="Referred By / भेजा किसने"
+  name="referred_by"
+  value={editFormData.referred_by}
+  onChange={handleEditFormChange}
+  options={[
+    ["", "Select referred by"],
+    ["SJS", "SJS"],
+    ["PAS", "PAS"],
+    ["VRS", "VRS"],
+    ["BBS", "BBS"],
+    ["MS", "MS"],
+    ["PRN", "PRN"],
+    ["SS", "SS"],
+    ["SRS", "SRS"],
+  ]}
+/>
         <EditInput
           label="Husband / Wife Name"
           name="spouse_name"
@@ -4523,19 +4541,26 @@ titleHi="स्थगित"
             ? formatDate(person.final_meeting_date)
             : "-";
 
-            const guardianLabel =
-            person.marital_status === "Married"
-              ? "Husband / Wife Name"
-              : person.marital_status === "Widowed"
-              ? "Late Husband / Wife Name"
-              : "Father / Mother Name";
-              const guardianValue =
-              person.marital_status === "Married" ||
-              person.marital_status === "Widowed"
-                ? person.spouse_name || "-"
-                : `Father: ${person.father_name || "-"} / Mother: ${
-                    person.mother_name || "-"
-                  }`;
+            const shouldShowHusbandName =
+  person.gender === "Female" &&
+  (person.marital_status === "Married" ||
+    person.marital_status === "Widowed");
+
+const guardianLabel = shouldShowHusbandName
+  ? person.marital_status === "Widowed"
+    ? "Late Husband Name"
+    : "Husband Name"
+  : person.gender === "Male"
+  ? "Father Name"
+  : "Father / Mother Name";
+
+const guardianValue = shouldShowHusbandName
+  ? person.spouse_name || "-"
+  : person.gender === "Male"
+  ? person.father_name || "-"
+  : `Father: ${person.father_name || "-"} / Mother: ${
+      person.mother_name || "-"
+    }`;
 
           return (
             <div key={person.id} className="devotee-form-page">
