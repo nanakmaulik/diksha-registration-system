@@ -165,58 +165,87 @@ export default async function AdminPage({
     );
   }
 
-  const { data: registrations, error: registrationsError } = await supabase
-    .from("registrations")
-    .select(
-      `
-      id,
-      token,
-      slot_id,
-      full_name,
-      age,
-      gender,
-      occupation,
-      marital_status,
-      mobile,
-      whatsapp,
-      address,
-      city,
-      state,
-      country,
-      pin_code,
-      spouse_name,
-      father_name,
-      mother_name,
-      family_name,
-      family_relation,
-      family_mobile,
-      id_type,
-      id_number,
-      remarks_by,
-      status,
-      candidate_status,
-      final_meeting_attendance,
-      diksha_attendance,
-      final_meeting_date,
-      final_meeting_time,
-      diksha_date,
-      diksha_time,
-      evaluator_name,
-      evaluator_notes,
-      admin_remarks,
-      created_at,
-     aadhaar_file_url,
-aadhaar_file_name,
-referred_to,
-referred_by,
-slots (
-  slot_date,
-  slot_time
-)
-    `
-    )
-    .order("final_meeting_date", { ascending: true })
-    .order("created_at", { ascending: true });
+  const registrations: any[] = [];
+  let registrationsError: any = null;
+  
+  const registrationBatchSize = 1000;
+  let registrationFrom = 0;
+  
+  while (true) {
+    const { data: registrationBatch, error: registrationBatchError } =
+      await supabase
+        .from("registrations")
+        .select(
+          `
+          id,
+          token,
+          slot_id,
+          full_name,
+          age,
+          gender,
+          occupation,
+          marital_status,
+          mobile,
+          whatsapp,
+          address,
+          city,
+          state,
+          country,
+          pin_code,
+          spouse_name,
+          father_name,
+          mother_name,
+          family_name,
+          family_relation,
+          family_mobile,
+          id_type,
+          id_number,
+          remarks_by,
+          status,
+          candidate_status,
+          final_meeting_attendance,
+          diksha_attendance,
+          final_meeting_date,
+          final_meeting_time,
+          diksha_date,
+          diksha_time,
+          evaluator_name,
+          evaluator_notes,
+          admin_remarks,
+          created_at,
+          aadhaar_file_url,
+          aadhaar_file_name,
+          referred_to,
+          referred_by,
+          slots (
+            slot_date,
+            slot_time
+          )
+        `
+        )
+        .order("final_meeting_date", { ascending: true })
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true })
+        .range(
+          registrationFrom,
+          registrationFrom + registrationBatchSize - 1
+        );
+  
+    if (registrationBatchError) {
+      registrationsError = registrationBatchError;
+      break;
+    }
+  
+    const currentBatch = registrationBatch || [];
+  
+    registrations.push(...currentBatch);
+  
+    if (currentBatch.length < registrationBatchSize) {
+      break;
+    }
+  
+    registrationFrom += registrationBatchSize;
+  }
 
   const { data: slots, error: slotsError } = await supabase
     .from("slots")
