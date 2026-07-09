@@ -3551,7 +3551,7 @@ titleHi="स्थगित"
           )}
 
           <div className="overflow-x-auto rounded-2xl border border-orange-100">
-            <table className="w-full min-w-[1450px] border-collapse text-left">
+          <table className="w-full min-w-[1600px] border-collapse text-left">
               <thead className="bg-orange-100">
                 <tr>
                 <TableHead>
@@ -3575,8 +3575,9 @@ titleHi="स्थगित"
                   <TableHead>Mobile</TableHead>
                   <TableHead>City</TableHead>
                   <TableHead>Meeting Date</TableHead>
-                  <TableHead>Meeting Time</TableHead>
-                  <TableHead>Actions</TableHead>
+<TableHead>Meeting Time</TableHead>
+<TableHead>Diksha Date</TableHead>
+<TableHead>Actions</TableHead>
                   <TableHead>Aadhaar</TableHead>
                   <TableHead>Status</TableHead>
                 </tr>
@@ -3594,8 +3595,9 @@ titleHi="स्थगित"
                   <TableHead>मोबाइल</TableHead>
                   <TableHead>शहर</TableHead>
                   <TableHead>मीटिंग दिनांक</TableHead>
-                  <TableHead>मीटिंग समय</TableHead>
-                  <TableHead>कार्यवाही</TableHead>
+<TableHead>मीटिंग समय</TableHead>
+<TableHead>दीक्षा दिनांक</TableHead>
+<TableHead>कार्यवाही</TableHead>
                   <TableHead>आधार</TableHead>
                   <TableHead>स्थिति</TableHead>
                 </tr>
@@ -3660,8 +3662,29 @@ titleHi="स्थगित"
     "-"}
 </TableCell>
 
-                      <TableCell>
-                        <div className="flex flex-wrap gap-2">
+<TableCell>
+  {person.diksha_date ? (
+    <div>
+      <p className="font-extrabold text-purple-800">
+        {formatDate(person.diksha_date)}
+      </p>
+
+      {(person.candidate_status || person.status) ===
+        "Diksha Completed" && (
+        <span className="mt-1 inline-block rounded-full bg-green-100 px-2 py-1 text-[10px] font-bold text-green-700">
+          Completed
+        </span>
+      )}
+    </div>
+  ) : (
+    <span className="text-xs font-bold text-stone-400">
+      Not Scheduled
+    </span>
+  )}
+</TableCell>
+
+<TableCell>
+  <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => {
@@ -3868,7 +3891,7 @@ titleHi="स्थगित"
     <Fragment key={group.title}>
       <tr>
         <td
-          colSpan={10}
+          colSpan={11}
           className="border border-black bg-stone-100 px-2 py-2 text-left text-sm font-extrabold"
         >
           {group.title} ({group.records.length})
