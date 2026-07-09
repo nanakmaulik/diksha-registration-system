@@ -89,7 +89,12 @@ export default function RegisterPage() {
   formData.maritalStatus === "Married" ||
   formData.maritalStatus === "Widowed";
 
-const needsFatherName = !needsSpouseName;
+const isMarriedMale =
+  formData.gender === "Male" &&
+  formData.maritalStatus === "Married";
+
+const needsFatherName =
+  isMarriedMale || !needsSpouseName;
 
 const spouseLabelEn =
   formData.gender === "Male"
@@ -1316,14 +1321,18 @@ const spouseLabelHi =
                   }, ${finalCountry} - ${formData.pinCode}`}
                 />
 
-                <ReviewRow
-                  label="Family Approval / परिवार स्वीकृति"
-                  value={
-                    needsSpouseName
-                    ? `${spouseLabelEn}: ${formData.spouseName || "-"}`
-                    : `Father: ${formData.fatherName || "-"}`
-                  }
-                />
+<ReviewRow
+  label="Family Approval / परिवार स्वीकृति"
+  value={
+    isMarriedMale
+      ? `Wife: ${formData.spouseName || "-"} | Father: ${
+          formData.fatherName || "-"
+        }`
+      : needsSpouseName
+      ? `${spouseLabelEn}: ${formData.spouseName || "-"}`
+      : `Father: ${formData.fatherName || "-"}`
+  }
+/>
 
                 <ReviewRow
                   label="Family Contact / परिवार संपर्क"
