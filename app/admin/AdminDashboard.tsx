@@ -172,6 +172,25 @@ const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
   useState(false);
   const [printMode, setPrintMode] = useState<"list" | "forms">("list");
   const [isBulkScheduling, setIsBulkScheduling] = useState(false);
+  const [
+    isSelectedDikshaSchedulerOpen,
+    setIsSelectedDikshaSchedulerOpen,
+  ] = useState(false);
+  
+  const [
+    selectedBulkDikshaDate,
+    setSelectedBulkDikshaDate,
+  ] = useState("");
+  
+  const [
+    selectedBulkDikshaUpdatedBy,
+    setSelectedBulkDikshaUpdatedBy,
+  ] = useState("Sadhak");
+  
+  const [
+    isSchedulingSelectedDiksha,
+    setIsSchedulingSelectedDiksha,
+  ] = useState(false);
   const [attendanceDate, setAttendanceDate] = useState(getTodayDateString());
   const [selectedAttendanceIds, setSelectedAttendanceIds] = useState<string[]>([]);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
@@ -1236,7 +1255,119 @@ referred_by: request.referred_by || "",
   
     window.location.reload();
   }
-
+  function openSelectedDikshaScheduler() {
+    if (selectedRegistrationIds.length === 0) {
+      alert(
+        "Please select devotees first.\nकृपया पहले श्रद्धालुओं को select करें।"
+      );
+      return;
+    }
+  
+    const selectedPeople = registrations.filter((person) =>
+      selectedRegistrationIds.includes(person.id)
+    );
+  
+    const completedPeople = selectedPeople.filter(
+      (person) =>
+        (person.candidate_status || person.status) ===
+        "Diksha Completed"
+    );
+  
+    if (completedPeople.length > 0) {
+      alert(
+        `${completedPeople.length} selected devotee(s) already have Diksha Completed status.\n\nPlease unselect completed devotees before scheduling.\nकृपया Diksha Completed श्रद्धालुओं को unselect करें।`
+      );
+      return;
+    }
+  
+    setSelectedBulkDikshaDate("");
+    setIsSelectedDikshaSchedulerOpen(true);
+  }
+  
+  async function handleScheduleSelectedDiksha() {
+    if (selectedRegistrationIds.length === 0) {
+      alert(
+        "Please select devotees first.\nकृपया पहले श्रद्धालुओं को select करें।"
+      );
+      return;
+    }
+  
+    if (!selectedBulkDikshaDate) {
+      alert(
+        "Please select Diksha date.\nकृपया दीक्षा तारीख चुनें।"
+      );
+      return;
+    }
+  
+    if (!selectedBulkDikshaUpdatedBy.trim()) {
+      alert(
+        "Please enter Sadhak name.\nकृपया साधक का नाम भरें।"
+      );
+      return;
+    }
+  
+    const selectedPeople = registrations.filter((person) =>
+      selectedRegistrationIds.includes(person.id)
+    );
+  
+    const selectedNames = selectedPeople
+      .map(
+        (person, index) =>
+          `${index + 1}. ${person.full_name || person.token || "-"}`
+      )
+      .join("\n");
+  
+    const confirmed = window.confirm(
+      `Schedule ${selectedPeople.length} selected devotee(s) for Diksha?\n\nDiksha Date: ${formatDate(
+        selectedBulkDikshaDate
+      )}\n\nSelected Devotees:\n${selectedNames}\n\nक्या selected devotees को इस तारीख पर schedule करना है?`
+    );
+  
+    if (!confirmed) return;
+  
+    setIsSchedulingSelectedDiksha(true);
+  
+    let updatedCount = 0;
+  
+    for (const person of selectedPeople) {
+      const { error } = await supabase.rpc(
+        "schedule_candidate_diksha",
+        {
+          p_registration_id: person.id,
+          p_diksha_date: selectedBulkDikshaDate,
+          p_diksha_time: "",
+          p_notes: "Scheduled from selected devotees bulk action",
+          p_updated_by: selectedBulkDikshaUpdatedBy.trim(),
+        }
+      );
+  
+      if (error) {
+        alert(
+          `Diksha scheduling error for ${
+            person.full_name || person.token || "-"
+          }:\n${error.message}`
+        );
+  
+        setIsSchedulingSelectedDiksha(false);
+        return;
+      }
+  
+      updatedCount += 1;
+    }
+  
+    alert(
+      `Diksha scheduled successfully.\n\nDate: ${formatDate(
+        selectedBulkDikshaDate
+      )}\nUpdated devotees: ${updatedCount}\n\nSelected devotees की दीक्षा तारीख सफलतापूर्वक schedule हो गई।`
+    );
+  
+    setIsSchedulingSelectedDiksha(false);
+    setIsSelectedDikshaSchedulerOpen(false);
+    setSelectedBulkDikshaDate("");
+    setSelectedRegistrationIds([]);
+  
+    window.location.reload();
+  }
   async function handleBulkScheduleNextDayDiksha() {
     if (slotDate === "all") {
       alert(
@@ -3225,6 +3356,23 @@ titleHi="स्थगित"
     अगले दिन की दीक्षा शेड्यूल करें
   </span>
 </button>
+
+<button
+  type="button"
+  onClick={openSelectedDikshaScheduler}
+  disabled={
+    selectedRegistrationIds.length === 0 ||
+    isSchedulingSelectedDiksha
+  }
+  className="rounded-2xl bg-blue-700 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+>
+  Schedule Selected Diksha
+  <span className="block text-sm font-normal">
+    चुने हुए श्रद्धालुओं की तारीख चुनें
+  </span>
+</button>
+
+
 <button
   type="button"
   onClick={handleBulkDikshaCompleted}
@@ -4705,6 +4853,164 @@ const guardianValue = shouldShowHusbandName
         })}
       </section>
       )}
+
+{isSelectedDikshaSchedulerOpen && (
+  <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4">
+    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl md:p-8">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-2xl font-extrabold text-stone-900">
+            Schedule Selected Diksha
+          </h3>
+
+          <p className="mt-1 text-lg font-bold text-blue-700">
+            चुने हुए श्रद्धालुओं की दीक्षा तारीख
+          </p>
+
+          <p className="mt-2 text-sm font-semibold text-stone-600">
+            Selected devotees: {selectedRegistrationIds.length}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setIsSelectedDikshaSchedulerOpen(false);
+            setSelectedBulkDikshaDate("");
+          }}
+          disabled={isSchedulingSelectedDiksha}
+          className="rounded-full bg-stone-100 px-4 py-2 text-sm font-bold text-stone-700 disabled:opacity-50"
+        >
+          Close
+        </button>
+      </div>
+
+      <div className="mt-6 max-h-56 overflow-y-auto rounded-2xl border border-blue-100 bg-blue-50 p-4">
+        <p className="mb-3 font-extrabold text-blue-900">
+          Selected Devotees / चुने हुए श्रद्धालु
+        </p>
+
+        <div className="space-y-2">
+          {registrations
+            .filter((person) =>
+              selectedRegistrationIds.includes(person.id)
+            )
+            .map((person, index) => (
+              <div
+                key={person.id}
+                className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 shadow-sm"
+              >
+                <div>
+                  <p className="font-extrabold text-stone-900">
+                    {index + 1}. {person.full_name || "-"}
+                  </p>
+
+                  <p className="text-xs font-semibold text-stone-500">
+                    Token:{" "}
+                    {getTokenWithMemberLetter(
+                      person,
+                      registrations
+                    )}
+                  </p>
+                </div>
+
+                {person.diksha_date && (
+                  <div className="text-right text-xs font-bold text-purple-700">
+                    <p>Current Diksha Date</p>
+                    <p>{formatDate(person.diksha_date)}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <label className="mb-2 block font-extrabold text-stone-800">
+          Select Diksha Date
+          <span className="block text-sm font-semibold text-blue-700">
+            दीक्षा तारीख चुनें
+          </span>
+        </label>
+
+        <input
+          type="date"
+          min={getTodayDateString()}
+          value={selectedBulkDikshaDate}
+          onChange={(event) =>
+            setSelectedBulkDikshaDate(event.target.value)
+          }
+          className="w-full rounded-2xl border-2 border-blue-200 px-4 py-4 text-lg font-bold outline-none focus:border-blue-600"
+        />
+
+        {selectedBulkDikshaDate && (
+          <div className="mt-3 rounded-2xl bg-green-50 p-4 text-center">
+            <p className="text-sm font-bold text-green-700">
+              Selected Diksha Date
+            </p>
+
+            <p className="mt-1 text-2xl font-extrabold text-green-900">
+              {formatDate(selectedBulkDikshaDate)}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-5">
+        <label className="mb-2 block font-extrabold text-stone-800">
+          Updated By / अपडेट करने वाला
+        </label>
+
+        <input
+          type="text"
+          value={selectedBulkDikshaUpdatedBy}
+          onChange={(event) =>
+            setSelectedBulkDikshaUpdatedBy(event.target.value)
+          }
+          placeholder="Enter Sadhak name"
+          className="w-full rounded-2xl border border-blue-200 px-4 py-3 outline-none focus:border-blue-600"
+        />
+      </div>
+
+      <div className="mt-7 flex flex-col gap-3 md:flex-row">
+        <button
+          type="button"
+          onClick={() => {
+            setIsSelectedDikshaSchedulerOpen(false);
+            setSelectedBulkDikshaDate("");
+          }}
+          disabled={isSchedulingSelectedDiksha}
+          className="flex-1 rounded-2xl border border-blue-300 px-5 py-3 font-bold text-blue-700 disabled:opacity-50"
+        >
+          Cancel
+          <span className="block text-xs font-normal">
+            रद्द करें
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleScheduleSelectedDiksha}
+          disabled={
+            isSchedulingSelectedDiksha ||
+            !selectedBulkDikshaDate
+          }
+          className="flex-1 rounded-2xl bg-blue-700 px-5 py-3 font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSchedulingSelectedDiksha
+            ? "Scheduling..."
+            : `Schedule ${selectedRegistrationIds.length} Devotees`}
+
+          <span className="block text-xs font-normal">
+            चुने हुए श्रद्धालुओं की दीक्षा शेड्यूल करें
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
       {selectedAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-3xl bg-white p-6 shadow-xl">
