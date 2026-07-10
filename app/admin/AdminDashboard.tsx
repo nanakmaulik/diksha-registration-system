@@ -124,7 +124,7 @@ export default function AdminDashboard({
   registrationRequests,
   accessMode = "admin",
   permissions,
-  loggedInUsername,
+  loggedInUsername = "Sadhak",
 }: {
   registrations: Registration[];
   slots: Slot[];
@@ -132,7 +132,7 @@ export default function AdminDashboard({
   registrationRequests: RegistrationRequest[];
   accessMode?: "admin" | "sadhak";
   permissions?: Record<string, boolean> | null;
-  loggedInUsername: string;
+  loggedInUsername?: string;
 }) {
   const [isMounted, setIsMounted] = useState(false);
 
