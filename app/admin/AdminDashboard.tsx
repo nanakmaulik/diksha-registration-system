@@ -157,6 +157,8 @@ export default function AdminDashboard({
   function can(permissionName: string) {
     return isSuperAdminAccess || Boolean(permissions?.[permissionName]);
   }
+  const actorUsername =
+  loggedInUsername?.trim() || "Sadhak";
 
   const [search, setSearch] = useState("");
   const [slotDate, setSlotDate] = useState("all");
@@ -187,7 +189,7 @@ const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
   const [
     selectedBulkDikshaUpdatedBy,
     setSelectedBulkDikshaUpdatedBy,
-  ] = useState("Sadhak");
+  ] = useState(actorUsername);
   
   const [
     isSchedulingSelectedDiksha,
@@ -196,7 +198,8 @@ const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
   const [attendanceDate, setAttendanceDate] = useState(getTodayDateString());
   const [selectedAttendanceIds, setSelectedAttendanceIds] = useState<string[]>([]);
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
-  const [attendanceUpdatedBy, setAttendanceUpdatedBy] = useState("Sadhak");
+  const [attendanceUpdatedBy, setAttendanceUpdatedBy] =
+  useState(actorUsername);
   const [attendanceSearch, setAttendanceSearch] = useState("");
   const requestUpdatedBy = loggedInUsername;
 const [rejectionReason, setRejectionReason] = useState("");
@@ -314,7 +317,8 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   } | null>(null);
 
   const [actionNotes, setActionNotes] = useState("");
-  const [updatedBy, setUpdatedBy] = useState("Sadhak");
+  const [updatedBy, setUpdatedBy] =
+  useState(actorUsername);
   const [isUpdatingAction, setIsUpdatingAction] = useState(false);
   const [tokenSuccess, setTokenSuccess] = useState<{
     token: string;
@@ -496,7 +500,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
         p_new_status: actionToSave.newStatus,
         p_action_type: actionToSave.title,
         p_notes: actionNotes.trim(),
-        p_updated_by: updatedBy.trim(),
+        p_updated_by: actorUsername,
       });
 
       if (error) {
@@ -512,7 +516,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
         p_attendance_type: actionToSave.attendanceType,
         p_attendance_value: actionToSave.attendanceValue,
         p_notes: actionNotes.trim(),
-        p_updated_by: updatedBy.trim(),
+        p_updated_by: actorUsername,
       });
 
       if (error) {
@@ -554,7 +558,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     const { error } = await supabase.rpc("reschedule_registration_request", {
       p_request_id: request.id,
       p_new_slot_id: editingRequestNewSlotId,
-      p_updated_by: requestUpdatedBy.trim(),
+      p_updated_by: actorUsername,
     });
   
     if (error) {
@@ -679,7 +683,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
       "approve_registration_request",
       {
         p_request_id: request.id,
-        p_verified_by: requestUpdatedBy.trim(),
+        p_verified_by: actorUsername,
       }
     );
   
@@ -814,7 +818,7 @@ setIsBulkApprovingRequests(false);
   
     const { error } = await supabase.rpc("reject_registration_request", {
       p_request_id: request.id,
-      p_rejected_by: requestUpdatedBy.trim(),
+      p_rejected_by: actorUsername,
       p_rejection_reason: reason.trim(),
     });
   
@@ -971,7 +975,7 @@ referred_by: request.referred_by || "",
       p_registration_id: selectedAction.registrationId,
       p_new_slot_id: finalMeetingSlotId,
       p_notes: actionNotes.trim(),
-      p_updated_by: updatedBy.trim(),
+      p_updated_by: actorUsername,
     });
   
     if (error) {
@@ -1028,7 +1032,7 @@ referred_by: request.referred_by || "",
       p_diksha_date: dikshaDate,
       p_diksha_time: "",
       p_notes: actionNotes.trim(),
-      p_updated_by: updatedBy.trim(),
+      p_updated_by: actorUsername,
     });
 
     if (error) {
@@ -1160,7 +1164,7 @@ referred_by: request.referred_by || "",
   
     const { error } = await supabase.rpc("mark_final_meeting_present", {
       p_registration_id: person.id,
-      p_updated_by: attendanceUpdatedBy.trim(),
+      p_updated_by: actorUsername,
       p_notes: "Marked from attendance list",
     });
   
@@ -1258,7 +1262,7 @@ referred_by: request.referred_by || "",
     const { error } = await supabase.rpc("update_slot_capacity", {
       p_slot_id: slot.id,
       p_new_capacity: newCapacity,
-      p_updated_by: "Admin",
+      p_updated_by: actorUsername,
     });
   
     if (error) {
@@ -1355,7 +1359,7 @@ referred_by: request.referred_by || "",
           p_diksha_date: selectedBulkDikshaDate,
           p_diksha_time: "",
           p_notes: "Scheduled from selected devotees bulk action",
-          p_updated_by: selectedBulkDikshaUpdatedBy.trim(),
+          p_updated_by: actorUsername,
         }
       );
   
@@ -1420,7 +1424,7 @@ referred_by: request.referred_by || "",
     const { data, error } = await supabase.rpc("bulk_schedule_next_day_diksha", {
       p_meeting_date: slotDate,
       p_diksha_time: "",
-      p_updated_by: "Sadhak",
+      p_updated_by: actorUsername,
     });
   
     if (error) {
@@ -1494,7 +1498,7 @@ referred_by: request.referred_by || "",
           p_attendance_type: "Diksha",
           p_attendance_value: "Present",
           p_notes: "Marked from bulk Diksha Completed button",
-          p_updated_by: "Sadhak",
+          p_updated_by: actorUsername,
         }
       );
   
@@ -1511,7 +1515,7 @@ referred_by: request.referred_by || "",
           p_new_status: "Diksha Completed",
           p_action_type: "Bulk Diksha Completed",
           p_notes: "Marked from bulk Diksha Completed button",
-          p_updated_by: "Sadhak",
+          p_updated_by: actorUsername,
         }
       );
   
@@ -1897,7 +1901,7 @@ referred_by: request.referred_by || "",
         "convert_registrations_to_group_token",
         {
           p_registration_ids: selectedRegistrationIds,
-          p_updated_by: "Sadhak",
+          p_updated_by: actorUsername,
           p_group_type: groupType,
         }
       );
