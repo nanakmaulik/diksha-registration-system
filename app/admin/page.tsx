@@ -348,13 +348,14 @@ export default async function AdminPage({
   </div>
 </div>
 
-      <AdminDashboard
+<AdminDashboard
   registrations={cleanedRegistrations}
   slots={slots || []}
   activityLogs={activityLogs || []}
   registrationRequests={registrationRequests || []}
   accessMode={isAdminAccess ? "admin" : "sadhak"}
   permissions={dashboardPermissions}
+  loggedInUsername={adminProfile.username}
 />
     </>
   );

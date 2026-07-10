@@ -124,6 +124,7 @@ export default function AdminDashboard({
   registrationRequests,
   accessMode = "admin",
   permissions,
+  loggedInUsername,
 }: {
   registrations: Registration[];
   slots: Slot[];
@@ -131,6 +132,7 @@ export default function AdminDashboard({
   registrationRequests: RegistrationRequest[];
   accessMode?: "admin" | "sadhak";
   permissions?: Record<string, boolean> | null;
+  loggedInUsername: string;
 }) {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -196,7 +198,7 @@ const [isReschedulingFinalMeeting, setIsReschedulingFinalMeeting] =
   const [isMarkingAttendance, setIsMarkingAttendance] = useState(false);
   const [attendanceUpdatedBy, setAttendanceUpdatedBy] = useState("Sadhak");
   const [attendanceSearch, setAttendanceSearch] = useState("");
-  const [requestUpdatedBy, setRequestUpdatedBy] = useState("Sadhak");
+  const requestUpdatedBy = loggedInUsername;
 const [rejectionReason, setRejectionReason] = useState("");
 const [processingRequestId, setProcessingRequestId] = useState<string | null>(
   null
@@ -415,6 +417,22 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     return registrationRequests.filter(
       (request) => request.request_status === "Pending Verification"
     );
+  }, [registrationRequests]);
+  const approvedByRegistrationId = useMemo(() => {
+    const approverMap = new Map<string, string>();
+  
+    registrationRequests.forEach((request) => {
+      if (!request.created_registration_id) {
+        return;
+      }
+  
+      approverMap.set(
+        request.created_registration_id,
+        request.verified_by || "-"
+      );
+    });
+  
+    return approverMap;
   }, [registrationRequests]);
  
 
@@ -2235,12 +2253,12 @@ referred_to:
 
   <div className="mb-5 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto_auto_auto_auto]">
   <input
-    type="text"
-    value={requestUpdatedBy}
-    onChange={(event) => setRequestUpdatedBy(event.target.value)}
-    placeholder="Sadhak name"
-    className="rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
-  />
+  type="text"
+  value={requestUpdatedBy}
+  readOnly
+  title="Logged-in Sadhak ID"
+  className="cursor-not-allowed rounded-2xl border border-orange-200 bg-stone-100 px-4 py-3 font-bold text-stone-700 outline-none"
+/>
 
   <input
     type="text"
@@ -3607,7 +3625,7 @@ titleHi="स्थगित"
                 {filteredRegistrations.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={10}
+                      colSpan={11}
                       className="px-4 py-10 text-center font-semibold text-stone-600"
                     >
                       No matching registrations / कोई मिलान पंजीकरण नहीं मिला
@@ -3882,6 +3900,7 @@ titleHi="स्थगित"
 <PrintHead>CITY</PrintHead>
 <PrintHead>MS</PrintHead>
 <PrintHead>FAMILY REL</PrintHead>
+<PrintHead>APPR BY</PrintHead>
 <PrintHead>REMARKS BY</PrintHead>
             </tr>
           </thead>
@@ -3917,12 +3936,18 @@ titleHi="स्थगित"
     <PrintCell>{person.city || "-"}</PrintCell>
     <PrintCell>{getMaritalStatusShort(person.marital_status)}</PrintCell>
     <PrintCell>{person.family_relation || "-"}</PrintCell>
-    <PrintCell>
-      {person.remarks_by ||
-        person.evaluator_name ||
-        person.admin_remarks ||
-        "-"}
-    </PrintCell>
+
+<PrintCell>
+  {approvedByRegistrationId.get(person.id) ||
+    person.evaluator_name ||
+    "-"}
+</PrintCell>
+
+<PrintCell>
+  {person.remarks_by ||
+    person.admin_remarks ||
+    "-"}
+</PrintCell>
   </tr>
 ))}
     </Fragment>
