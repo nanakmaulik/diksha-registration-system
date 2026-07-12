@@ -2092,7 +2092,19 @@ referred_to:
       return;
     }
 
+    const formFillUpDateByRegistrationId = new Map<string, string>();
+
+    registrationRequests.forEach((request: any) => {
+      if (request.created_registration_id) {
+        formFillUpDateByRegistrationId.set(
+          request.created_registration_id,
+          request.created_at || ""
+        );
+      }
+    });
+    
     const headers = [
+      "Devotee Form Fill Up Date",
       "Token",
       "Name",
       "Age",
@@ -2121,8 +2133,17 @@ referred_to:
               person.mother_name || "-"
             }`;
 
-      return [
-        person.token || "-",
+            const formFillUpDate =
+            formFillUpDateByRegistrationId.get(person.id) ||
+            person.created_at ||
+            "";
+          
+          return [
+            formFillUpDate
+              ? formatDateForExport(formFillUpDate)
+              : "-",
+            person.token || "-",
+            person.full_name || "-",
         person.full_name || "-",
         person.age || "-",
         person.gender || "-",
@@ -4496,6 +4517,7 @@ titleHi="स्थगित"
             ["Daughter", "Daughter / पुत्री"],
             ["Brother", "Brother / भाई"],
             ["Sister", "Sister / बहन"],
+            ["Father and Mother", "Mother & Father Both (Parents) / माता-पिता दोनों"],
             ["Other", "Other / अन्य"],
           ]}
         />
@@ -5571,6 +5593,19 @@ function parseLocalDate(dateString: string) {
 
 function formatDate(dateString: string) {
   const date = parseLocalDate(dateString);
+
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+function formatDateForExport(dateString: string) {
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return dateString || "-";
+  }
 
   return date.toLocaleDateString("en-IN", {
     day: "numeric",

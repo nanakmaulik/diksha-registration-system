@@ -1080,7 +1080,7 @@ const spouseLabelHi =
                   ["Sister", "Sister / बहन"],
                   ["Son", "Son / पुत्र"],
                   ["Daughter", "Daughter / पुत्री"],
-                  ["Father and Mother", "Father and Mother / माता और पिता"],
+                  ["Father and Mother", "Mother & Father Both (Parents) / माता-पिता दोनों"],
                   ["Other", "Other / अन्य"],
                 ]}
               />
