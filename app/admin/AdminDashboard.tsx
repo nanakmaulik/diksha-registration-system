@@ -1791,31 +1791,42 @@ referred_by: request.referred_by || "",
     filteredRegistrations[0]?.slots?.slot_time || "3:30 PM";
 
     const groupedPrintRegistrations = useMemo(() => {
-      const couples = filteredRegistrations.filter((person) =>
-        (person.token || "").toUpperCase().startsWith("CP")
+      const couples = filteredRegistrations.filter(
+        (person) => getTokenPrefix(person.token) === "CP"
       );
     
-      const family = filteredRegistrations.filter((person) =>
-        (person.token || "").toUpperCase().startsWith("FAM")
+      const family = filteredRegistrations.filter(
+        (person) => getTokenPrefix(person.token) === "FAM"
       );
     
       const females = filteredRegistrations.filter((person) => {
-        const token = (person.token || "").toUpperCase();
-        return person.gender === "Female" && !token.startsWith("CP") && !token.startsWith("FAM");
+        const tokenPrefix = getTokenPrefix(person.token);
+    
+        return (
+          person.gender === "Female" &&
+          tokenPrefix !== "CP" &&
+          tokenPrefix !== "FAM"
+        );
       });
     
       const males = filteredRegistrations.filter((person) => {
-        const token = (person.token || "").toUpperCase();
-        return person.gender === "Male" && !token.startsWith("CP") && !token.startsWith("FAM");
+        const tokenPrefix = getTokenPrefix(person.token);
+    
+        return (
+          person.gender === "Male" &&
+          tokenPrefix !== "CP" &&
+          tokenPrefix !== "FAM"
+        );
       });
     
       const others = filteredRegistrations.filter((person) => {
-        const token = (person.token || "").toUpperCase();
+        const tokenPrefix = getTokenPrefix(person.token);
+    
         return (
           person.gender !== "Male" &&
           person.gender !== "Female" &&
-          !token.startsWith("CP") &&
-          !token.startsWith("FAM")
+          tokenPrefix !== "CP" &&
+          tokenPrefix !== "FAM"
         );
       });
     
@@ -5794,13 +5805,28 @@ function getMaritalStatusShort(status: string | null) {
   return "-";
 }
 
-function getTokenCategory(token: string | null) {
-  const safeToken = (token || "").toUpperCase();
+function getTokenPrefix(token: string | null) {
+  const safeToken = (token || "").toUpperCase().trim();
 
-  if (safeToken.startsWith("CP")) return safeToken;
-  if (safeToken.startsWith("FAM")) return safeToken;
-  if (safeToken.startsWith("M")) return safeToken;
-  if (safeToken.startsWith("F")) return safeToken;
+  const newFormatMatch = safeToken.match(
+    /^\d{6}-(M|F|CP|FAM)-\d+$/
+  );
+
+  if (newFormatMatch) {
+    return newFormatMatch[1];
+  }
+
+  const oldFormatMatch = safeToken.match(/^(FAM|CP|M|F)\d+$/);
+
+  if (oldFormatMatch) {
+    return oldFormatMatch[1];
+  }
+
+  return "";
+}
+
+function getTokenCategory(token: string | null) {
+  const safeToken = (token || "").toUpperCase().trim();
 
   return safeToken || "-";
 }
@@ -5809,18 +5835,21 @@ function getTokenWithMemberLetter(
   person: Registration,
   groupRecords: Registration[]
 ) {
-  const token = (person.token || "").toUpperCase();
+  const token = (person.token || "").toUpperCase().trim();
 
   if (!token) return "-";
 
-  const isSharedToken = token.startsWith("CP") || token.startsWith("FAM");
+  const tokenPrefix = getTokenPrefix(token);
+  const isSharedToken =
+    tokenPrefix === "CP" || tokenPrefix === "FAM";
 
   if (!isSharedToken) {
     return token;
   }
 
   const sameTokenPeople = groupRecords.filter(
-    (record) => (record.token || "").toUpperCase() === token
+    (record) =>
+      (record.token || "").toUpperCase().trim() === token
   );
 
   if (sameTokenPeople.length <= 1) {
@@ -5831,16 +5860,21 @@ function getTokenWithMemberLetter(
     (record) => record.id === person.id
   );
 
-  const letter = String.fromCharCode(65 + Math.max(memberIndex, 0));
+  const letter = String.fromCharCode(
+    65 + Math.max(memberIndex, 0)
+  );
 
   return `${token}${letter}`;
 }
 
-function getPrintGroupTitle(token: string | null, gender: string | null) {
-  const safeToken = (token || "").toUpperCase();
+function getPrintGroupTitle(
+  token: string | null,
+  gender: string | null
+) {
+  const tokenPrefix = getTokenPrefix(token);
 
-  if (safeToken.startsWith("CP")) return "COUPLES";
-  if (safeToken.startsWith("FAM")) return "FAMILY";
+  if (tokenPrefix === "CP") return "COUPLES";
+  if (tokenPrefix === "FAM") return "FAMILY";
   if (gender === "Female") return "FEMALES";
   if (gender === "Male") return "MALES";
 
@@ -5848,20 +5882,45 @@ function getPrintGroupTitle(token: string | null, gender: string | null) {
 }
 
 function getTokenParts(token: string | null) {
-  const safeToken = token || "";
+  const safeToken = (token || "").toUpperCase().trim();
 
-  const prefixMatch = safeToken.match(/^[A-Za-z]+/);
-  const numberMatch = safeToken.match(/\d+$/);
+  const newFormatMatch = safeToken.match(
+    /^(\d{6})-(M|F|CP|FAM)-(\d+)$/
+  );
+
+  if (newFormatMatch) {
+    return {
+      datePart: newFormatMatch[1],
+      prefix: newFormatMatch[2],
+      number: Number(newFormatMatch[3]),
+    };
+  }
+
+  const oldFormatMatch = safeToken.match(/^(FAM|CP|M|F)(\d+)$/);
+
+  if (oldFormatMatch) {
+    return {
+      datePart: "",
+      prefix: oldFormatMatch[1],
+      number: Number(oldFormatMatch[2]),
+    };
+  }
 
   return {
-    prefix: prefixMatch ? prefixMatch[0].toUpperCase() : "",
-    number: numberMatch ? Number(numberMatch[0]) : 0,
+    datePart: "",
+    prefix: "",
+    number: 0,
   };
 }
 
-function sortByMeetingDateAndToken(a: Registration, b: Registration) {
-  const dateA = a.slots?.slot_date || a.final_meeting_date || "";
-  const dateB = b.slots?.slot_date || b.final_meeting_date || "";
+function sortByMeetingDateAndToken(
+  a: Registration,
+  b: Registration
+) {
+  const dateA =
+    a.final_meeting_date || a.slots?.slot_date || "";
+  const dateB =
+    b.final_meeting_date || b.slots?.slot_date || "";
 
   if (dateA !== dateB) {
     return dateA.localeCompare(dateB);
@@ -5873,9 +5932,8 @@ function sortByMeetingDateAndToken(a: Registration, b: Registration) {
   const prefixOrder: Record<string, number> = {
     M: 1,
     F: 2,
-    DK: 3,
-    CP: 4,
-    FAM: 5,
+    CP: 3,
+    FAM: 4,
   };
 
   const orderA = prefixOrder[tokenA.prefix] || 99;
