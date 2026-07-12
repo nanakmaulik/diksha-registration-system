@@ -134,6 +134,9 @@ export default function AdminDashboard({
   permissions?: Record<string, boolean> | null;
   loggedInUsername?: string;
 }) {
+
+  const actorUsername =
+    loggedInUsername?.trim() || "Sadhak";
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -157,8 +160,7 @@ export default function AdminDashboard({
   function can(permissionName: string) {
     return isSuperAdminAccess || Boolean(permissions?.[permissionName]);
   }
-  const actorUsername =
-  loggedInUsername?.trim() || "Sadhak";
+  
 
   const [search, setSearch] = useState("");
   const [slotDate, setSlotDate] = useState("all");
@@ -756,7 +758,7 @@ const confirmed = window.confirm(
   
     const { data, error } = await supabase.rpc("approve_registration_request_group", {
       p_request_ids: selectedRequestIds,
-      p_verified_by: requestUpdatedBy.trim(),
+      p_verified_by: actorUsername,
       p_group_type: groupType,
     });
   
