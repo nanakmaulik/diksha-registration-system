@@ -422,6 +422,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
       (request) => request.request_status === "Pending Verification"
     );
   }, [registrationRequests]);
+
   const approvedByRegistrationId = useMemo(() => {
     const approverMap = new Map<string, string>();
   
@@ -438,6 +439,8 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   
     return approverMap;
   }, [registrationRequests]);
+
+  
  
 
   async function handleSubmitAction(actionOverride?: {
@@ -3938,6 +3941,8 @@ titleHi="स्थगित"
 <PrintHead>FAMILY REL</PrintHead>
 <PrintHead>APPR BY</PrintHead>
 <PrintHead>REMARKS BY</PrintHead>
+
+
             </tr>
           </thead>
 
@@ -3976,6 +3981,12 @@ titleHi="स्थगित"
 <PrintCell>
   {approvedByRegistrationId.get(person.id) ||
     person.evaluator_name ||
+    "-"}
+</PrintCell>
+
+<PrintCell>
+  {person.remarks_by ||
+    person.admin_remarks ||
     "-"}
 </PrintCell>
 
