@@ -5856,15 +5856,23 @@ function getMaritalStatusShort(status: string | null) {
 function getTokenPrefix(token: string | null) {
   const safeToken = (token || "").toUpperCase().trim();
 
-  const newFormatMatch = safeToken.match(
-    /^\d{6}-(M|F|CP|FAM)-\d+$/
+  const monthlyFormatMatch = safeToken.match(
+    /^(FAM|CP|M|F|DK)\d{4}\/\d+$/
   );
 
-  if (newFormatMatch) {
-    return newFormatMatch[1];
+  if (monthlyFormatMatch) {
+    return monthlyFormatMatch[1];
   }
 
-  const oldFormatMatch = safeToken.match(/^(FAM|CP|M|F)\d+$/);
+  const dailyFormatMatch = safeToken.match(
+    /^\d{6}-(M|F|CP|FAM|DK)-\d+$/
+  );
+
+  if (dailyFormatMatch) {
+    return dailyFormatMatch[1];
+  }
+
+  const oldFormatMatch = safeToken.match(/^(FAM|CP|M|F|DK)\d+$/);
 
   if (oldFormatMatch) {
     return oldFormatMatch[1];
@@ -5932,19 +5940,31 @@ function getPrintGroupTitle(
 function getTokenParts(token: string | null) {
   const safeToken = (token || "").toUpperCase().trim();
 
-  const newFormatMatch = safeToken.match(
-    /^(\d{6})-(M|F|CP|FAM)-(\d+)$/
+  const monthlyFormatMatch = safeToken.match(
+    /^(FAM|CP|M|F|DK)(\d{4})\/(\d+)$/
   );
 
-  if (newFormatMatch) {
+  if (monthlyFormatMatch) {
     return {
-      datePart: newFormatMatch[1],
-      prefix: newFormatMatch[2],
-      number: Number(newFormatMatch[3]),
+      datePart: monthlyFormatMatch[2],
+      prefix: monthlyFormatMatch[1],
+      number: Number(monthlyFormatMatch[3]),
     };
   }
 
-  const oldFormatMatch = safeToken.match(/^(FAM|CP|M|F)(\d+)$/);
+  const dailyFormatMatch = safeToken.match(
+    /^(\d{6})-(M|F|CP|FAM|DK)-(\d+)$/
+  );
+
+  if (dailyFormatMatch) {
+    return {
+      datePart: dailyFormatMatch[1],
+      prefix: dailyFormatMatch[2],
+      number: Number(dailyFormatMatch[3]),
+    };
+  }
+
+  const oldFormatMatch = safeToken.match(/^(FAM|CP|M|F|DK)(\d+)$/);
 
   if (oldFormatMatch) {
     return {
