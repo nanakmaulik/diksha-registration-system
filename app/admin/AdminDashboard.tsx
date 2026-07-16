@@ -2112,14 +2112,14 @@ referred_to:
       });
     
       const headers = isDikshaCompletedExport
-        ? [
-            "Name",
-            "Phone no",
-            "City",
-            "Aadhar no.",
-            "State",
-            "Occupation",
-          ]
+      ? [
+          "Name",
+          "Phone no",
+          "Aadhar no.",
+          "City",
+          "State",
+          "Occupation",
+        ]
         : [
             "Devotee Form Fill Up Date",
             "Token",
@@ -2147,10 +2147,10 @@ referred_to:
           return [
             person.full_name || "-",
             csvTextValue(formatPhoneDisplay(person.mobile)),
-            person.city || "-",
             csvTextValue(
               formatIdNumberDisplay(person.id_type, person.id_number)
             ),
+            person.city || "-",
             person.state || "-",
             person.occupation || "-",
           ];
