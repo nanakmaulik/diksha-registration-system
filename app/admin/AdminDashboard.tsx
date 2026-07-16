@@ -2091,114 +2091,142 @@ referred_to:
       setIsDeletingRegistrationId(null);
       window.location.reload();
     }
-  function handleExportCsv() {
-    if (filteredRegistrations.length === 0) {
-      alert("No records to export.\nExport करने के लिए कोई रिकॉर्ड नहीं है।");
-      return;
-    }
-
-    const formFillUpDateByRegistrationId = new Map<string, string>();
-
-    registrationRequests.forEach((request: any) => {
-      if (request.created_registration_id) {
-        formFillUpDateByRegistrationId.set(
-          request.created_registration_id,
-          request.created_at || ""
-        );
+    function handleExportCsv() {
+      if (filteredRegistrations.length === 0) {
+        alert("No records to export.\nExport करने के लिए कोई रिकॉर्ड नहीं है।");
+        return;
       }
-    });
     
-    const headers = [
-      "Devotee Form Fill Up Date",
-      "Token",
-      "Name",
-      "Age",
-      "Gender",
-      "Mobile",
-      "WhatsApp",
-      "City",
-      "State",
-      "Meeting Date",
-"Meeting Time",
-      "Candidate Status",
-      "Final Meeting Attendance",
-      "Diksha Attendance",
-      "Diksha Date",
-      "Diksha Time",
-      "Family Approval",
-      "Updated By",
-      "Remarks",
-    ];
-
-    const rows = filteredRegistrations.map((person) => {
-      const familyApproval =
-        person.marital_status === "Married"
-          ? `Husband / Wife: ${person.spouse_name || "-"}`
-          : `Father: ${person.father_name || "-"} | Mother: ${
-              person.mother_name || "-"
-            }`;
-
-            const formFillUpDate =
-            formFillUpDateByRegistrationId.get(person.id) ||
-            person.created_at ||
-            "";
-          
+      const isDikshaCompletedExport =
+        reportFilter === "diksha_completed";
+    
+      const formFillUpDateByRegistrationId = new Map<string, string>();
+    
+      registrationRequests.forEach((request: any) => {
+        if (request.created_registration_id) {
+          formFillUpDateByRegistrationId.set(
+            request.created_registration_id,
+            request.created_at || ""
+          );
+        }
+      });
+    
+      const headers = isDikshaCompletedExport
+        ? [
+            "Name",
+            "Phone no",
+            "City",
+            "Aadhar no.",
+            "State",
+            "Occupation",
+          ]
+        : [
+            "Devotee Form Fill Up Date",
+            "Token",
+            "Name",
+            "Age",
+            "Gender",
+            "Mobile",
+            "WhatsApp",
+            "City",
+            "State",
+            "Meeting Date",
+            "Meeting Time",
+            "Candidate Status",
+            "Final Meeting Attendance",
+            "Diksha Attendance",
+            "Diksha Date",
+            "Diksha Time",
+            "Family Approval",
+            "Updated By",
+            "Remarks",
+          ];
+    
+      const rows = filteredRegistrations.map((person) => {
+        if (isDikshaCompletedExport) {
           return [
-            formFillUpDate
-              ? formatDateForExport(formFillUpDate)
-              : "-",
-            person.token || "-",
             person.full_name || "-",
-        person.full_name || "-",
-        person.age || "-",
-        person.gender || "-",
-        csvTextValue(formatPhoneDisplay(person.mobile)),
-        csvTextValue(formatPhoneDisplay(person.whatsapp)),
-        person.city || "-",
-        person.state || "-",
-        person.slots?.slot_date ? formatDate(person.slots.slot_date) : "-",
-        person.slots?.slot_time || "-",
-        person.candidate_status || person.status || "-",
-        person.final_meeting_attendance || "Not Marked",
-        person.diksha_attendance || "Not Marked",
-        person.diksha_date ? formatDate(person.diksha_date) : "-",
-        person.diksha_time || "-",
-        familyApproval,
-        person.evaluator_name || "-",
-        person.evaluator_notes ||
-          person.admin_remarks ||
-          person.remarks_by ||
-          "-",
-      ];
-    });
-
-    const csvContent = [
-      headers.map(csvEscape).join(","),
-      ...rows.map((row) =>
-        row.map((value) => csvEscape(String(value))).join(",")
-      ),
-    ].join("\n");
-
-    const blob = new Blob(["\uFEFF" + csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    const fileNameParts = [
-      "diksha-registrations",
-      reportFilter !== "all" ? reportFilter : null,
-      slotDate !== "all" ? slotDate : null,
-      getTodayDateString(),
-    ].filter(Boolean);
-
-    link.href = url;
-    link.download = `${fileNameParts.join("-")}.csv`;
-    link.click();
-
-    URL.revokeObjectURL(url);
-  }
+            csvTextValue(formatPhoneDisplay(person.mobile)),
+            person.city || "-",
+            csvTextValue(
+              formatIdNumberDisplay(person.id_type, person.id_number)
+            ),
+            person.state || "-",
+            person.occupation || "-",
+          ];
+        }
+    
+        const familyApproval =
+          person.marital_status === "Married"
+            ? `Husband / Wife: ${person.spouse_name || "-"}`
+            : `Father: ${person.father_name || "-"} | Mother: ${
+                person.mother_name || "-"
+              }`;
+    
+        const formFillUpDate =
+          formFillUpDateByRegistrationId.get(person.id) ||
+          person.created_at ||
+          "";
+    
+        return [
+          formFillUpDate
+            ? formatDateForExport(formFillUpDate)
+            : "-",
+          person.token || "-",
+          person.full_name || "-",
+          person.age || "-",
+          person.gender || "-",
+          csvTextValue(formatPhoneDisplay(person.mobile)),
+          csvTextValue(formatPhoneDisplay(person.whatsapp)),
+          person.city || "-",
+          person.state || "-",
+          person.slots?.slot_date
+            ? formatDate(person.slots.slot_date)
+            : "-",
+          person.slots?.slot_time || "-",
+          person.candidate_status || person.status || "-",
+          person.final_meeting_attendance || "Not Marked",
+          person.diksha_attendance || "Not Marked",
+          person.diksha_date ? formatDate(person.diksha_date) : "-",
+          person.diksha_time || "-",
+          familyApproval,
+          person.evaluator_name || "-",
+          person.evaluator_notes ||
+            person.admin_remarks ||
+            person.remarks_by ||
+            "-",
+        ];
+      });
+    
+      const csvContent = [
+        headers.map(csvEscape).join(","),
+        ...rows.map((row) =>
+          row.map((value) => csvEscape(String(value))).join(",")
+        ),
+      ].join("\n");
+    
+      const blob = new Blob(["\uFEFF" + csvContent], {
+        type: "text/csv;charset=utf-8;",
+      });
+    
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+    
+      const fileNameParts = [
+        isDikshaCompletedExport
+          ? "diksha-completed-final-list"
+          : "diksha-registrations",
+        reportFilter !== "all" ? reportFilter : null,
+        slotDate !== "all" ? slotDate : null,
+        getTodayDateString(),
+      ].filter(Boolean);
+    
+      link.href = url;
+      link.download = `${fileNameParts.join("-")}.csv`;
+      link.click();
+    
+      URL.revokeObjectURL(url);
+    }
   if (!isMounted) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fff8ed]">
