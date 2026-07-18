@@ -3970,7 +3970,6 @@ titleHi="स्थगित"
 <PrintHead>MS</PrintHead>
 <PrintHead>FAMILY REL</PrintHead>
 <PrintHead>APPR BY</PrintHead>
-<PrintHead>REMARKS BY</PrintHead>
 
 
             </tr>
@@ -3981,7 +3980,7 @@ titleHi="स्थगित"
     <Fragment key={group.title}>
       <tr>
         <td
-          colSpan={11}
+colSpan={10}
           className="border border-black bg-stone-100 px-2 py-2 text-left text-sm font-extrabold"
         >
           {group.title} ({group.records.length})
@@ -4008,21 +4007,9 @@ titleHi="स्थगित"
     <PrintCell>{getMaritalStatusShort(person.marital_status)}</PrintCell>
     <PrintCell>{person.family_relation || "-"}</PrintCell>
 
-<PrintCell>
+    <PrintCell>
   {approvedByRegistrationId.get(person.id) ||
     person.evaluator_name ||
-    "-"}
-</PrintCell>
-
-<PrintCell>
-  {person.remarks_by ||
-    person.admin_remarks ||
-    "-"}
-</PrintCell>
-
-<PrintCell>
-  {person.remarks_by ||
-    person.admin_remarks ||
     "-"}
 </PrintCell>
   </tr>
@@ -6052,7 +6039,7 @@ function csvTextValue(value: string | null | undefined) {
     return "-";
   }
 
-  return `="${cleanValue}"`;
+  return `\t${cleanValue}`;
 }
 
 function csvEscape(value: string) {
