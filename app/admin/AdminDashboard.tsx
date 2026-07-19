@@ -420,9 +420,17 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     finalMeetingMonthSlots
   );
   const pendingRequests = useMemo(() => {
-    return registrationRequests.filter(
-      (request) => request.request_status === "Pending Verification"
-    );
+    return registrationRequests
+      .filter(
+        (request) =>
+          request.request_status === "Pending Verification"
+      )
+      .sort((a, b) => {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+  
+        return dateA - dateB;
+      });
   }, [registrationRequests]);
 
   const approvedByRegistrationId = useMemo(() => {
