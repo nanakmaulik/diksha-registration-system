@@ -865,7 +865,7 @@ const spouseLabelHi =
                 required
                 options={[
                   ["", "Select marital status / वैवाहिक स्थिति चुनें"],
-                  ["Single", "Single / अविवाहित"],
+                  ["Single", "Unmarried / अविवाहित"],
                   ["Married", "Married / विवाहित"],
                   ["Widowed", "Widowed / विधवा / विधुर"],
                   ["Divorced", "Divorced / तलाकशुदा"],

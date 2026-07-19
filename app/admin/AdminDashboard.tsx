@@ -431,7 +431,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   
         return dateA - dateB;
       });
-  }, [registrationRequests]);
+  }, [registrationRequests]); 
 
   const approvedByRegistrationId = useMemo(() => {
     const approverMap = new Map<string, string>();
@@ -4138,7 +4138,7 @@ colSpan={10}
           onChange={handleEditFormChange}
           options={[
             ["", "Select marital status"],
-            ["Single", "Single"],
+            ["Single", "Unmarried / अविवाहित"],
             ["Married", "Married"],
             ["Widowed", "Widowed"],
             ["Divorced", "Divorced"],
