@@ -949,7 +949,7 @@ referred_by: request.referred_by || "",
   
     setIsSavingRequestEdit(false);
     setEditingRequest(null);
-    window.location.reload();
+    router.refresh();
   }
   async function handleRescheduleFinalMeeting() {
     if (!selectedAction) return;
