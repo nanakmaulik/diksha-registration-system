@@ -2120,14 +2120,14 @@ referred_to:
       });
     
       const headers = isDikshaCompletedExport
-      ? [
-          "Name",
-          "Phone no",
-          "Aadhar no.",
-          "City",
-          "State",
-          "Occupation",
-        ]
+  ? [
+      "NAME",
+      "PHONE NO",
+      "AADHAR NO.",
+      "CITY",
+      "STATE",
+      "OCCUPATION",
+    ]
         : [
             "Devotee Form Fill Up Date",
             "Token",
@@ -2150,17 +2150,40 @@ referred_to:
             "Remarks",
           ];
     
+
+          const finalDikshaCell = (value: string | number | null | undefined) => {
+            const cleanValue = String(value || "-").trim();
+        
+            if (!cleanValue || cleanValue === "-") {
+              return "-";
+            }
+        
+            return cleanValue.toUpperCase();
+          };
+        
+          const finalDikshaTextCell = (
+            value: string | number | null | undefined
+          ) => {
+            const cleanValue = String(value || "-").trim();
+        
+            if (!cleanValue || cleanValue === "-") {
+              return "-";
+            }
+        
+            return `\t${cleanValue.toUpperCase()}`;
+          };
+
       const rows = filteredRegistrations.map((person) => {
         if (isDikshaCompletedExport) {
           return [
-            person.full_name || "-",
-            csvTextValue(formatPhoneDisplay(person.mobile)),
-            csvTextValue(
+            finalDikshaCell(person.full_name),
+            finalDikshaTextCell(formatPhoneDisplay(person.mobile)),
+            finalDikshaTextCell(
               formatIdNumberDisplay(person.id_type, person.id_number)
             ),
-            person.city || "-",
-            person.state || "-",
-            person.occupation || "-",
+            finalDikshaCell(person.city),
+            finalDikshaCell(person.state),
+            finalDikshaCell(person.occupation),
           ];
         }
     
@@ -4866,9 +4889,13 @@ const guardianValue = shouldShowHusbandName
                     value={person.age ? String(person.age) : "-"}
                   />
                   <DevoteeLine
-                    label="Marital Status"
-                    value={person.marital_status || "-"}
-                  />
+  label="Marital Status"
+  value={
+    person.marital_status === "Single"
+      ? "UNMARRIED"
+      : person.marital_status || "-"
+  }
+/>
                   <DevoteeLine label="Address" value={person.address || "-"} />
                   <DevoteeLine label="City" value={person.city || "-"} />
                   <DevoteeLine label="State" value={person.state || "-"} />
