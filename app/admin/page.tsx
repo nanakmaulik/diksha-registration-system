@@ -217,6 +217,7 @@ export default async function AdminPage({
           aadhaar_file_name,
           referred_to,
           referred_by,
+          affidavit_required,
           slots (
             slot_date,
             slot_time

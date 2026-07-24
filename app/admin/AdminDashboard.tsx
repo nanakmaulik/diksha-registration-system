@@ -49,6 +49,7 @@ pin_code: string | null;
 video_proof_other: string | null;
   referred_to: string | null;
   referred_by: string | null;
+  affidavit_required: boolean | null;
   slots: {
     slot_date: string;
     slot_time: string;
@@ -110,6 +111,7 @@ type RegistrationRequest = {
   rejection_reason: string | null;
   created_registration_id: string | null;
   vrindavan_stay_days: string | null;
+  affidavit_required: boolean | null;
 video_proof_attached: string | null;
 video_proof_other: string | null;
 referred_to: string | null;
@@ -218,7 +220,7 @@ const [pendingQuestionAnswers, setPendingQuestionAnswers] = useState<
   Record<
     string,
     {
-      vrindavan_stay_days: string;
+      affidavit_required: boolean;
       video_proof_attached: string;
       video_proof_other: string;
       referred_to: string;
@@ -253,8 +255,8 @@ const [editRequestFormData, setEditRequestFormData] = useState({
   family_mobile: "",
   id_type: "",
   id_number: "",
-  vrindavan_stay_days: "",
-  video_proof_attached: "",
+  affidavit_required: false,
+video_proof_attached: "",
   video_proof_other: "",
   referred_to: "",
   referred_by: "",
@@ -589,12 +591,11 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   function getPendingQuestionAnswers(request: RegistrationRequest) {
     return (
       pendingQuestionAnswers[request.id] || {
-        vrindavan_stay_days: request.vrindavan_stay_days || "",
+        affidavit_required: Boolean(request.affidavit_required),
         video_proof_attached: request.video_proof_attached || "",
         video_proof_other: request.video_proof_other || "",
         referred_to: request.referred_to || "",
         referred_by: request.referred_by || "",
-        
       }
     );
   }
@@ -602,11 +603,10 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   function handlePendingQuestionChange(
     request: RegistrationRequest,
     field:
-      | "vrindavan_stay_days"
-      | "video_proof_attached"
-      | "video_proof_other"
-      | "referred_to"
-| "referred_by",
+    | "video_proof_attached"
+    | "video_proof_other"
+    | "referred_to"
+    | "referred_by",
     value: string
   ) {
     const currentAnswers = getPendingQuestionAnswers(request);
@@ -622,7 +622,20 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
       },
     }));
   }
+  function handlePendingAffidavitChange(
+    request: RegistrationRequest,
+    checked: boolean
+  ) {
+    const currentAnswers = getPendingQuestionAnswers(request);
   
+    setPendingQuestionAnswers((prev) => ({
+      ...prev,
+      [request.id]: {
+        ...currentAnswers,
+        affidavit_required: checked,
+      },
+    }));
+  }
   async function savePendingQuestionAnswers(
     request: RegistrationRequest,
     showAlert = true
@@ -642,7 +655,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     const { error } = await supabase
       .from("registration_requests")
       .update({
-        vrindavan_stay_days: answers.vrindavan_stay_days.trim() || null,
+        affidavit_required: answers.affidavit_required === true,
         video_proof_attached: answers.video_proof_attached || null,
         video_proof_other: answers.video_proof_other.trim() || null,
         referred_to: answers.referred_to || null,
@@ -871,7 +884,7 @@ setIsBulkApprovingRequests(false);
       family_mobile: request.family_mobile || "",
       id_type: request.id_type || "",
       id_number: request.id_number || "",
-      vrindavan_stay_days: request.vrindavan_stay_days || "",
+      affidavit_required: Boolean(request.affidavit_required),
       video_proof_attached: request.video_proof_attached || "",
 video_proof_other: request.video_proof_other || "",
 referred_to: request.referred_to || "",
@@ -938,8 +951,8 @@ referred_by: request.referred_by || "",
         family_mobile: editRequestFormData.family_mobile.trim() || null,
         id_type: editRequestFormData.id_type || null,
         id_number: editRequestFormData.id_number.trim() || null,
-        vrindavan_stay_days:
-        editRequestFormData.vrindavan_stay_days.trim() || null,
+        affidavit_required:
+        editRequestFormData.affidavit_required === true,
       video_proof_attached:
         editRequestFormData.video_proof_attached || null,
       video_proof_other:
@@ -2770,28 +2783,28 @@ referred_to:
   </div>
 
   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-    <div>
-      <label className="mb-2 block text-sm font-bold text-stone-700">
-        For how many days you are here in Vrindavan?
-        <span className="block text-xs font-semibold text-orange-800">
-          आप वृंदावन में कितने दिनों के लिए हैं?
-        </span>
-      </label>
+  <div className="rounded-2xl border border-orange-200 bg-white px-4 py-3">
+  <label className="flex cursor-pointer items-start gap-3 text-sm font-bold text-stone-700">
+    <input
+      type="checkbox"
+      checked={getPendingQuestionAnswers(request).affidavit_required}
+      onChange={(event) =>
+        handlePendingAffidavitChange(request, event.target.checked)
+      }
+      className="mt-1 h-5 w-5 accent-orange-700"
+    />
 
-      <input
-        type="text"
-        value={getPendingQuestionAnswers(request).vrindavan_stay_days}
-        onChange={(event) =>
-          handlePendingQuestionChange(
-            request,
-            "vrindavan_stay_days",
-            event.target.value
-          )
-        }
-        placeholder="Example: 3 days"
-        className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
-      />
-    </div>
+    <span>
+      Affidavit Required
+      <span className="block text-xs font-semibold text-orange-800">
+        शपथ पत्र आवश्यक है
+      </span>
+      <span className="mt-1 block text-xs font-normal text-stone-500">
+        Mark only if affidavit is required.
+      </span>
+    </span>
+  </label>
+</div>
 
     <div>
       <label className="mb-2 block text-sm font-bold text-stone-700">
@@ -4595,12 +4608,28 @@ colSpan={10}
             value={editRequestFormData.address}
             onChange={handleEditRequestFormChange}
           />
-        <EditInput
-          label="Vrindavan Stay Days / वृंदावन में कितने दिन"
-          name="vrindavan_stay_days"
-          value={editRequestFormData.vrindavan_stay_days}
-          onChange={handleEditRequestFormChange}
-        />
+       <div className="rounded-2xl border border-orange-200 bg-white px-4 py-3">
+  <label className="flex cursor-pointer items-start gap-3 text-sm font-bold text-stone-700">
+    <input
+      type="checkbox"
+      checked={editRequestFormData.affidavit_required}
+      onChange={(event) =>
+        setEditRequestFormData((prev) => ({
+          ...prev,
+          affidavit_required: event.target.checked,
+        }))
+      }
+      className="mt-1 h-5 w-5 accent-orange-700"
+    />
+
+    <span>
+      Affidavit Required / शपथ पत्र आवश्यक
+      <span className="mt-1 block text-xs font-normal text-stone-500">
+        Mark only if affidavit is required.
+      </span>
+    </span>
+  </label>
+</div>
 
         <EditSelect
           label="Video Proof Attached / वीडियो प्रमाण"
@@ -4917,6 +4946,12 @@ const guardianValue = shouldShowHusbandName
                     label="ID / Aadhaar No"
                     value={formatIdNumberDisplay(person.id_type, person.id_number)}
                   />
+                  {person.affidavit_required && (
+  <DevoteeLine
+    label="Affidavit Required"
+    value="Yes"
+  />
+)}
                 </div>
 
                 <div className="devotee-photo-box">
