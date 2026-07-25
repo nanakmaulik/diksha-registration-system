@@ -162,7 +162,30 @@ export default function AdminDashboard({
   function can(permissionName: string) {
     return isSuperAdminAccess || Boolean(permissions?.[permissionName]);
   }
-  
+  const standardFamilyRelations = [
+    "Father",
+    "Mother",
+    "Husband",
+    "Wife",
+    "Son",
+    "Daughter",
+    "Brother",
+    "Sister",
+    "Father and Mother",
+    "Other",
+  ];
+
+  function getFamilyRelationSelectValue(value: string | null | undefined) {
+    const cleanValue = String(value || "").trim();
+
+    if (!cleanValue) {
+      return "";
+    }
+
+    return standardFamilyRelations.includes(cleanValue)
+      ? cleanValue
+      : "Other";
+  }
 
   const [search, setSearch] = useState("");
   const [slotDate, setSlotDate] = useState("all");
@@ -252,6 +275,7 @@ const [editRequestFormData, setEditRequestFormData] = useState({
   mother_name: "",
   family_name: "",
   family_relation: "",
+  family_relation_other: "",
   family_mobile: "",
   id_type: "",
   id_number: "",
@@ -296,7 +320,8 @@ const [editFormData, setEditFormData] = useState({
   mother_name: "",
   family_name: "",
   family_relation: "",
-  family_mobile: "",
+family_relation_other: "",
+family_mobile: "",
   id_type: "",
   id_number: "",
   video_proof_attached: "",
@@ -861,6 +886,10 @@ setIsBulkApprovingRequests(false);
     window.location.reload();
   }
   function openEditRequest(request: RegistrationRequest) {
+    const existingFamilyRelation = request.family_relation || "";
+    const familyRelationSelectValue =
+      getFamilyRelationSelectValue(existingFamilyRelation);
+  
     setEditingRequest(request);
   
     setEditRequestFormData({
@@ -880,7 +909,11 @@ setIsBulkApprovingRequests(false);
       father_name: request.father_name || "",
       mother_name: request.mother_name || "",
       family_name: request.family_name || "",
-      family_relation: request.family_relation || "",
+      family_relation: familyRelationSelectValue,
+      family_relation_other:
+        familyRelationSelectValue === "Other"
+          ? existingFamilyRelation
+          : "",
       family_mobile: request.family_mobile || "",
       id_type: request.id_type || "",
       id_number: request.id_number || "",
@@ -905,6 +938,9 @@ referred_by: request.referred_by || "",
       ...(name === "video_proof_attached" && value !== "Others"
         ? { video_proof_other: "" }
         : {}),
+      ...(name === "family_relation" && value !== "Other"
+        ? { family_relation_other: "" }
+        : {}),
     }));
   }
 
@@ -926,11 +962,24 @@ referred_by: request.referred_by || "",
       return;
     }
   
-    setIsSavingRequestEdit(true);
+    const finalFamilyRelation =
+    editRequestFormData.family_relation === "Other"
+      ? editRequestFormData.family_relation_other.trim()
+      : editRequestFormData.family_relation;
   
-    const { error } = await supabase
-      .from("registration_requests")
-      .update({
+  if (
+    editRequestFormData.family_relation === "Other" &&
+    !finalFamilyRelation
+  ) {
+    alert("Please enter family relation.\nकृपया संबंध लिखें।");
+    return;
+  }
+  
+  setIsSavingRequestEdit(true);
+  
+  const { error } = await supabase
+    .from("registration_requests")
+    .update({
         full_name: editRequestFormData.full_name.trim(),
         age: editRequestFormData.age ? Number(editRequestFormData.age) : null,
         gender: editRequestFormData.gender || null,
@@ -947,7 +996,7 @@ referred_by: request.referred_by || "",
         father_name: editRequestFormData.father_name.trim() || null,
         mother_name: editRequestFormData.mother_name.trim() || null,
         family_name: editRequestFormData.family_name.trim() || null,
-        family_relation: editRequestFormData.family_relation || null,
+        family_relation: finalFamilyRelation || null,
         family_mobile: editRequestFormData.family_mobile.trim() || null,
         id_type: editRequestFormData.id_type || null,
         id_number: editRequestFormData.id_number.trim() || null,
@@ -1970,6 +2019,10 @@ setTokenSuccess({
       setIsConvertingGroupToken(false);
     }
     function openEditRegistration(person: Registration) {
+      const existingFamilyRelation = person.family_relation || "";
+      const familyRelationSelectValue =
+        getFamilyRelationSelectValue(existingFamilyRelation);
+    
       setEditingRegistration(person);
     
       setEditFormData({
@@ -1989,7 +2042,11 @@ setTokenSuccess({
         father_name: person.father_name || "",
         mother_name: person.mother_name || "",
         family_name: person.family_name || "",
-        family_relation: person.family_relation || "",
+        family_relation: familyRelationSelectValue,
+        family_relation_other:
+          familyRelationSelectValue === "Other"
+            ? existingFamilyRelation
+            : "",
         family_mobile: person.family_mobile || "",
         id_type: person.id_type || "",
 id_number: person.id_number || "",
@@ -2013,6 +2070,9 @@ referred_by: person.referred_by || "",
         ...(name === "video_proof_attached" && value !== "Others"
           ? { video_proof_other: "" }
           : {}),
+        ...(name === "family_relation" && value !== "Other"
+          ? { family_relation_other: "" }
+          : {}),
       }));
     }
     
@@ -2034,11 +2094,24 @@ referred_by: person.referred_by || "",
         return;
       }
     
-      setIsSavingRegistrationEdit(true);
+      const finalFamilyRelation =
+      editFormData.family_relation === "Other"
+        ? editFormData.family_relation_other.trim()
+        : editFormData.family_relation;
     
-      const { error } = await supabase
-        .from("registrations")
-        .update({
+    if (
+      editFormData.family_relation === "Other" &&
+      !finalFamilyRelation
+    ) {
+      alert("Please enter family relation.\nकृपया संबंध लिखें।");
+      return;
+    }
+    
+    setIsSavingRegistrationEdit(true);
+    
+    const { error } = await supabase
+      .from("registrations")
+      .update({
           full_name: editFormData.full_name.trim(),
           age: editFormData.age ? Number(editFormData.age) : null,
           gender: editFormData.gender || null,
@@ -2055,7 +2128,7 @@ referred_by: person.referred_by || "",
           father_name: editFormData.father_name.trim() || null,
           mother_name: editFormData.mother_name.trim() || null,
           family_name: editFormData.family_name.trim() || null,
-          family_relation: editFormData.family_relation.trim() || null,
+          family_relation: finalFamilyRelation || null,
           family_mobile: editFormData.family_mobile.trim() || null,
           id_type: editFormData.id_type || null,
           id_number: editFormData.id_number.trim() || null,
@@ -4331,24 +4404,35 @@ colSpan={10}
           onChange={handleEditFormChange}
         />
 
-        <EditSelect
-          label="Family Relation"
-          name="family_relation"
-          value={editFormData.family_relation}
-          onChange={handleEditFormChange}
-          options={[
-            ["", "Select relation"],
-            ["Father", "Father"],
-            ["Mother", "Mother"],
-            ["Husband", "Husband"],
-            ["Wife", "Wife"],
-            ["Son", "Son"],
-            ["Daughter", "Daughter"],
-            ["Brother", "Brother"],
-            ["Sister", "Sister"],
-            ["Other", "Other"],
-          ]}
-        />
+<EditSelect
+  label="Family Relation"
+  name="family_relation"
+  value={editFormData.family_relation}
+  onChange={handleEditFormChange}
+  options={[
+    ["", "Select relation"],
+    ["Father", "Father"],
+    ["Mother", "Mother"],
+    ["Husband", "Husband"],
+    ["Wife", "Wife"],
+    ["Son", "Son"],
+    ["Daughter", "Daughter"],
+    ["Brother", "Brother"],
+    ["Sister", "Sister"],
+    ["Father and Mother", "Mother & Father Both"],
+    ["Other", "Other"],
+  ]}
+/>
+
+{editFormData.family_relation === "Other" && (
+  <EditInput
+    label="Please specify relation"
+    name="family_relation_other"
+    value={editFormData.family_relation_other}
+    onChange={handleEditFormChange}
+    required
+  />
+)}
 
         <EditInput
           label="Family Mobile"
@@ -4593,7 +4677,15 @@ colSpan={10}
             ["Other", "Other / अन्य"],
           ]}
         />
-
+{editRequestFormData.family_relation === "Other" && (
+  <EditInput
+    label="Please specify relation / कृपया संबंध लिखें"
+    name="family_relation_other"
+    value={editRequestFormData.family_relation_other}
+    onChange={handleEditRequestFormChange}
+    required
+  />
+)}
         <EditInput
           label="Family Mobile / पारिवारिक मोबाइल"
           name="family_mobile"
