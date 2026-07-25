@@ -2208,7 +2208,7 @@ referred_to:
       const headers = isDikshaCompletedExport
   ? [
       "NAME",
-      "PHONE NO",
+      "WHATSAPP NO",
       "AADHAR NO.",
       "CITY",
       "STATE",
@@ -2263,7 +2263,7 @@ referred_to:
         if (isDikshaCompletedExport) {
           return [
             finalDikshaCell(person.full_name),
-            finalDikshaTextCell(formatPhoneDisplay(person.mobile)),
+            finalDikshaTextCell(formatPhoneDisplay(person.whatsapp)),
             finalDikshaTextCell(
               formatIdNumberDisplay(person.id_type, person.id_number)
             ),
