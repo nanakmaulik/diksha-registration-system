@@ -136,7 +136,7 @@ const spouseLabelHi =
   const finalIdType =
     formData.idType === "other" ? formData.idTypeOther.trim() : formData.idType;
 
-  const totalSteps = 6;
+    const totalSteps = 5;
 
   useEffect(() => {
     async function loadSlots() {
@@ -438,6 +438,26 @@ const spouseLabelHi =
           message: "Please select marital status.\nकृपया वैवाहिक स्थिति चुनें।",
         };
       }
+      if (!formData.idType.trim()) {
+        return {
+          isValid: false,
+          message: "Please select ID type.\nकृपया पहचान प्रमाण का प्रकार चुनें।",
+        };
+      }
+      
+      if (formData.idType === "other" && !formData.idTypeOther.trim()) {
+        return {
+          isValid: false,
+          message: "Please specify ID type.\nकृपया पहचान प्रमाण का नाम लिखें।",
+        };
+      }
+      
+      if (!formData.idNumber.trim()) {
+        return {
+          isValid: false,
+          message: "Please enter ID number.\nकृपया पहचान नंबर भरें।",
+        };
+      }
     }
 
     if (currentStep === 2) {
@@ -591,30 +611,9 @@ const spouseLabelHi =
       }
     }
 
+   
+
     if (currentStep === 4) {
-      if (!formData.idType.trim()) {
-        return {
-          isValid: false,
-          message: "Please select ID type.\nकृपया पहचान प्रमाण का प्रकार चुनें।",
-        };
-      }
-
-      if (formData.idType === "other" && !formData.idTypeOther.trim()) {
-        return {
-          isValid: false,
-          message: "Please specify ID type.\nकृपया पहचान प्रमाण का नाम लिखें।",
-        };
-      }
-
-      if (!formData.idNumber.trim()) {
-        return {
-          isValid: false,
-          message: "Please enter ID number.\nकृपया पहचान नंबर भरें।",
-        };
-      }
-    }
-
-    if (currentStep === 5) {
       if (!formData.selectedSlotId) {
         return {
           isValid: false,
@@ -650,7 +649,7 @@ const spouseLabelHi =
   async function handleSubmit() {
     if (isSubmitting) return;
 
-    const finalValidation = validateStep(5);
+    const finalValidation = validateStep(4);
 
     if (!finalValidation.isValid) {
       alert(finalValidation.message);
@@ -872,8 +871,47 @@ const spouseLabelHi =
                   ["Virakt", "Virakt / विरक्त"],
                 ]}
               />
+              <SelectField
+  labelEn="ID Type"
+  labelHi="पहचान प्रमाण का प्रकार"
+  name="idType"
+  value={formData.idType}
+  onChange={handleChange}
+  required
+  options={[
+    ["aadhaar", "Aadhaar Card / आधार कार्ड"],
+    ["passport", "Passport / पासपोर्ट"],
+    ["other", "Other Government ID / अन्य सरकारी पहचान"],
+  ]}
+/>
+
+{formData.idType === "other" && (
+  <InputField
+    labelEn="Please specify ID type"
+    labelHi="कृपया पहचान प्रमाण का नाम लिखें"
+    name="idTypeOther"
+    value={formData.idTypeOther}
+    onChange={handleChange}
+    placeholder="Example: Voter ID, Driving License"
+    required
+  />
+)}
+
+<InputField
+  labelEn="ID Number"
+  labelHi="पहचान नंबर"
+  name="idNumber"
+  value={formData.idNumber}
+  onChange={handleChange}
+  placeholder={
+    formData.idType === "aadhaar"
+      ? "1234 5678 9123"
+      : "Enter ID number"
+  }
+  required
+/>
             </StepCard>
-          )}
+          )} 
 
           {step === 2 && (
             <StepCard
@@ -1110,58 +1148,10 @@ const spouseLabelHi =
             </StepCard>
           )}
 
-          {step === 4 && (
-            <StepCard
-              titleEn="Identity Proof"
-              titleHi="पहचान प्रमाण"
-              subtitleEn="Please enter Aadhaar or any valid government ID details."
-              subtitleHi="कृपया आधार या कोई मान्य सरकारी पहचान प्रमाण की जानकारी भरें।"
-            >
-              <SelectField
-                labelEn="ID Type"
-                labelHi="पहचान प्रमाण का प्रकार"
-                name="idType"
-                value={formData.idType}
-                onChange={handleChange}
-                required
-                options={[
-                  ["aadhaar", "Aadhaar Card / आधार कार्ड"],
-                  ["passport", "Passport / पासपोर्ट"],
-                  ["other", "Other Government ID / अन्य सरकारी पहचान"],
-                ]}
-              />
-
-              {formData.idType === "other" && (
-                <InputField
-                  labelEn="Please specify ID type"
-                  labelHi="कृपया पहचान प्रमाण का नाम लिखें"
-                  name="idTypeOther"
-                  value={formData.idTypeOther}
-                  onChange={handleChange}
-                  placeholder="Example: Voter ID, Driving License"
-                  required
-                />
-              )}
-
-              <InputField
-                labelEn="ID Number"
-                labelHi="पहचान नंबर"
-                name="idNumber"
-                value={formData.idNumber}
-                onChange={handleChange}
-                placeholder={
-                  formData.idType === "aadhaar"
-                    ? "1234 5678 9123"
-                    : "Enter ID number"
-                }
-                required
-              />
-            </StepCard>
-          )}
-
-          {step === 5 && (
-            <StepCard
-              titleEn="Select Appointment Date"
+         
+{step === 4 && (
+  <StepCard
+    titleEn="Select Appointment Date"
               titleHi="अपॉइंटमेंट तारीख चुनें"
               subtitleEn="Please choose one available date for final meeting."
               subtitleHi="कृपया फाइनल मीटिंग के लिए एक उपलब्ध तारीख चुनें।"
@@ -1295,7 +1285,7 @@ const spouseLabelHi =
             </StepCard>
           )}
 
-          {step === 6 && (
+{step === 5 && (
             <StepCard
               titleEn="Review & Submit"
               titleHi="जांचें और जमा करें"
