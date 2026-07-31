@@ -4074,7 +4074,7 @@ titleHi="स्थगित"
           </p>
         </div>
 
-        <table className="w-full border-collapse text-xs">
+        <table className="w-full border-collapse text-[12px]">
           <thead>
             <tr>
             <PrintHead>ROW</PrintHead>
@@ -4098,7 +4098,7 @@ titleHi="स्थगित"
       <tr>
         <td
 colSpan={10}
-          className="border border-black bg-stone-100 px-2 py-2 text-left text-sm font-extrabold"
+          className="border border-black bg-stone-100 px-2 py-2 text-left text-[14px] font-extrabold"
         >
           {group.title} ({group.records.length})
         </td>
@@ -6335,14 +6335,18 @@ function TableCell({ children }: { children: ReactNode }) {
 
 function PrintHead({ children }: { children: ReactNode }) {
   return (
-    <th className="border border-black px-1 py-1 text-left font-bold">
+    <th className="border border-black px-2 py-1.5 text-left text-[12px] font-extrabold leading-tight">
       {children}
     </th>
   );
 }
 
 function PrintCell({ children }: { children: ReactNode }) {
-  return <td className="border border-black px-1 py-1">{children}</td>;
+  return (
+    <td className="border border-black px-2 py-1.5 text-[12px] font-semibold leading-tight">
+      {children}
+    </td>
+  );
 }
 
 function EditInput({

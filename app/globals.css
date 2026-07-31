@@ -385,3 +385,39 @@ button {
     display: none !important;
   }
 }
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  .print-list-area {
+    font-size: 12px !important;
+  }
+
+  .print-list-area table {
+    width: 100% !important;
+    font-size: 12px !important;
+    page-break-inside: auto;
+  }
+
+  .print-list-area th,
+  .print-list-area td {
+    padding: 5px 6px !important;
+    line-height: 1.25 !important;
+    vertical-align: middle !important;
+  }
+
+  .print-list-area tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .print-list-area h1 {
+    font-size: 20px !important;
+  }
+
+  .print-list-area h2 {
+    font-size: 16px !important;
+  }
+}
