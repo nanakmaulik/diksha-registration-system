@@ -5104,12 +5104,32 @@ const guardianValue = shouldShowHusbandName
                     label="ID / Aadhaar No"
                     value={formatIdNumberDisplay(person.id_type, person.id_number)}
                   />
-                  {person.affidavit_required && (
+              <div className="hukm-checking-section">
+  <h3>FINAL VERIFICATION / HUKM CHECKING</h3>
+
+  <DevoteeLine
+    label="Video Proof"
+    value={formatVideoProofDisplay(
+      person.video_proof_attached,
+      person.video_proof_other
+    )}
+  />
+
+  <DevoteeLine
+    label="Referred To"
+    value={person.referred_to || "-"}
+  />
+
+  <DevoteeLine
+    label="Referred By"
+    value={person.referred_by || "-"}
+  />
+
   <DevoteeLine
     label="Affidavit Required"
-    value="Yes"
+    value={person.affidavit_required ? "YES" : "NO"}
   />
-)}
+</div>
                 </div>
 
                 <div className="devotee-photo-box">
@@ -6056,7 +6076,27 @@ function formatIdNumberDisplay(idType: string | null, idNumber: string | null) {
 
   return idNumber || "-";
 }
+function formatVideoProofDisplay(
+  videoProof: string | null,
+  videoProofOther: string | null
+) {
+  const cleanVideoProof = String(videoProof || "").trim();
+  const cleanOther = String(videoProofOther || "").trim();
 
+  if (!cleanVideoProof) {
+    return "-";
+  }
+
+  if (cleanVideoProof === "Others") {
+    return cleanOther ? `OTHERS - ${cleanOther.toUpperCase()}` : "OTHERS";
+  }
+
+  if (cleanVideoProof === "Not Reqd.") {
+    return "NOT REQD.";
+  }
+
+  return cleanVideoProof.toUpperCase();
+}
 function isFinalMeetingCandidate(person: Registration) {
   const status = person.candidate_status || person.status || "";
 
