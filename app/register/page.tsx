@@ -547,6 +547,13 @@ const spouseLabelHi =
     }
 
     if (currentStep === 3) {
+      if (needsFatherName && !formData.fatherName.trim()) {
+        return {
+          isValid: false,
+          message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
+        };
+      }
+
       if (needsSpouseName && !formData.spouseName.trim()) {
         return {
           isValid: false,
@@ -556,13 +563,6 @@ const spouseLabelHi =
               : formData.gender === "Female"
               ? "Please enter husband name.\nकृपया पति का नाम भरें।"
               : "Please enter spouse name.\nकृपया जीवनसाथी का नाम भरें।",
-        };
-      }
-
-      if (needsFatherName && !formData.fatherName.trim()) {
-        return {
-          isValid: false,
-          message: "Please enter father's name.\nकृपया पिता का नाम भरें।",
         };
       }
 
@@ -1047,29 +1047,7 @@ const spouseLabelHi =
               titleHi="परिवार की स्वीकृति जानकारी"
               subtitleEn="Please provide family approval details based on marital status."
               subtitleHi="कृपया वैवाहिक स्थिति के अनुसार परिवार की स्वीकृति जानकारी भरें।"
-            >
-            {needsSpouseName && (
-  <InputField
-    labelEn={spouseLabelEn}
-    labelHi={spouseLabelHi}
-    name="spouseName"
-    value={formData.spouseName}
-    onChange={handleChange}
-    placeholder={
-      formData.gender === "Male"
-        ? formData.maritalStatus === "Widowed"
-          ? "Enter late wife name / स्वर्गीय पत्नी का नाम भरें"
-          : "Enter wife name / पत्नी का नाम भरें"
-        : formData.gender === "Female"
-        ? formData.maritalStatus === "Widowed"
-          ? "Enter late husband name / स्वर्गीय पति का नाम भरें"
-          : "Enter husband name / पति का नाम भरें"
-        : "Enter spouse name / जीवनसाथी का नाम भरें"
-    }
-    required
-  />
-)}
-
+              >
               {needsFatherName && (
                 <InputField
                   labelEn="Father's Name"
@@ -1078,6 +1056,28 @@ const spouseLabelHi =
                   value={formData.fatherName}
                   onChange={handleChange}
                   placeholder="Enter father's name"
+                  required
+                />
+              )}
+
+              {needsSpouseName && (
+                <InputField
+                  labelEn={spouseLabelEn}
+                  labelHi={spouseLabelHi}
+                  name="spouseName"
+                  value={formData.spouseName}
+                  onChange={handleChange}
+                  placeholder={
+                    formData.gender === "Male"
+                      ? formData.maritalStatus === "Widowed"
+                        ? "Enter late wife name / स्वर्गीय पत्नी का नाम भरें"
+                        : "Enter wife name / पत्नी का नाम भरें"
+                      : formData.gender === "Female"
+                      ? formData.maritalStatus === "Widowed"
+                        ? "Enter late husband name / स्वर्गीय पति का नाम भरें"
+                        : "Enter husband name / पति का नाम भरें"
+                      : "Enter spouse name / जीवनसाथी का नाम भरें"
+                  }
                   required
                 />
               )}
@@ -1315,8 +1315,8 @@ const spouseLabelHi =
   label="Family Approval / परिवार स्वीकृति"
   value={
     isMarriedMale
-      ? `Wife: ${formData.spouseName || "-"} | Father: ${
-          formData.fatherName || "-"
+      ? `Father: ${formData.fatherName || "-"} | Wife: ${
+          formData.spouseName || "-"
         }`
       : needsSpouseName
       ? `${spouseLabelEn}: ${formData.spouseName || "-"}`
