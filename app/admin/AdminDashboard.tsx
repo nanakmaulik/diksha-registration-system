@@ -1011,15 +1011,58 @@ referred_by: request.referred_by || "",
       })
       .eq("id", editingRequest.id);
   
-    if (error) {
-      alert("Pending request update error: " + error.message);
+      if (error) {
+        alert("Pending request update error: " + error.message);
+        setIsSavingRequestEdit(false);
+        return;
+      }
+      
+      setPendingQuestionAnswers((prev) => ({
+        ...prev,
+        [editingRequest.id]: {
+          affidavit_required:
+            editRequestFormData.affidavit_required === true,
+          video_proof_attached:
+            editRequestFormData.video_proof_attached || "",
+          video_proof_other:
+            editRequestFormData.video_proof_other.trim() || "",
+          referred_to:
+            editRequestFormData.referred_to || "",
+          referred_by:
+            editRequestFormData.referred_by || "",
+        },
+      }));
+      
+      if (editingRequest.created_registration_id) {
+        const { error: linkedRegistrationError } = await supabase
+          .from("registrations")
+          .update({
+            affidavit_required:
+              editRequestFormData.affidavit_required === true,
+            video_proof_attached:
+              editRequestFormData.video_proof_attached || null,
+            video_proof_other:
+              editRequestFormData.video_proof_other.trim() || null,
+            referred_to:
+              editRequestFormData.referred_to || null,
+            referred_by:
+              editRequestFormData.referred_by || null,
+          })
+          .eq("id", editingRequest.created_registration_id);
+      
+        if (linkedRegistrationError) {
+          alert(
+            "Pending request saved, but linked registration sync error: " +
+              linkedRegistrationError.message
+          );
+          setIsSavingRequestEdit(false);
+          return;
+        }
+      }
+      
       setIsSavingRequestEdit(false);
-      return;
-    }
-  
-    setIsSavingRequestEdit(false);
-    setEditingRequest(null);
-    router.refresh();
+      setEditingRequest(null);
+      router.refresh();
   }
   async function handleRescheduleFinalMeeting() {
     if (!selectedAction) return;
@@ -2143,15 +2186,38 @@ referred_to:
         })
         .eq("id", editingRegistration.id);
     
-      if (error) {
-        alert("Registration update error: " + error.message);
+        if (error) {
+          alert("Registration update error: " + error.message);
+          setIsSavingRegistrationEdit(false);
+          return;
+        }
+        
+        const { error: linkedRequestError } = await supabase
+          .from("registration_requests")
+          .update({
+            video_proof_attached:
+              editFormData.video_proof_attached || null,
+            video_proof_other:
+              editFormData.video_proof_other.trim() || null,
+            referred_to:
+              editFormData.referred_to || null,
+            referred_by:
+              editFormData.referred_by || null,
+          })
+          .eq("created_registration_id", editingRegistration.id);
+        
+        if (linkedRequestError) {
+          alert(
+            "Registration saved, but linked request sync error: " +
+              linkedRequestError.message
+          );
+          setIsSavingRegistrationEdit(false);
+          return;
+        }
+        
         setIsSavingRegistrationEdit(false);
-        return;
-      }
-    
-      setIsSavingRegistrationEdit(false);
-      setEditingRegistration(null);
-      window.location.reload();
+        setEditingRegistration(null);
+        window.location.reload();
     }
     
     async function handleDeleteRegistration(person: Registration) {
