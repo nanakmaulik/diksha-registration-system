@@ -5104,19 +5104,12 @@ const guardianValue = shouldShowHusbandName
                     label="ID / Aadhaar No"
                     value={formatIdNumberDisplay(person.id_type, person.id_number)}
                   />
-             <div className="hukm-checking-mini">
-             <strong>FINAL VERIFICATION:</strong>{" "}
-  <span>
-    VIDEO:{" "}
-    {formatVideoProofDisplay(
-      person.video_proof_attached,
-      person.video_proof_other
-    )}
-  </span>
-  <span>REF TO: {person.referred_to || "-"}</span>
-  <span>REF BY: {person.referred_by || "-"}</span>
-  <span>AFF: {person.affidavit_required ? "YES" : "NO"}</span>
-</div>
+         {person.affidavit_required && (
+  <DevoteeLine
+    label="Affidavit Required"
+    value="Yes"
+  />
+)}
                 </div>
 
                 <div className="devotee-photo-box">

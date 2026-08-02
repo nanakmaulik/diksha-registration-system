@@ -449,46 +449,4 @@ button {
     margin-bottom: 5px !important;
   }
 }
-.hukm-checking-mini {
-  margin-top: 4px;
-  border: 1px solid #111;
-  padding: 3px 5px;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1.15;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-}
 
-.hukm-checking-mini strong {
-  font-weight: 900;
-  text-decoration: underline;
-}
-
-@media print {
-  .hukm-checking-section {
-    display: none !important;
-  }
-
-  .hukm-checking-mini {
-    margin-top: 3px !important;
-    padding: 2px 4px !important;
-    font-size: 8.5px !important;
-    line-height: 1.05 !important;
-    border: 1px solid #000 !important;
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    gap: 7px !important;
-    width: calc(100% + 190px) !important;
-    max-width: calc(100% + 190px) !important;
-    white-space: nowrap !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  .hukm-checking-mini strong,
-  .hukm-checking-mini span {
-    white-space: nowrap !important;
-  }
-}
