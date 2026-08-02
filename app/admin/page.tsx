@@ -214,11 +214,13 @@ export default async function AdminPage({
           admin_remarks,
           created_at,
           aadhaar_file_url,
-          aadhaar_file_name,
-          referred_to,
-          referred_by,
-          affidavit_required,
-          slots (
+aadhaar_file_name,
+video_proof_attached,
+video_proof_other,
+referred_to,
+referred_by,
+affidavit_required,
+slots (
             slot_date,
             slot_time
           )
