@@ -610,8 +610,8 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     setEditingRequestSlotId(null);
     setEditingRequestNewSlotId("");
     setIsUpdatingRequestSlot(false);
-  
-    window.location.reload();
+    
+    router.refresh();
   }
   function getPendingQuestionAnswers(request: RegistrationRequest) {
     return (
@@ -2216,8 +2216,8 @@ referred_to:
         }
         
         setIsSavingRegistrationEdit(false);
-        setEditingRegistration(null);
-        window.location.reload();
+setEditingRegistration(null);
+router.refresh();
     }
     
     async function handleDeleteRegistration(person: Registration) {
@@ -5105,7 +5105,7 @@ const guardianValue = shouldShowHusbandName
                     value={formatIdNumberDisplay(person.id_type, person.id_number)}
                   />
              <div className="hukm-checking-mini">
-  <strong>FINAL VERIFICATION / HUKM:</strong>{" "}
+             <strong>FINAL VERIFICATION:</strong>{" "}
   <span>
     VIDEO:{" "}
     {formatVideoProofDisplay(
