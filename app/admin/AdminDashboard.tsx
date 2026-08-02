@@ -5104,31 +5104,18 @@ const guardianValue = shouldShowHusbandName
                     label="ID / Aadhaar No"
                     value={formatIdNumberDisplay(person.id_type, person.id_number)}
                   />
-              <div className="hukm-checking-section">
-  <h3>FINAL VERIFICATION / HUKM CHECKING</h3>
-
-  <DevoteeLine
-    label="Video Proof"
-    value={formatVideoProofDisplay(
+             <div className="hukm-checking-mini">
+  <strong>FINAL VERIFICATION / HUKM:</strong>{" "}
+  <span>
+    VIDEO:{" "}
+    {formatVideoProofDisplay(
       person.video_proof_attached,
       person.video_proof_other
     )}
-  />
-
-  <DevoteeLine
-    label="Referred To"
-    value={person.referred_to || "-"}
-  />
-
-  <DevoteeLine
-    label="Referred By"
-    value={person.referred_by || "-"}
-  />
-
-  <DevoteeLine
-    label="Affidavit Required"
-    value={person.affidavit_required ? "YES" : "NO"}
-  />
+  </span>
+  <span>REF TO: {person.referred_to || "-"}</span>
+  <span>REF BY: {person.referred_by || "-"}</span>
+  <span>AFF: {person.affidavit_required ? "YES" : "NO"}</span>
 </div>
                 </div>
 
