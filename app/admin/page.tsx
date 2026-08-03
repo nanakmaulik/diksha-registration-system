@@ -359,6 +359,7 @@ slots (
   accessMode={isAdminAccess ? "admin" : "sadhak"}
   permissions={dashboardPermissions}
   loggedInUsername={adminProfile.username}
+  loggedInRole={adminProfile.role}
 />
     </>
   );

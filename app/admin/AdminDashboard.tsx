@@ -127,6 +127,7 @@ export default function AdminDashboard({
   accessMode = "admin",
   permissions,
   loggedInUsername = "Sadhak",
+loggedInRole = "sadhak",
 }: {
   registrations: Registration[];
   slots: Slot[];
@@ -135,6 +136,7 @@ export default function AdminDashboard({
   accessMode?: "admin" | "sadhak";
   permissions?: Record<string, boolean> | null;
   loggedInUsername?: string;
+  loggedInRole?: "super_admin" | "admin" | "sadhak";
 }) {
 
   const actorUsername =
@@ -158,6 +160,13 @@ export default function AdminDashboard({
   const router = useRouter();
   const isSadhakAccess = accessMode === "sadhak";
   const isSuperAdminAccess = accessMode === "admin";
+  const isSuperAdminUser = loggedInRole === "super_admin";
+  
+  function isDikshaCompletedLocked(person: Registration) {
+    const statusValue = person.candidate_status || person.status || "";
+  
+    return statusValue === "Diksha Completed" && !isSuperAdminUser;
+  }
 
   function can(permissionName: string) {
     return isSuperAdminAccess || Boolean(permissions?.[permissionName]);
@@ -2062,6 +2071,12 @@ setTokenSuccess({
       setIsConvertingGroupToken(false);
     }
     function openEditRegistration(person: Registration) {
+      if (isDikshaCompletedLocked(person)) {
+        alert(
+          "This candidate's Diksha is completed. Only Super Admin can edit these details.\nइस candidate की दीक्षा पूर्ण हो चुकी है। केवल Super Admin details edit कर सकता है।"
+        );
+        return;
+      }
       const existingFamilyRelation = person.family_relation || "";
       const familyRelationSelectValue =
         getFamilyRelationSelectValue(existingFamilyRelation);
@@ -2121,6 +2136,13 @@ referred_by: person.referred_by || "",
     
     async function handleSaveRegistrationEdit() {
       if (!editingRegistration) return;
+    
+      if (isDikshaCompletedLocked(editingRegistration)) {
+        alert(
+          "This candidate's Diksha is completed. Only Super Admin can save changes.\nइस candidate की दीक्षा पूर्ण हो चुकी है। केवल Super Admin बदलाव save कर सकता है।"
+        );
+        return;
+      }
     
       if (!editFormData.full_name.trim()) {
         alert("Please enter name.");
@@ -3954,93 +3976,118 @@ titleHi="स्थगित"
 </TableCell>
 
 <TableCell>
-  <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedAction({
-                                registrationId: person.id,
-                                candidateName: person.full_name || person.token,
-                                workflow: isDikshaCandidate(person) ? "diksha" : "final_meeting",
-                                actionType: "status",
-                                title: "Manage Candidate",
-                                newStatus: person.candidate_status || person.status,
-                              });
-                              setFinalMeetingSlotId(person.slots?.slot_date ? person.slot_id || "" : "");
-                              setFinalMeetingMonth("");
-                              setDikshaDate(person.diksha_date || "");
-                              setDikshaTime(person.diksha_time || "3:30 PM");
-                            }}
-                            className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
-                          >
-                            {isDikshaCandidate(person) ? "Manage Diksha" : "Manage Meeting"}
-                            <span className="block text-[10px] font-normal">
-  {isDikshaCandidate(person) ? "दीक्षा अपडेट करें" : "मीटिंग अपडेट करें"}
-</span>
-                          </button>
+  {isDikshaCompletedLocked(person) ? (
+    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-extrabold text-red-700">
+      Locked
+      <span className="block text-[10px] font-semibold">
+        Super Admin only
+      </span>
+    </div>
+  ) : (
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => {
+          setSelectedAction({
+            registrationId: person.id,
+            candidateName: person.full_name || person.token,
+            workflow: isDikshaCandidate(person)
+              ? "diksha"
+              : "final_meeting",
+            actionType: "status",
+            title: "Manage Candidate",
+            newStatus: person.candidate_status || person.status,
+          });
+          setFinalMeetingSlotId(
+            person.slots?.slot_date ? person.slot_id || "" : ""
+          );
+          setFinalMeetingMonth("");
+          setDikshaDate(person.diksha_date || "");
+          setDikshaTime(person.diksha_time || "3:30 PM");
+        }}
+        className="rounded-full bg-orange-100 px-4 py-2 text-xs font-bold text-orange-800"
+      >
+        {isDikshaCandidate(person)
+          ? "Manage Diksha"
+          : "Manage Meeting"}
+        <span className="block text-[10px] font-normal">
+          {isDikshaCandidate(person)
+            ? "दीक्षा अपडेट करें"
+            : "मीटिंग अपडेट करें"}
+        </span>
+      </button>
 
-                          <button
-                            type="button"
-                            onClick={() => setSelectedHistory(person)}
-                            className="rounded-full bg-stone-100 px-4 py-2 text-xs font-bold text-stone-700"
-                          >
-                            History
-                            <span className="block text-[10px] font-normal">
-                              इतिहास
-                            </span>
-                          </button>
-                          <button
-  type="button"
-  onClick={() => openEditRegistration(person)}
-  className="rounded-full bg-blue-100 px-4 py-2 text-xs font-bold text-blue-700"
->
-  Edit
-  <span className="block text-[10px] font-normal">
-    विवरण बदलें
-  </span>
-</button>
+      <button
+        type="button"
+        onClick={() => setSelectedHistory(person)}
+        className="rounded-full bg-stone-100 px-4 py-2 text-xs font-bold text-stone-700"
+      >
+        History
+        <span className="block text-[10px] font-normal">
+          इतिहास
+        </span>
+      </button>
 
-{(person.candidate_status || person.status) !== "Diksha Completed" && (
-  <button
-    type="button"
-    onClick={() => handleDeleteRegistration(person)}
-    disabled={isDeletingRegistrationId === person.id}
-    className="rounded-full bg-red-100 px-4 py-2 text-xs font-bold text-red-700 disabled:opacity-50"
-  >
-    {isDeletingRegistrationId === person.id ? "Deleting..." : "Delete"}
-    <span className="block text-[10px] font-normal">
-      हटाएं
+      <button
+        type="button"
+        onClick={() => openEditRegistration(person)}
+        className="rounded-full bg-blue-100 px-4 py-2 text-xs font-bold text-blue-700"
+      >
+        Edit
+        <span className="block text-[10px] font-normal">
+          विवरण बदलें
+        </span>
+      </button>
+
+      {(person.candidate_status || person.status) !==
+        "Diksha Completed" && (
+        <button
+          type="button"
+          onClick={() => handleDeleteRegistration(person)}
+          disabled={isDeletingRegistrationId === person.id}
+          className="rounded-full bg-red-100 px-4 py-2 text-xs font-bold text-red-700 disabled:opacity-50"
+        >
+          {isDeletingRegistrationId === person.id
+            ? "Deleting..."
+            : "Delete"}
+          <span className="block text-[10px] font-normal">
+            हटाएं
+          </span>
+        </button>
+      )}
+    </div>
+  )}
+</TableCell>
+
+<TableCell>
+  {isDikshaCompletedLocked(person) ? (
+    <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
+      Locked
     </span>
-  </button>
-)}
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        {person.aadhaar_file_url ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedAadhaar({
-                                url: person.aadhaar_file_url || "",
-                                name:
-                                  person.aadhaar_file_name ||
-                                  person.full_name,
-                              })
-                            }
-                            className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-800"
-                          >
-                            View
-                            <span className="block text-[10px] font-normal">
-                              देखें
-                            </span>
-                          </button>
-                        ) : (
-                          <span className="text-xs font-bold text-red-600">
-                            Missing
-                          </span>
-                        )}
-                      </TableCell>
+  ) : person.aadhaar_file_url ? (
+    <button
+      type="button"
+      onClick={() =>
+        setSelectedAadhaar({
+          url: person.aadhaar_file_url || "",
+          name:
+            person.aadhaar_file_name ||
+            person.full_name,
+        })
+      }
+      className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-800"
+    >
+      View
+      <span className="block text-[10px] font-normal">
+        देखें
+      </span>
+    </button>
+  ) : (
+    <span className="text-xs font-bold text-red-600">
+      Missing
+    </span>
+  )}
+</TableCell>
 
                       <TableCell>
                         <div className="space-y-2">
