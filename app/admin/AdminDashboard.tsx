@@ -5151,10 +5151,20 @@ const guardianValue = shouldShowHusbandName
                     label="ID / Aadhaar No"
                     value={formatIdNumberDisplay(person.id_type, person.id_number)}
                   />
-         {person.affidavit_required && (
+      {person.affidavit_required && (
   <DevoteeLine
     label="Affidavit Required"
-    value="Yes"
+    value="YES"
+  />
+)}
+
+{person.video_proof_attached && (
+  <DevoteeLine
+    label="Video Proof"
+    value={formatVideoProofDisplay(
+      person.video_proof_attached,
+      person.video_proof_other
+    )}
   />
 )}
                 </div>
