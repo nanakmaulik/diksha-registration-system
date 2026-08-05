@@ -289,7 +289,7 @@ const [editRequestFormData, setEditRequestFormData] = useState({
   id_type: "",
   id_number: "",
   affidavit_required: false,
-video_proof_attached: "",
+  video_proof_attached: "",
   video_proof_other: "",
   referred_to: "",
   referred_by: "",
@@ -331,9 +331,10 @@ const [editFormData, setEditFormData] = useState({
   family_relation: "",
 family_relation_other: "",
 family_mobile: "",
-  id_type: "",
-  id_number: "",
-  video_proof_attached: "",
+id_type: "",
+id_number: "",
+affidavit_required: false,
+video_proof_attached: "",
   video_proof_other: "",
   referred_to: "",
   referred_by: "",
@@ -2107,8 +2108,9 @@ setTokenSuccess({
             : "",
         family_mobile: person.family_mobile || "",
         id_type: person.id_type || "",
-id_number: person.id_number || "",
-video_proof_attached: person.video_proof_attached || "",
+        id_number: person.id_number || "",
+        affidavit_required: Boolean(person.affidavit_required),
+        video_proof_attached: person.video_proof_attached || "",
 video_proof_other: person.video_proof_other || "",
 referred_to: person.referred_to || "",
 referred_by: person.referred_by || "",
@@ -2197,6 +2199,7 @@ referred_by: person.referred_by || "",
           family_mobile: editFormData.family_mobile.trim() || null,
           id_type: editFormData.id_type || null,
           id_number: editFormData.id_number.trim() || null,
+          affidavit_required: editFormData.affidavit_required === true,
           video_proof_attached:
   editFormData.video_proof_attached || null,
 video_proof_other:
@@ -2215,9 +2218,10 @@ referred_to:
         }
         
         const { error: linkedRequestError } = await supabase
-          .from("registration_requests")
-          .update({
-            video_proof_attached:
+        .from("registration_requests")
+        .update({
+          affidavit_required: editFormData.affidavit_required === true,
+          video_proof_attached:
               editFormData.video_proof_attached || null,
             video_proof_other:
               editFormData.video_proof_other.trim() || null,
@@ -4423,13 +4427,37 @@ colSpan={10}
           ]}
         />
 
-        <EditInput
-          label="ID / Aadhaar Number"
-          name="id_number"
-          value={editFormData.id_number}
-          onChange={handleEditFormChange}
-          required
-        />
+<EditInput
+  label="ID / Aadhaar Number"
+  name="id_number"
+  value={editFormData.id_number}
+  onChange={handleEditFormChange}
+  required
+/>
+
+<div className="rounded-2xl border border-orange-200 bg-white px-4 py-3">
+  <label className="flex cursor-pointer items-start gap-3 text-sm font-bold text-stone-700">
+    <input
+      type="checkbox"
+      checked={editFormData.affidavit_required}
+      onChange={(event) =>
+        setEditFormData((prev) => ({
+          ...prev,
+          affidavit_required: event.target.checked,
+        }))
+      }
+      className="mt-1 h-5 w-5 accent-orange-700"
+    />
+
+    <span>
+      Affidavit Required / शपथ पत्र आवश्यक
+      <span className="mt-1 block text-xs font-normal text-stone-500">
+        Mark only if affidavit is required.
+      </span>
+    </span>
+  </label>
+</div>
+
 <EditSelect
   label="Video Proof Attached / वीडियो प्रमाण"
   name="video_proof_attached"
