@@ -436,4 +436,35 @@ button {
     break-after: auto;
   }
 }
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 6mm;
+  }
+
+  .devotee-forms-area .devotee-form-page {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 190mm !important;
+    height: 277mm !important;
+    min-height: 0 !important;
+    max-height: 277mm !important;
+    margin: 0 auto !important;
+    padding: 4mm 6mm !important;
+    overflow: hidden !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .devotee-forms-area .devotee-form-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .devotee-forms-area .form-footer {
+    display: none !important;
+  }
+}
 
