@@ -5127,6 +5127,9 @@ const guardianValue = shouldShowHusbandName
                   <strong>Card No :</strong>{" "}
                   {getTokenWithMemberLetter(person, registrations)}
                   </p>
+                  <p>
+  <strong>Meeting Date :</strong> {meetingDate}
+</p>
                 </div>
 
                 <div>
@@ -5269,11 +5272,7 @@ const guardianValue = shouldShowHusbandName
   </div>
 </div>
 
-              <div className="form-footer">
-                <p>
-                <strong>Meeting Date / मीटिंग तारीख :</strong> {meetingDate}
-                </p>
-              </div>
+
             </div>
           );
         })}
