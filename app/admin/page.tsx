@@ -220,6 +220,8 @@ video_proof_other,
 referred_to,
 referred_by,
 affidavit_required,
+affidavit_attached,
+affidavit_other,
 slots (
             slot_date,
             slot_time

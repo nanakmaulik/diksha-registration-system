@@ -50,6 +50,8 @@ video_proof_other: string | null;
   referred_to: string | null;
   referred_by: string | null;
   affidavit_required: boolean | null;
+  affidavit_attached: string | null;
+affidavit_other: string | null;
   slots: {
     slot_date: string;
     slot_time: string;
@@ -112,6 +114,8 @@ type RegistrationRequest = {
   created_registration_id: string | null;
   vrindavan_stay_days: string | null;
   affidavit_required: boolean | null;
+  affidavit_attached: string | null;
+affidavit_other: string | null;
 video_proof_attached: string | null;
 video_proof_other: string | null;
 referred_to: string | null;
@@ -253,6 +257,8 @@ const [pendingQuestionAnswers, setPendingQuestionAnswers] = useState<
     string,
     {
       affidavit_required: boolean;
+      affidavit_attached: string;
+      affidavit_other: string;
       video_proof_attached: string;
       video_proof_other: string;
       referred_to: string;
@@ -289,7 +295,9 @@ const [editRequestFormData, setEditRequestFormData] = useState({
   id_type: "",
   id_number: "",
   affidavit_required: false,
-  video_proof_attached: "",
+affidavit_attached: "",
+affidavit_other: "",
+video_proof_attached: "",
   video_proof_other: "",
   referred_to: "",
   referred_by: "",
@@ -334,6 +342,8 @@ family_mobile: "",
 id_type: "",
 id_number: "",
 affidavit_required: false,
+affidavit_attached: "",
+affidavit_other: "",
 video_proof_attached: "",
   video_proof_other: "",
   referred_to: "",
@@ -624,9 +634,17 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     router.refresh();
   }
   function getPendingQuestionAnswers(request: RegistrationRequest) {
+    const oldAffidavitRequired = Boolean(request.affidavit_required);
+  
     return (
       pendingQuestionAnswers[request.id] || {
-        affidavit_required: Boolean(request.affidavit_required),
+        affidavit_required: oldAffidavitRequired,
+        affidavit_attached:
+          request.affidavit_attached ||
+          (oldAffidavitRequired ? "Others" : ""),
+        affidavit_other:
+          request.affidavit_other ||
+          (oldAffidavitRequired ? "Required" : ""),
         video_proof_attached: request.video_proof_attached || "",
         video_proof_other: request.video_proof_other || "",
         referred_to: request.referred_to || "",
@@ -638,6 +656,8 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   function handlePendingQuestionChange(
     request: RegistrationRequest,
     field:
+    | "affidavit_attached"
+    | "affidavit_other"
     | "video_proof_attached"
     | "video_proof_other"
     | "referred_to"
@@ -651,6 +671,15 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
       [request.id]: {
         ...currentAnswers,
         [field]: value,
+        ...(field === "affidavit_attached"
+          ? {
+              affidavit_required:
+                Boolean(value) && value !== "Not Reqd.",
+            }
+          : {}),
+        ...(field === "affidavit_attached" && value !== "Others"
+          ? { affidavit_other: "" }
+          : {}),
         ...(field === "video_proof_attached" && value !== "Others"
           ? { video_proof_other: "" }
           : {}),
@@ -690,8 +719,12 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     const { error } = await supabase
       .from("registration_requests")
       .update({
-        affidavit_required: answers.affidavit_required === true,
-        video_proof_attached: answers.video_proof_attached || null,
+        affidavit_required:
+        Boolean(answers.affidavit_attached) &&
+        answers.affidavit_attached !== "Not Reqd.",
+      affidavit_attached: answers.affidavit_attached || null,
+      affidavit_other: answers.affidavit_other.trim() || null,
+      video_proof_attached: answers.video_proof_attached || null,
         video_proof_other: answers.video_proof_other.trim() || null,
         referred_to: answers.referred_to || null,
         referred_by: answers.referred_by || null,
@@ -928,6 +961,12 @@ setIsBulkApprovingRequests(false);
       id_type: request.id_type || "",
       id_number: request.id_number || "",
       affidavit_required: Boolean(request.affidavit_required),
+      affidavit_attached:
+        request.affidavit_attached ||
+        (request.affidavit_required ? "Others" : ""),
+      affidavit_other:
+        request.affidavit_other ||
+        (request.affidavit_required ? "Required" : ""),
       video_proof_attached: request.video_proof_attached || "",
 video_proof_other: request.video_proof_other || "",
 referred_to: request.referred_to || "",
@@ -948,6 +987,15 @@ referred_by: request.referred_by || "",
       ...(name === "video_proof_attached" && value !== "Others"
         ? { video_proof_other: "" }
         : {}),
+        ...(name === "affidavit_attached"
+          ? {
+              affidavit_required:
+                Boolean(value) && value !== "Not Reqd.",
+            }
+          : {}),
+        ...(name === "affidavit_attached" && value !== "Others"
+          ? { affidavit_other: "" }
+          : {}),
       ...(name === "family_relation" && value !== "Other"
         ? { family_relation_other: "" }
         : {}),
@@ -1031,7 +1079,12 @@ referred_by: request.referred_by || "",
         ...prev,
         [editingRequest.id]: {
           affidavit_required:
-            editRequestFormData.affidavit_required === true,
+            Boolean(editRequestFormData.affidavit_attached) &&
+            editRequestFormData.affidavit_attached !== "Not Reqd.",
+          affidavit_attached:
+            editRequestFormData.affidavit_attached || "",
+          affidavit_other:
+            editRequestFormData.affidavit_other.trim() || "",
           video_proof_attached:
             editRequestFormData.video_proof_attached || "",
           video_proof_other:
@@ -2110,6 +2163,12 @@ setTokenSuccess({
         id_type: person.id_type || "",
         id_number: person.id_number || "",
         affidavit_required: Boolean(person.affidavit_required),
+        affidavit_attached:
+          person.affidavit_attached ||
+          (person.affidavit_required ? "Others" : ""),
+        affidavit_other:
+          person.affidavit_other ||
+          (person.affidavit_required ? "Required" : ""),
         video_proof_attached: person.video_proof_attached || "",
 video_proof_other: person.video_proof_other || "",
 referred_to: person.referred_to || "",
@@ -2199,8 +2258,12 @@ referred_by: person.referred_by || "",
           family_mobile: editFormData.family_mobile.trim() || null,
           id_type: editFormData.id_type || null,
           id_number: editFormData.id_number.trim() || null,
-          affidavit_required: editFormData.affidavit_required === true,
-          video_proof_attached:
+          affidavit_required:
+          Boolean(editFormData.affidavit_attached) &&
+          editFormData.affidavit_attached !== "Not Reqd.",
+        affidavit_attached: editFormData.affidavit_attached || null,
+        affidavit_other: editFormData.affidavit_other.trim() || null,
+        video_proof_attached:
   editFormData.video_proof_attached || null,
 video_proof_other:
   editFormData.video_proof_other.trim() || null,
@@ -2948,27 +3011,51 @@ router.refresh();
   </div>
 
   <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-  <div className="rounded-2xl border border-orange-200 bg-white px-4 py-3">
-  <label className="flex cursor-pointer items-start gap-3 text-sm font-bold text-stone-700">
-    <input
-      type="checkbox"
-      checked={getPendingQuestionAnswers(request).affidavit_required}
-      onChange={(event) =>
-        handlePendingAffidavitChange(request, event.target.checked)
-      }
-      className="mt-1 h-5 w-5 accent-orange-700"
-    />
-
-    <span>
-      Affidavit Required
-      <span className="block text-xs font-semibold text-orange-800">
-        शपथ पत्र आवश्यक है
-      </span>
-      <span className="mt-1 block text-xs font-normal text-stone-500">
-        Mark only if affidavit is required.
-      </span>
+  <div>
+  <label className="mb-2 block text-sm font-bold text-stone-700">
+    Affidavit
+    <span className="block text-xs font-semibold text-orange-800">
+      शपथ पत्र
     </span>
   </label>
+
+  <select
+    value={getPendingQuestionAnswers(request).affidavit_attached}
+    onChange={(event) =>
+      handlePendingQuestionChange(
+        request,
+        "affidavit_attached",
+        event.target.value
+      )
+    }
+    className="w-full rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none focus:border-orange-600"
+  >
+    <option value="">Select affidavit</option>
+    <option value="Father">Father / पिता</option>
+    <option value="Mother">Mother / माता</option>
+    <option value="Both">Both / दोनों</option>
+    <option value="Husband">Husband / पति</option>
+    <option value="Wife">Wife / पत्नी</option>
+    <option value="Not Reqd.">Not Reqd. / आवश्यक नहीं</option>
+    <option value="Others">Others / अन्य</option>
+  </select>
+
+  {getPendingQuestionAnswers(request).affidavit_attached ===
+    "Others" && (
+    <input
+      type="text"
+      value={getPendingQuestionAnswers(request).affidavit_other}
+      onChange={(event) =>
+        handlePendingQuestionChange(
+          request,
+          "affidavit_other",
+          event.target.value
+        )
+      }
+      placeholder="Enter other affidavit details"
+      className="mt-3 w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+    />
+  )}
 </div>
 
     <div>
@@ -4435,28 +4522,31 @@ colSpan={10}
   required
 />
 
-<div className="rounded-2xl border border-orange-200 bg-white px-4 py-3">
-  <label className="flex cursor-pointer items-start gap-3 text-sm font-bold text-stone-700">
-    <input
-      type="checkbox"
-      checked={editFormData.affidavit_required}
-      onChange={(event) =>
-        setEditFormData((prev) => ({
-          ...prev,
-          affidavit_required: event.target.checked,
-        }))
-      }
-      className="mt-1 h-5 w-5 accent-orange-700"
-    />
+<EditSelect
+  label="Affidavit / शपथ पत्र"
+  name="affidavit_attached"
+  value={editFormData.affidavit_attached}
+  onChange={handleEditFormChange}
+  options={[
+    ["", "Select affidavit"],
+    ["Father", "Father / पिता"],
+    ["Mother", "Mother / माता"],
+    ["Both", "Both / दोनों"],
+    ["Husband", "Husband / पति"],
+    ["Wife", "Wife / पत्नी"],
+    ["Not Reqd.", "Not Reqd. / आवश्यक नहीं"],
+    ["Others", "Others / अन्य"],
+  ]}
+/>
 
-    <span>
-      Affidavit Required / शपथ पत्र आवश्यक
-      <span className="mt-1 block text-xs font-normal text-stone-500">
-        Mark only if affidavit is required.
-      </span>
-    </span>
-  </label>
-</div>
+{editFormData.affidavit_attached === "Others" && (
+  <EditInput
+    label="Other Affidavit Details / अन्य शपथ पत्र"
+    name="affidavit_other"
+    value={editFormData.affidavit_other}
+    onChange={handleEditFormChange}
+  />
+)}
 
 <EditSelect
   label="Video Proof Attached / वीडियो प्रमाण"
@@ -4841,29 +4931,31 @@ colSpan={10}
             value={editRequestFormData.address}
             onChange={handleEditRequestFormChange}
           />
-       <div className="rounded-2xl border border-orange-200 bg-white px-4 py-3">
-  <label className="flex cursor-pointer items-start gap-3 text-sm font-bold text-stone-700">
-    <input
-      type="checkbox"
-      checked={editRequestFormData.affidavit_required}
-      onChange={(event) =>
-        setEditRequestFormData((prev) => ({
-          ...prev,
-          affidavit_required: event.target.checked,
-        }))
-      }
-      className="mt-1 h-5 w-5 accent-orange-700"
-    />
+    <EditSelect
+  label="Affidavit / शपथ पत्र"
+  name="affidavit_attached"
+  value={editRequestFormData.affidavit_attached}
+  onChange={handleEditRequestFormChange}
+  options={[
+    ["", "Select affidavit"],
+    ["Father", "Father / पिता"],
+    ["Mother", "Mother / माता"],
+    ["Both", "Both / दोनों"],
+    ["Husband", "Husband / पति"],
+    ["Wife", "Wife / पत्नी"],
+    ["Not Reqd.", "Not Reqd. / आवश्यक नहीं"],
+    ["Others", "Others / अन्य"],
+  ]}
+/>
 
-    <span>
-      Affidavit Required / शपथ पत्र आवश्यक
-      <span className="mt-1 block text-xs font-normal text-stone-500">
-        Mark only if affidavit is required.
-      </span>
-    </span>
-  </label>
-</div>
-
+{editRequestFormData.affidavit_attached === "Others" && (
+  <EditInput
+    label="Other Affidavit Details / अन्य शपथ पत्र"
+    name="affidavit_other"
+    value={editRequestFormData.affidavit_other}
+    onChange={handleEditRequestFormChange}
+  />
+)}
         <EditSelect
           label="Video Proof Attached / वीडियो प्रमाण"
           name="video_proof_attached"
@@ -5182,7 +5274,7 @@ const guardianValue = shouldShowHusbandName
                     label="ID / Aadhaar No"
                     value={formatIdNumberDisplay(person.id_type, person.id_number)}
                   />
-      {person.affidavit_required && (
+ {person.affidavit_required && (
   <DevoteeLine
     label="Affidavit Required"
     value="YES"
@@ -5198,6 +5290,7 @@ const guardianValue = shouldShowHusbandName
     )}
   />
 )}
+
                 </div>
 
                 <div className="devotee-photo-box">
@@ -6161,6 +6254,30 @@ function formatVideoProofDisplay(
 
   return cleanVideoProof.toUpperCase();
 }
+
+function formatAffidavitDisplay(
+  affidavitValue: string | null,
+  affidavitOther: string | null,
+  oldRequiredValue?: boolean | null
+) {
+  const cleanValue = String(affidavitValue || "").trim();
+  const cleanOther = String(affidavitOther || "").trim();
+
+  if (!cleanValue) {
+    return oldRequiredValue ? "YES" : "";
+  }
+
+  if (cleanValue === "Others") {
+    return cleanOther ? `OTHERS - ${cleanOther.toUpperCase()}` : "OTHERS";
+  }
+
+  if (cleanValue === "Not Reqd.") {
+    return "NOT REQD.";
+  }
+
+  return cleanValue.toUpperCase();
+}
+
 function isFinalMeetingCandidate(person: Registration) {
   const status = person.candidate_status || person.status || "";
 
