@@ -1059,7 +1059,10 @@ referred_by: request.referred_by || "",
         id_type: editRequestFormData.id_type || null,
         id_number: editRequestFormData.id_number.trim() || null,
         affidavit_required:
-        editRequestFormData.affidavit_required === true,
+        Boolean(editRequestFormData.affidavit_attached) &&
+        editRequestFormData.affidavit_attached !== "Not Reqd.",
+      affidavit_attached: editRequestFormData.affidavit_attached || null,
+      affidavit_other: editRequestFormData.affidavit_other.trim() || null,
       video_proof_attached:
         editRequestFormData.video_proof_attached || null,
       video_proof_other:
@@ -1098,11 +1101,14 @@ referred_by: request.referred_by || "",
       
       if (editingRequest.created_registration_id) {
         const { error: linkedRegistrationError } = await supabase
-          .from("registrations")
-          .update({
-            affidavit_required:
-              editRequestFormData.affidavit_required === true,
-            video_proof_attached:
+        .from("registrations")
+        .update({
+          affidavit_required:
+            Boolean(editRequestFormData.affidavit_attached) &&
+            editRequestFormData.affidavit_attached !== "Not Reqd.",
+          affidavit_attached: editRequestFormData.affidavit_attached || null,
+          affidavit_other: editRequestFormData.affidavit_other.trim() || null,
+          video_proof_attached:
               editRequestFormData.video_proof_attached || null,
             video_proof_other:
               editRequestFormData.video_proof_other.trim() || null,
@@ -2186,6 +2192,15 @@ referred_by: person.referred_by || "",
       setEditFormData((prev) => ({
         ...prev,
         [name]: value,
+        ...(name === "affidavit_attached"
+          ? {
+              affidavit_required:
+                Boolean(value) && value !== "Not Reqd.",
+            }
+          : {}),
+        ...(name === "affidavit_attached" && value !== "Others"
+          ? { affidavit_other: "" }
+          : {}),
         ...(name === "video_proof_attached" && value !== "Others"
           ? { video_proof_other: "" }
           : {}),
@@ -2283,7 +2298,11 @@ referred_to:
         const { error: linkedRequestError } = await supabase
         .from("registration_requests")
         .update({
-          affidavit_required: editFormData.affidavit_required === true,
+          affidavit_required:
+            Boolean(editFormData.affidavit_attached) &&
+            editFormData.affidavit_attached !== "Not Reqd.",
+          affidavit_attached: editFormData.affidavit_attached || null,
+          affidavit_other: editFormData.affidavit_other.trim() || null,
           video_proof_attached:
               editFormData.video_proof_attached || null,
             video_proof_other:
