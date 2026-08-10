@@ -1912,8 +1912,22 @@ referred_by: request.referred_by || "",
     (slot) => slot.current_count < slot.capacity
   );
 
-  const tomorrowDate = getTodayDateString();
-  const threeMonthsLaterDate = getDateAfterMonths(3);
+  const formatSlotFilterDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+  
+    return `${year}-${month}-${day}`;
+  };
+  
+  const tomorrowForSlots = new Date();
+  tomorrowForSlots.setDate(tomorrowForSlots.getDate() + 1);
+  
+  const sixMonthsLaterForSlots = new Date();
+  sixMonthsLaterForSlots.setMonth(sixMonthsLaterForSlots.getMonth() + 6);
+  
+  const tomorrowDate = formatSlotFilterDate(tomorrowForSlots);
+  const sixMonthsLaterDate = formatSlotFilterDate(sixMonthsLaterForSlots);
   const finalMeetingAttendanceList = useMemo(() => {
     return registrations
       .filter((person) => {
@@ -1955,7 +1969,7 @@ referred_by: request.referred_by || "",
     .filter(
       (slot) =>
         slot.slot_date >= tomorrowDate &&
-        slot.slot_date <= threeMonthsLaterDate
+      slot.slot_date <= sixMonthsLaterDate
     )
     .sort((a, b) => a.slot_date.localeCompare(b.slot_date))
     .slice(0, showAllSlots ? 100 : 8);
@@ -3576,10 +3590,11 @@ titleHi="स्थगित"
               आने वाली मीटिंग तारीखें
               </h4>
               <p className="mt-2 text-sm text-stone-600">
-              Showing upcoming slots for the next 3 months.
+              Showing upcoming slots for the next 6 months.
+
               </p>
               <p className="text-sm text-stone-600">
-              अगले 3 महीनों की मीटिंग तारीखें दिखाई जा रही हैं।
+              अगले 6 महीनों की मीटिंग तारीखें दिखाई जा रही हैं।
               </p>
             </div>
 
@@ -3588,9 +3603,9 @@ titleHi="स्थगित"
               onClick={() => setShowAllSlots((prev) => !prev)}
               className="rounded-2xl border border-orange-300 px-5 py-3 font-bold text-orange-800"
             >
-             {showAllSlots ? "Show Less" : "View Next 3 Months"}
+             {showAllSlots ? "Show Less" : "View Next 6 Months"}
               <span className="block text-sm font-normal">
-              {showAllSlots ? "कम दिखाएं" : "अगले 3 महीने देखें"}
+              {showAllSlots ? "कम दिखाएं" : "अगले 6 महीने देखें"}
               </span>
             </button>
           </div>
