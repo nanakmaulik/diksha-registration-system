@@ -1246,11 +1246,22 @@ referred_by: request.referred_by || "",
   }
   
   function handleToggleAllFilteredRegistrations() {
-    const ids = filteredRegistrations.map((person) => person.id);
+    const selectableRegistrations = filteredRegistrations.filter(
+      (person) => !isDikshaCompletedLocked(person)
+    );
   
-    if (ids.length === 0) return;
+    const ids = selectableRegistrations.map((person) => person.id);
   
-    const allSelected = ids.every((id) => selectedRegistrationIds.includes(id));
+    if (ids.length === 0) {
+      alert(
+        "No selectable records found. Diksha Completed records are locked for non-SuperAdmin users.\nकोई selectable record नहीं मिला। Diksha Completed records केवल SuperAdmin के लिए खुले हैं।"
+      );
+      return;
+    }
+  
+    const allSelected = ids.every((id) =>
+      selectedRegistrationIds.includes(id)
+    );
   
     if (allSelected) {
       setSelectedRegistrationIds([]);
@@ -2054,6 +2065,17 @@ referred_by: request.referred_by || "",
         return;
       }
     
+      const lockedForms = selectedDevoteeForms.filter(
+        isDikshaCompletedLocked
+      );
+    
+      if (lockedForms.length > 0) {
+        alert(
+          "One or more selected profiles are locked because Diksha is completed. Only SuperAdmin can open or print these forms.\nचुनी हुई profiles में से कुछ locked हैं क्योंकि Diksha completed है। केवल SuperAdmin ये forms open/print कर सकता है।"
+        );
+        return;
+      }
+    
       setPrintMode("forms");
     
       setTimeout(() => {
@@ -2362,6 +2384,17 @@ router.refresh();
     function handleExportCsv() {
       if (filteredRegistrations.length === 0) {
         alert("No records to export.\nExport करने के लिए कोई रिकॉर्ड नहीं है।");
+        return;
+      }
+    
+      const lockedExportRecords = filteredRegistrations.filter(
+        isDikshaCompletedLocked
+      );
+    
+      if (lockedExportRecords.length > 0) {
+        alert(
+          "This export contains Diksha Completed locked profiles. Only SuperAdmin can download this information.\nइस export में Diksha Completed locked profiles हैं। केवल SuperAdmin यह information download कर सकता है।"
+        );
         return;
       }
     
@@ -4022,12 +4055,16 @@ titleHi="स्थगित"
                       className={index % 2 === 0 ? "bg-white" : "bg-orange-50"}
                     >
                       <TableCell>
-  <input
-    type="checkbox"
-    checked={selectedRegistrationIds.includes(person.id)}
-    onChange={() => handleToggleRegistrationSelection(person.id)}
-    className="h-5 w-5 accent-orange-700"
-  />
+                      <input
+  type="checkbox"
+  checked={
+    !isDikshaCompletedLocked(person) &&
+    selectedRegistrationIds.includes(person.id)
+  }
+  disabled={isDikshaCompletedLocked(person)}
+  onChange={() => handleToggleRegistrationSelection(person.id)}
+  className="h-5 w-5 accent-orange-700 disabled:cursor-not-allowed disabled:opacity-40"
+/>
 </TableCell>
 <TableCell>
   {getTokenWithMemberLetter(person, registrations)}
