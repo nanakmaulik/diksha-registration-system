@@ -1926,7 +1926,7 @@ referred_by: request.referred_by || "",
   const sixMonthsLaterForSlots = new Date();
   sixMonthsLaterForSlots.setMonth(sixMonthsLaterForSlots.getMonth() + 6);
   
-  const tomorrowDate = formatSlotFilterDate(tomorrowForSlots);
+  const todaySlotDate = getTodayDateString();
   const sixMonthsLaterDate = formatSlotFilterDate(sixMonthsLaterForSlots);
   const finalMeetingAttendanceList = useMemo(() => {
     return registrations
@@ -1968,7 +1968,7 @@ referred_by: request.referred_by || "",
     const upcomingSlots = slots
     .filter(
       (slot) =>
-        slot.slot_date >= tomorrowDate &&
+        slot.slot_date >= todaySlotDate &&
       slot.slot_date <= sixMonthsLaterDate
     )
     .sort((a, b) => a.slot_date.localeCompare(b.slot_date))
