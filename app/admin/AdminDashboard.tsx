@@ -175,6 +175,28 @@ loggedInRole = "sadhak",
   function can(permissionName: string) {
     return isSuperAdminAccess || Boolean(permissions?.[permissionName]);
   }
+  const standardReferredByOptions = [
+    "SJS",
+    "PAS",
+    "VRS",
+    "BBS",
+    "MS",
+    "PRN",
+    "SS",
+    "SRS",
+  ];
+  
+  function getReferredBySelectValue(value: string | null | undefined) {
+    const cleanValue = String(value || "").trim();
+  
+    if (!cleanValue) {
+      return "";
+    }
+  
+    return standardReferredByOptions.includes(cleanValue)
+      ? cleanValue
+      : "Other";
+  }
   const standardFamilyRelations = [
     "Father",
     "Mother",
@@ -262,7 +284,8 @@ const [pendingQuestionAnswers, setPendingQuestionAnswers] = useState<
       video_proof_attached: string;
       video_proof_other: string;
       referred_to: string;
-      referred_by: string;
+referred_by: string;
+referred_by_other: string;
     }
   >
 >({});
@@ -300,7 +323,8 @@ affidavit_other: "",
 video_proof_attached: "",
   video_proof_other: "",
   referred_to: "",
-  referred_by: "",
+referred_by: "",
+referred_by_other: "",
 });
 
 const [isSavingRequestEdit, setIsSavingRequestEdit] = useState(false);
@@ -348,6 +372,7 @@ video_proof_attached: "",
   video_proof_other: "",
   referred_to: "",
   referred_by: "",
+  referred_by_other: "",
 });
 
 const [isSavingRegistrationEdit, setIsSavingRegistrationEdit] = useState(false);
@@ -648,7 +673,11 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
         video_proof_attached: request.video_proof_attached || "",
         video_proof_other: request.video_proof_other || "",
         referred_to: request.referred_to || "",
-        referred_by: request.referred_by || "",
+        referred_by: getReferredBySelectValue(request.referred_by),
+        referred_by_other:
+          getReferredBySelectValue(request.referred_by) === "Other"
+            ? request.referred_by || ""
+            : "",
       }
     );
   }
@@ -661,7 +690,8 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     | "video_proof_attached"
     | "video_proof_other"
     | "referred_to"
-    | "referred_by",
+    | "referred_by"
+    | "referred_by_other",
     value: string
   ) {
     const currentAnswers = getPendingQuestionAnswers(request);
@@ -683,6 +713,9 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
         ...(field === "video_proof_attached" && value !== "Others"
           ? { video_proof_other: "" }
           : {}),
+          ...(field === "referred_by" && value !== "Other"
+            ? { referred_by_other: "" }
+            : {}),
       },
     }));
   }
@@ -727,7 +760,10 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
       video_proof_attached: answers.video_proof_attached || null,
         video_proof_other: answers.video_proof_other.trim() || null,
         referred_to: answers.referred_to || null,
-        referred_by: answers.referred_by || null,
+        referred_by:
+  answers.referred_by === "Other"
+    ? answers.referred_by_other.trim() || null
+    : answers.referred_by || null,
       })
       .eq("id", request.id);
   
@@ -970,7 +1006,11 @@ setIsBulkApprovingRequests(false);
       video_proof_attached: request.video_proof_attached || "",
 video_proof_other: request.video_proof_other || "",
 referred_to: request.referred_to || "",
-referred_by: request.referred_by || "",
+referred_by: getReferredBySelectValue(request.referred_by),
+referred_by_other:
+  getReferredBySelectValue(request.referred_by) === "Other"
+    ? request.referred_by || ""
+    : "",
     });
   }
   
@@ -996,6 +1036,9 @@ referred_by: request.referred_by || "",
         ...(name === "affidavit_attached" && value !== "Others"
           ? { affidavit_other: "" }
           : {}),
+          ...(name === "referred_by" && value !== "Other"
+            ? { referred_by_other: "" }
+            : {}),
       ...(name === "family_relation" && value !== "Other"
         ? { family_relation_other: "" }
         : {}),
@@ -1068,7 +1111,10 @@ referred_by: request.referred_by || "",
       video_proof_other:
         editRequestFormData.video_proof_other.trim() || null,
       referred_to: editRequestFormData.referred_to || null,
-      referred_by: editRequestFormData.referred_by || null,
+      referred_by:
+  editRequestFormData.referred_by === "Other"
+    ? editRequestFormData.referred_by_other.trim() || null
+    : editRequestFormData.referred_by || null,
       })
       .eq("id", editingRequest.id);
   
@@ -1096,6 +1142,8 @@ referred_by: request.referred_by || "",
             editRequestFormData.referred_to || "",
           referred_by:
             editRequestFormData.referred_by || "",
+          referred_by_other:
+            editRequestFormData.referred_by_other || "",
         },
       }));
       
@@ -1977,6 +2025,7 @@ referred_by: request.referred_by || "",
     const isDikshaDateReport =
     reportFilter === "scheduled_diksha" ||
     reportFilter === "diksha_completed" ||
+    
     reportFilter === "today_diksha" ||
     reportFilter === "rescheduled_diksha";
   
@@ -2214,7 +2263,11 @@ setTokenSuccess({
         video_proof_attached: person.video_proof_attached || "",
 video_proof_other: person.video_proof_other || "",
 referred_to: person.referred_to || "",
-referred_by: person.referred_by || "",
+referred_by: getReferredBySelectValue(person.referred_by),
+referred_by_other:
+  getReferredBySelectValue(person.referred_by) === "Other"
+    ? person.referred_by || ""
+    : "",
       });
     }
     
@@ -2240,6 +2293,9 @@ referred_by: person.referred_by || "",
         ...(name === "video_proof_attached" && value !== "Others"
           ? { video_proof_other: "" }
           : {}),
+          ...(name === "referred_by" && value !== "Other"
+            ? { referred_by_other: "" }
+            : {}),
         ...(name === "family_relation" && value !== "Other"
           ? { family_relation_other: "" }
           : {}),
@@ -2321,7 +2377,9 @@ video_proof_other:
 referred_to:
   editFormData.referred_to || null,
   referred_by:
-  editFormData.referred_by || null,
+  editFormData.referred_by === "Other"
+    ? editFormData.referred_by_other.trim() || null
+    : editFormData.referred_by || null,
         })
         .eq("id", editingRegistration.id);
     
@@ -3228,6 +3286,22 @@ router.refresh();
     <option value="PRN">PRN</option>
     <option value="SS">SS</option>
     <option value="SRS">SRS</option>
+    <option value="Other">Other</option>
+    {getPendingQuestionAnswers(request).referred_by === "Other" && (
+  <input
+    type="text"
+    value={getPendingQuestionAnswers(request).referred_by_other}
+    onChange={(event) =>
+      handlePendingQuestionChange(
+        request,
+        "referred_by_other",
+        event.target.value
+      )
+    }
+    placeholder="Enter referred by name"
+    className="mt-3 w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+  />
+)}
   </select>
 </div>
   </div>
@@ -3244,151 +3318,7 @@ router.refresh();
 </section>
 )}
 
-{!isSadhakAccess && (
-        <section className="mb-8 space-y-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            <StatsCard
-              title="Total Registered"
-              titleHi="कुल पंजीकरण"
-              value={String(totalRegistered)}
-            />
 
-            <StatsCard
-              title="Showing Now"
-              titleHi="अभी दिख रहे हैं"
-              value={String(filteredRegistrations.length)}
-            />
-
-            <StatsCard
-              title="Slots Full"
-              titleHi="भरे हुए स्लॉट"
-              value={String(slotsFull)}
-            />
-
-            <StatsCard
-              title="Next Available Slot"
-              titleHi="अगला उपलब्ध स्लॉट"
-              value={
-                nextAvailableSlot
-                  ? formatDateShort(nextAvailableSlot.slot_date)
-                  : "None"
-              }
-            />
-          </div>
-
-          <div className="rounded-3xl bg-white p-5 shadow-sm md:p-6">
-            <div className="mb-5">
-              <h3 className="text-2xl font-extrabold">Reports Summary</h3>
-              <h4 className="mt-1 text-xl font-bold text-orange-800">
-                रिपोर्ट सारांश
-              </h4>
-              <p className="mt-2 text-sm text-stone-600">
-                Click any report card to filter registrations.
-              </p>
-              <p className="text-sm text-stone-600">
-                पंजीकरण फ़िल्टर करने के लिए किसी भी रिपोर्ट कार्ड पर क्लिक करें।
-              </p>
-            </div>
-
-
-            <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
-              <ReportCountCard
-                title="Scheduled Final Meetings"
-                titleHi="फाइनल मीटिंग शेड्यूल"
-                value={reportCounts.scheduledFinalMeetings}
-                active={reportFilter === "scheduled_final_meetings"}
-                onClick={() => setReportFilter("scheduled_final_meetings")}
-              />
-
-              <ReportCountCard
-                title="Pending"
-                titleHi="लंबित"
-                value={reportCounts.pending}
-                active={reportFilter === "pending"}
-                onClick={() => setReportFilter("pending")}
-              />
-
-              <ReportCountCard
-                title="Approved"
-                titleHi="स्वीकृत"
-                value={reportCounts.approved}
-                active={reportFilter === "approved"}
-                onClick={() => setReportFilter("approved")}
-              />
-<ReportCountCard
-  title="Final Meeting Attended"
-  titleHi="फाइनल मीटिंग उपस्थित"
-  value={reportCounts.finalMeetingAttended}
-  active={reportFilter === "final_meeting_attended"}
-  onClick={() => setReportFilter("final_meeting_attended")}
-/>
-              <ReportCountCard
-                title="Deferred"
-titleHi="स्थगित"
-                value={reportCounts.rejected}
-                active={reportFilter === "rejected"}
-                onClick={() => setReportFilter("rejected")}
-              />
-
-              <ReportCountCard
-                title="Scheduled Diksha"
-                titleHi="दीक्षा शेड्यूल"
-                value={reportCounts.scheduledDiksha}
-                active={reportFilter === "scheduled_diksha"}
-                onClick={() => setReportFilter("scheduled_diksha")}
-              />
-
-              <ReportCountCard
-                title="Diksha Completed"
-                titleHi="दीक्षा पूर्ण"
-                value={reportCounts.dikshaCompleted}
-                active={reportFilter === "diksha_completed"}
-                onClick={() => setReportFilter("diksha_completed")}
-              />
-
-              <ReportCountCard
-                title="No Show"
-                titleHi="अनुपस्थित"
-                value={reportCounts.noShow}
-                active={reportFilter === "no_show"}
-                onClick={() => setReportFilter("no_show")}
-              />
-
-              <ReportCountCard
-                title="Today Final Meetings"
-                titleHi="आज फाइनल मीटिंग"
-                value={reportCounts.todayFinalMeetings}
-                active={reportFilter === "today_final_meetings"}
-                onClick={() => setReportFilter("today_final_meetings")}
-              />
-
-<ReportCountCard
-  title="Today Diksha"
-  titleHi="आज दीक्षा"
-  value={reportCounts.todayDiksha}
-  active={reportFilter === "today_diksha"}
-  onClick={() => setReportFilter("today_diksha")}
-/>
-
-<ReportCountCard
-  title="Rescheduled Diksha"
-  titleHi="बदली हुई दीक्षा"
-  value={reportCounts.rescheduledDiksha}
-  active={reportFilter === "rescheduled_diksha"}
-  onClick={() => setReportFilter("rescheduled_diksha")}
-/>
-
-<ReportCountCard
-  title="All"
-                titleHi="सभी"
-                value={registrations.length}
-                active={reportFilter === "all"}
-                onClick={() => setReportFilter("all")}
-              />
-            </div>
-          </div>
-        </section>
-        )}
         {can("view_final_meeting_attendance") && (
         <section className="mb-8 rounded-3xl bg-white p-5 shadow-sm md:p-6">
   <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -4327,9 +4257,157 @@ titleHi="स्थगित"
         </section>
         )}
       </div>
+
+      {!isSadhakAccess && (
+        <section className="mb-8 space-y-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            <StatsCard
+              title="Total Registered"
+              titleHi="कुल पंजीकरण"
+              value={String(totalRegistered)}
+            />
+
+            <StatsCard
+              title="Showing Now"
+              titleHi="अभी दिख रहे हैं"
+              value={String(filteredRegistrations.length)}
+            />
+
+            <StatsCard
+              title="Slots Full"
+              titleHi="भरे हुए स्लॉट"
+              value={String(slotsFull)}
+            />
+
+            <StatsCard
+              title="Next Available Slot"
+              titleHi="अगला उपलब्ध स्लॉट"
+              value={
+                nextAvailableSlot
+                  ? formatDateShort(nextAvailableSlot.slot_date)
+                  : "None"
+              }
+            />
+          </div>
+
+          <div className="rounded-3xl bg-white p-5 shadow-sm md:p-6">
+            <div className="mb-5">
+              <h3 className="text-2xl font-extrabold">Reports Summary</h3>
+              <h4 className="mt-1 text-xl font-bold text-orange-800">
+                रिपोर्ट सारांश
+              </h4>
+              <p className="mt-2 text-sm text-stone-600">
+                Click any report card to filter registrations.
+              </p>
+              <p className="text-sm text-stone-600">
+                पंजीकरण फ़िल्टर करने के लिए किसी भी रिपोर्ट कार्ड पर क्लिक करें।
+              </p>
+            </div>
+
+
+            <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+              <ReportCountCard
+                title="Scheduled Final Meetings"
+                titleHi="फाइनल मीटिंग शेड्यूल"
+                value={reportCounts.scheduledFinalMeetings}
+                active={reportFilter === "scheduled_final_meetings"}
+                onClick={() => setReportFilter("scheduled_final_meetings")}
+              />
+
+              <ReportCountCard
+                title="Pending"
+                titleHi="लंबित"
+                value={reportCounts.pending}
+                active={reportFilter === "pending"}
+                onClick={() => setReportFilter("pending")}
+              />
+
+              <ReportCountCard
+                title="Approved"
+                titleHi="स्वीकृत"
+                value={reportCounts.approved}
+                active={reportFilter === "approved"}
+                onClick={() => setReportFilter("approved")}
+              />
+<ReportCountCard
+  title="Final Meeting Attended"
+  titleHi="फाइनल मीटिंग उपस्थित"
+  value={reportCounts.finalMeetingAttended}
+  active={reportFilter === "final_meeting_attended"}
+  onClick={() => setReportFilter("final_meeting_attended")}
+/>
+              <ReportCountCard
+                title="Deferred"
+titleHi="स्थगित"
+                value={reportCounts.rejected}
+                active={reportFilter === "rejected"}
+                onClick={() => setReportFilter("rejected")}
+              />
+
+              <ReportCountCard
+                title="Scheduled Diksha"
+                titleHi="दीक्षा शेड्यूल"
+                value={reportCounts.scheduledDiksha}
+                active={reportFilter === "scheduled_diksha"}
+                onClick={() => setReportFilter("scheduled_diksha")}
+              />
+
+              <ReportCountCard
+                title="Diksha Completed"
+                titleHi="दीक्षा पूर्ण"
+                value={reportCounts.dikshaCompleted}
+                active={reportFilter === "diksha_completed"}
+                onClick={() => setReportFilter("diksha_completed")}
+              />
+
+              <ReportCountCard
+                title="No Show"
+                titleHi="अनुपस्थित"
+                value={reportCounts.noShow}
+                active={reportFilter === "no_show"}
+                onClick={() => setReportFilter("no_show")}
+              />
+
+              <ReportCountCard
+                title="Today Final Meetings"
+                titleHi="आज फाइनल मीटिंग"
+                value={reportCounts.todayFinalMeetings}
+                active={reportFilter === "today_final_meetings"}
+                onClick={() => setReportFilter("today_final_meetings")}
+              />
+
+<ReportCountCard
+  title="Today Diksha"
+  titleHi="आज दीक्षा"
+  value={reportCounts.todayDiksha}
+  active={reportFilter === "today_diksha"}
+  onClick={() => setReportFilter("today_diksha")}
+/>
+
+<ReportCountCard
+  title="Rescheduled Diksha"
+  titleHi="बदली हुई दीक्षा"
+  value={reportCounts.rescheduledDiksha}
+  active={reportFilter === "rescheduled_diksha"}
+  onClick={() => setReportFilter("rescheduled_diksha")}
+/>
+
+<ReportCountCard
+  title="All"
+                titleHi="सभी"
+                value={registrations.length}
+                active={reportFilter === "all"}
+                onClick={() => setReportFilter("all")}
+              />
+            </div>
+          </div>
+        </section>
+        )}
+
       {!isSadhakAccess && (
       <section
   className={`print-area print-list-area ${
+
     printMode === "list" ? "" : "print-hidden"
   } hidden`}
 >
@@ -4676,8 +4754,19 @@ colSpan={10}
     ["PRN", "PRN"],
     ["SS", "SS"],
     ["SRS", "SRS"],
+    ["Other", "Other"],
+    
   ]}
 />
+{editFormData.referred_by === "Other" && (
+      <EditInput
+        label="Other Referred By Name / भेजने वाले का नाम"
+        name="referred_by_other"
+        value={editFormData.referred_by_other}
+        onChange={handleEditFormChange}
+      />
+    )}
+
         <EditInput
           label="Husband / Wife Name"
           name="spouse_name"
@@ -5102,8 +5191,17 @@ colSpan={10}
     ["PRN", "PRN"],
     ["SS", "SS"],
     ["SRS", "SRS"],
+    ["Other", "Other"],
   ]}
 />
+{editRequestFormData.referred_by === "Other" && (
+  <EditInput
+    label="Other Referred By Name / भेजने वाले का नाम"
+    name="referred_by_other"
+    value={editRequestFormData.referred_by_other}
+    onChange={handleEditRequestFormChange}
+  />
+)}
         </div>
       </div>
 
