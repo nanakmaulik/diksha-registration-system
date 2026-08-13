@@ -4259,7 +4259,7 @@ router.refresh();
       </div>
 
       {!isSadhakAccess && (
-        <section className="mb-8 space-y-4">
+        <section className="print-hidden mb-8 space-y-4">
           <div className="grid gap-4 md:grid-cols-4">
             <StatsCard
               title="Total Registered"
