@@ -392,3 +392,160 @@ button {
     display: none !important;
   }
 }
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 5mm;
+  }
+
+  html,
+  body {
+    width: 210mm !important;
+    min-height: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  .devotee-forms-area {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  /* Main form page: filled look + no blank extra page */
+  .devotee-form-page {
+    box-sizing: border-box !important;
+    width: 190mm !important;
+    min-height: 270mm !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    padding: 6mm 7mm !important;
+    overflow: hidden !important;
+    background: white !important;
+    color: black !important;
+    font-size: 11.2px !important;
+    line-height: 1.24 !important;
+
+    page-break-after: auto !important;
+    break-after: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Only add page break BETWEEN selected forms, not after last form */
+  .devotee-form-page:not(:last-child) {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .devotee-form-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .devotee-form-top {
+    font-size: 9.2px !important;
+    margin-bottom: 4mm !important;
+  }
+
+  .devotee-form-title {
+    padding: 2.5mm !important;
+    margin-bottom: 4mm !important;
+  }
+
+  .devotee-form-title h1 {
+    font-size: 14.2px !important;
+  }
+
+  .devotee-form-title h2 {
+    font-size: 10.2px !important;
+  }
+
+  .devotee-form-main {
+    grid-template-columns: 1fr 36mm !important;
+    gap: 8mm !important;
+  }
+
+  .devotee-form-details {
+    gap: 1.45mm !important;
+  }
+
+  .devotee-line {
+    grid-template-columns: 35mm 4mm 1fr !important;
+    min-height: 4.7mm !important;
+  }
+
+  .devotee-photo-box {
+    width: 36mm !important;
+    height: 45mm !important;
+    font-size: 9px !important;
+  }
+
+  .declaration-section {
+    margin-top: 4.8mm !important;
+    font-size: 9.2px !important;
+    line-height: 1.28 !important;
+  }
+
+  .declaration-section h3 {
+    font-size: 13px !important;
+    margin-bottom: 2mm !important;
+  }
+
+  .declaration-section p {
+    margin-bottom: 2mm !important;
+  }
+
+  .family-details-section {
+    grid-template-columns: 33mm 33mm 1fr !important;
+    gap: 6mm !important;
+    margin-top: 6mm !important;
+  }
+
+  .family-photo-box {
+    width: 33mm !important;
+    height: 38mm !important;
+    font-size: 9px !important;
+  }
+
+  .family-info {
+    font-size: 10.2px !important;
+    padding-top: 2mm !important;
+  }
+
+  .family-info h3 {
+    font-size: 14px !important;
+    margin-bottom: 3mm !important;
+  }
+
+  .signature-section {
+    grid-template-columns: 1fr 66mm 1fr !important;
+    gap: 8mm !important;
+    margin-top: 13mm !important;
+    font-size: 9.5px !important;
+  }
+
+  .signature-block {
+    min-height: 17mm !important;
+  }
+
+  .thumb-box {
+    width: 30mm !important;
+    height: 24mm !important;
+    font-size: 8.5px !important;
+  }
+
+  .thumb-hi {
+    font-size: 8px !important;
+  }
+
+  .form-footer {
+    display: none !important;
+  }
+}
