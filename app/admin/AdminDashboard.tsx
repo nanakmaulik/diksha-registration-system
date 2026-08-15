@@ -49,6 +49,7 @@ pin_code: string | null;
 video_proof_other: string | null;
   referred_to: string | null;
   referred_by: string | null;
+  special_note: string | null;
   affidavit_required: boolean | null;
   affidavit_attached: string | null;
 affidavit_other: string | null;
@@ -120,6 +121,7 @@ video_proof_attached: string | null;
 video_proof_other: string | null;
 referred_to: string | null;
 referred_by: string | null;
+special_note: string | null;
   created_at: string;
 };
 
@@ -286,6 +288,7 @@ const [pendingQuestionAnswers, setPendingQuestionAnswers] = useState<
       referred_to: string;
 referred_by: string;
 referred_by_other: string;
+special_note: string;
     }
   >
 >({});
@@ -325,6 +328,7 @@ video_proof_attached: "",
   referred_to: "",
 referred_by: "",
 referred_by_other: "",
+special_note: "",
 });
 
 const [isSavingRequestEdit, setIsSavingRequestEdit] = useState(false);
@@ -373,6 +377,7 @@ video_proof_attached: "",
   referred_to: "",
   referred_by: "",
   referred_by_other: "",
+  special_note: "",
 });
 
 const [isSavingRegistrationEdit, setIsSavingRegistrationEdit] = useState(false);
@@ -678,6 +683,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
           getReferredBySelectValue(request.referred_by) === "Other"
             ? request.referred_by || ""
             : "",
+        special_note: request.special_note || "",
       }
     );
   }
@@ -691,7 +697,8 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
     | "video_proof_other"
     | "referred_to"
     | "referred_by"
-    | "referred_by_other",
+    | "referred_by_other"
+| "special_note",
     value: string
   ) {
     const currentAnswers = getPendingQuestionAnswers(request);
@@ -764,6 +771,7 @@ const [isDeletingRegistrationId, setIsDeletingRegistrationId] =
   answers.referred_by === "Other"
     ? answers.referred_by_other.trim() || null
     : answers.referred_by || null,
+    special_note: answers.special_note.trim() || null,
       })
       .eq("id", request.id);
   
@@ -1004,13 +1012,14 @@ setIsBulkApprovingRequests(false);
         request.affidavit_other ||
         (request.affidavit_required ? "Required" : ""),
       video_proof_attached: request.video_proof_attached || "",
-video_proof_other: request.video_proof_other || "",
-referred_to: request.referred_to || "",
-referred_by: getReferredBySelectValue(request.referred_by),
-referred_by_other:
-  getReferredBySelectValue(request.referred_by) === "Other"
-    ? request.referred_by || ""
-    : "",
+      video_proof_other: request.video_proof_other || "",
+      referred_to: request.referred_to || "",
+      referred_by: getReferredBySelectValue(request.referred_by),
+      referred_by_other:
+        getReferredBySelectValue(request.referred_by) === "Other"
+          ? request.referred_by || ""
+          : "",
+      special_note: request.special_note || "",
     });
   }
   
@@ -1110,11 +1119,12 @@ referred_by_other:
         editRequestFormData.video_proof_attached || null,
       video_proof_other:
         editRequestFormData.video_proof_other.trim() || null,
-      referred_to: editRequestFormData.referred_to || null,
-      referred_by:
-  editRequestFormData.referred_by === "Other"
-    ? editRequestFormData.referred_by_other.trim() || null
-    : editRequestFormData.referred_by || null,
+        referred_to: editRequestFormData.referred_to || null,
+        referred_by:
+          editRequestFormData.referred_by === "Other"
+            ? editRequestFormData.referred_by_other.trim() || null
+            : editRequestFormData.referred_by || null,
+        special_note: editRequestFormData.special_note.trim() || null,
       })
       .eq("id", editingRequest.id);
   
@@ -1142,8 +1152,10 @@ referred_by_other:
             editRequestFormData.referred_to || "",
           referred_by:
             editRequestFormData.referred_by || "",
-          referred_by_other:
+            referred_by_other:
             editRequestFormData.referred_by_other || "",
+          special_note:
+            editRequestFormData.special_note.trim() || "",
         },
       }));
       
@@ -1160,10 +1172,14 @@ referred_by_other:
               editRequestFormData.video_proof_attached || null,
             video_proof_other:
               editRequestFormData.video_proof_other.trim() || null,
-            referred_to:
+              referred_to:
               editRequestFormData.referred_to || null,
             referred_by:
-              editRequestFormData.referred_by || null,
+              editRequestFormData.referred_by === "Other"
+                ? editRequestFormData.referred_by_other.trim() || null
+                : editRequestFormData.referred_by || null,
+            special_note:
+              editRequestFormData.special_note.trim() || null,
           })
           .eq("id", editingRequest.created_registration_id);
       
@@ -2222,6 +2238,7 @@ setTokenSuccess({
         );
         return;
       }
+    
       const existingFamilyRelation = person.family_relation || "";
       const familyRelationSelectValue =
         getFamilyRelationSelectValue(existingFamilyRelation);
@@ -2261,16 +2278,16 @@ setTokenSuccess({
           person.affidavit_other ||
           (person.affidavit_required ? "Required" : ""),
         video_proof_attached: person.video_proof_attached || "",
-video_proof_other: person.video_proof_other || "",
-referred_to: person.referred_to || "",
-referred_by: getReferredBySelectValue(person.referred_by),
-referred_by_other:
-  getReferredBySelectValue(person.referred_by) === "Other"
-    ? person.referred_by || ""
-    : "",
+        video_proof_other: person.video_proof_other || "",
+        referred_to: person.referred_to || "",
+        referred_by: getReferredBySelectValue(person.referred_by),
+        referred_by_other:
+          getReferredBySelectValue(person.referred_by) === "Other"
+            ? person.referred_by || ""
+            : "",
+        special_note: person.special_note || "",
       });
     }
-    
     function handleEditFormChange(
       event: React.ChangeEvent<
         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -2380,6 +2397,7 @@ referred_to:
   editFormData.referred_by === "Other"
     ? editFormData.referred_by_other.trim() || null
     : editFormData.referred_by || null,
+special_note: editFormData.special_note.trim() || null,
         })
         .eq("id", editingRegistration.id);
     
@@ -2401,10 +2419,14 @@ referred_to:
               editFormData.video_proof_attached || null,
             video_proof_other:
               editFormData.video_proof_other.trim() || null,
-            referred_to:
+              referred_to:
               editFormData.referred_to || null,
             referred_by:
-              editFormData.referred_by || null,
+              editFormData.referred_by === "Other"
+                ? editFormData.referred_by_other.trim() || null
+                : editFormData.referred_by || null,
+            special_note:
+              editFormData.special_note.trim() || null,
           })
           .eq("created_registration_id", editingRegistration.id);
         
@@ -3266,6 +3288,28 @@ router.refresh();
       </select>
     </div>
     <div>
+    <div className="md:col-span-2 xl:col-span-4">
+  <label className="mb-2 block text-sm font-bold text-stone-700">
+    Special Note Related To Devotee
+    <span className="block text-xs font-semibold text-orange-800">
+      श्रद्धालु से संबंधित विशेष टिप्पणी
+    </span>
+  </label>
+
+  <textarea
+    value={getPendingQuestionAnswers(request).special_note}
+    onChange={(event) =>
+      handlePendingQuestionChange(
+        request,
+        "special_note",
+        event.target.value
+      )
+    }
+    placeholder="Write any special note before token generation"
+    rows={3}
+    className="w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+  />
+</div>
   <label className="mb-2 block text-sm font-bold text-stone-700">
     Referred By
     <span className="block text-xs font-semibold text-orange-800">
@@ -3294,22 +3338,23 @@ router.refresh();
     <option value="SS">SS</option>
     <option value="SRS">SRS</option>
     <option value="Other">Other</option>
-    {getPendingQuestionAnswers(request).referred_by === "Other" && (
-  <input
-    type="text"
-    value={getPendingQuestionAnswers(request).referred_by_other}
-    onChange={(event) =>
-      handlePendingQuestionChange(
-        request,
-        "referred_by_other",
-        event.target.value
-      )
-    }
-    placeholder="Enter referred by name"
-    className="mt-3 w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
-  />
-)}
   </select>
+
+  {getPendingQuestionAnswers(request).referred_by === "Other" && (
+    <input
+      type="text"
+      value={getPendingQuestionAnswers(request).referred_by_other}
+      onChange={(event) =>
+        handlePendingQuestionChange(
+          request,
+          "referred_by_other",
+          event.target.value
+        )
+      }
+      placeholder="Enter referred by name"
+      className="mt-3 w-full rounded-2xl border border-orange-200 px-4 py-3 outline-none focus:border-orange-600"
+    />
+  )}
 </div>
   </div>
 </div>
@@ -4839,14 +4884,23 @@ colSpan={10}
           onChange={handleEditFormChange}
         />
 
-        <div className="md:col-span-3">
-          <EditTextarea
-            label="Address"
-            name="address"
-            value={editFormData.address}
-            onChange={handleEditFormChange}
-          />
-        </div>
+<div className="md:col-span-3">
+  <EditTextarea
+    label="Address"
+    name="address"
+    value={editFormData.address}
+    onChange={handleEditFormChange}
+  />
+</div>
+
+<div className="md:col-span-3">
+  <EditTextarea
+    label="Special Note Related To Devotee / श्रद्धालु से संबंधित विशेष टिप्पणी"
+    name="special_note"
+    value={editFormData.special_note}
+    onChange={handleEditFormChange}
+  />
+</div>
       </div>
 
       <div className="mt-6 flex flex-col gap-3 md:flex-row md:justify-end">
