@@ -2485,19 +2485,24 @@ router.refresh();
       });
     
       const headers = isDikshaCompletedExport
-  ? [
-      "NAME",
-      "WHATSAPP NO",
-      "AADHAR NO.",
-      "CITY",
-      "STATE",
-      "OCCUPATION",
-    ]
+  ? 
+  
+  [
+    "NAME",
+    "REFERRED BY",
+    "PHONE NO",
+    "AADHAR NO.",
+    "CITY",
+    "STATE",
+    "OCCUPATION",
+  ]
+
         : [
             "Devotee Form Fill Up Date",
             "Token",
-            "Name",
-            "Age",
+          "Name",
+"Referred By",
+"Age",
             "Gender",
             "Mobile",
             "WhatsApp",
@@ -2542,6 +2547,7 @@ router.refresh();
         if (isDikshaCompletedExport) {
           return [
             finalDikshaCell(person.full_name),
+            finalDikshaCell(person.referred_by),
             finalDikshaTextCell(formatPhoneDisplay(person.whatsapp)),
             finalDikshaTextCell(
               formatIdNumberDisplay(person.id_type, person.id_number)
@@ -2570,6 +2576,7 @@ router.refresh();
             : "-",
           person.token || "-",
           person.full_name || "-",
+          person.referred_by || "-",
           person.age || "-",
           person.gender || "-",
           csvTextValue(formatPhoneDisplay(person.mobile)),
