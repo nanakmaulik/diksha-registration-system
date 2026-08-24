@@ -4541,30 +4541,37 @@ colSpan={10}
 </tbody>
         </table>
 
-        <div className="mt-3 text-sm font-extrabold">
-          MALE:{" "}
-          {
-            filteredRegistrations.filter((person) => person.gender === "Male")
-              .length
-          }{" "}
-          | FEMALE:{" "}
-          {
-            filteredRegistrations.filter((person) => person.gender === "Female")
-              .length
-          }{" "}
-          | TOTAL: {filteredRegistrations.length}
-        </div>
+        <div className="print-list-footer">
+  <div className="mt-2 text-sm font-extrabold">
+    MALE:{" "}
+    {
+      filteredRegistrations.filter(
+        (person) => person.gender === "Male"
+      ).length
+    }{" "}
+    | FEMALE:{" "}
+    {
+      filteredRegistrations.filter(
+        (person) => person.gender === "Female"
+      ).length
+    }{" "}
+    | TOTAL: {filteredRegistrations.length}
+  </div>
 
-        <div className="mt-10 grid grid-cols-2 gap-10 text-sm">
-          <div>
-            <p className="border-t border-black pt-2">Sadhak Signature</p>
-          </div>
-          <div>
-            <p className="border-t border-black pt-2">
-              Verification Signature
-            </p>
-          </div>
-        </div>
+  <div className="mt-5 grid grid-cols-2 gap-10 text-sm">
+    <div>
+      <p className="border-t border-black pt-2">
+        Sadhak Signature
+      </p>
+    </div>
+
+    <div>
+      <p className="border-t border-black pt-2">
+        Verification Signature
+      </p>
+    </div>
+  </div>
+</div>
       </section>
       )}
       {editingRegistration && (

@@ -87,7 +87,8 @@ export default function RegisterPage() {
 
   const needsSpouseName =
   formData.maritalStatus === "Married" ||
-  formData.maritalStatus === "Widowed";
+  formData.maritalStatus === "Widowed" ||
+  formData.maritalStatus === "Separated";
 
 const isMarriedMale =
   formData.gender === "Male" &&
@@ -868,6 +869,7 @@ const spouseLabelHi =
                   ["Married", "Married / विवाहित"],
                   ["Widowed", "Widowed / विधवा / विधुर"],
                   ["Divorced", "Divorced / तलाकशुदा"],
+                  ["Separated", "Separated / वियुक्त दंपत्ति"],
                   ["Virakt", "Virakt / विरक्त"],
                 ]}
               />

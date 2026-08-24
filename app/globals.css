@@ -408,7 +408,7 @@ button {
     background: white !important;
   }
 
-  .devotee-forms-area {
+  .devotee-forms-area:not(.print-hidden) {
     display: block !important;
     width: 100% !important;
     height: auto !important;
@@ -548,4 +548,40 @@ button {
   .form-footer {
     display: none !important;
   }
+
+
+  /* =========================
+   REGISTRATION LIST FOOTER FIX
+========================= */
+
+.print-list-footer {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  margin-top: 3mm !important;
+}
+
+.print-list-area table {
+  font-size: 10.5px !important;
+}
+
+.print-list-area th,
+.print-list-area td {
+  padding: 3px 4px !important;
+  line-height: 1.15 !important;
+}
+
+.print-list-area h1 {
+  font-size: 18px !important;
+  margin-bottom: 1px !important;
+}
+
+.print-list-area h2 {
+  font-size: 14px !important;
+  margin-bottom: 2px !important;
+}
+
+.print-list-area p {
+  margin: 1px 0 !important;
+}
+
 }
