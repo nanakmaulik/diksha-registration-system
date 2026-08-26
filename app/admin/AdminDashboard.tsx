@@ -1519,12 +1519,13 @@ setIsBulkApprovingRequests(false);
       );
       return;
     }
+  
     setIsUpdatingSlotCapacity(true);
   
     const { error } = await supabase.rpc("update_slot_capacity", {
       p_slot_id: slot.id,
       p_new_capacity: newCapacity,
-      p_updated_by: actorUsername,
+      p_updated_by: "Admin",
     });
   
     if (error) {
@@ -1537,7 +1538,8 @@ setIsBulkApprovingRequests(false);
     setEditingSlotCapacity("");
     setIsUpdatingSlotCapacity(false);
   
-    window.location.reload();
+    // No full page reload.
+    // Supabase realtime listener automatically refreshes updated slot data.
   }
   function openSelectedDikshaScheduler() {
     if (selectedRegistrationIds.length === 0) {
