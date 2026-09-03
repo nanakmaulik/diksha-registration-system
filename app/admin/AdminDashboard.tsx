@@ -2513,9 +2513,8 @@ router.refresh();
   
   [
     "NAME",
-    "REFERRED BY",
-    "PHONE NO",
-    "AADHAR NO.",
+    "WhatsApp No.",
+    "AADHAR No.",
     "CITY",
     "STATE",
     "OCCUPATION",
@@ -2571,7 +2570,6 @@ router.refresh();
         if (isDikshaCompletedExport) {
           return [
             finalDikshaCell(person.full_name),
-            finalDikshaCell(person.referred_by),
             finalDikshaTextCell(formatPhoneDisplay(person.whatsapp)),
             finalDikshaTextCell(
               formatIdNumberDisplay(person.id_type, person.id_number)
@@ -3952,10 +3950,23 @@ router.refresh();
               onClick={() => setShowFullMobile((prev) => !prev)}
               className="rounded-2xl border border-orange-300 px-4 py-3 font-bold text-orange-800"
             >
-              {showFullMobile ? "Hide Mobile" : "Show Mobile"}
-              <span className="block text-xs font-normal">
-                {showFullMobile ? "मोबाइल छुपाएं" : "मोबाइल दिखाएं"}
-              </span>
+             {reportFilter === "diksha_completed"
+  ? showFullMobile
+    ? "Hide WhatsApp"
+    : "Show WhatsApp"
+  : showFullMobile
+  ? "Hide Mobile"
+  : "Show Mobile"}
+
+<span className="block text-xs font-normal">
+  {reportFilter === "diksha_completed"
+    ? showFullMobile
+      ? "WhatsApp छुपाएं"
+      : "WhatsApp दिखाएं"
+    : showFullMobile
+    ? "मोबाइल छुपाएं"
+    : "मोबाइल दिखाएं"}
+</span>
             </button>
           </div>
 
@@ -4006,7 +4017,9 @@ router.refresh();
 </TableHead>
                   <TableHead>Token</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Mobile</TableHead>
+                  <TableHead>
+  {reportFilter === "diksha_completed" ? "WhatsApp No." : "Mobile"}
+</TableHead>
                   <TableHead>City</TableHead>
                   <TableHead>Meeting Date</TableHead>
 <TableHead>Meeting Time</TableHead>
@@ -4026,7 +4039,9 @@ router.refresh();
 </TableHead>
                   <TableHead>टोकन</TableHead>
                   <TableHead>नाम</TableHead>
-                  <TableHead>मोबाइल</TableHead>
+                  <TableHead>
+  {reportFilter === "diksha_completed" ? "WhatsApp नंबर" : "मोबाइल"}
+</TableHead>
                   <TableHead>शहर</TableHead>
                   <TableHead>मीटिंग दिनांक</TableHead>
 <TableHead>मीटिंग समय</TableHead>
@@ -4079,10 +4094,14 @@ router.refresh();
                       </TableCell>
 
                       <TableCell>
-                      {showFullMobile
-  ? formatPhoneDisplay(person.mobile)
-  : maskMobile(person.mobile)}
-                      </TableCell>
+  {reportFilter === "diksha_completed"
+    ? showFullMobile
+      ? formatPhoneDisplay(person.whatsapp)
+      : maskMobile(person.whatsapp)
+    : showFullMobile
+    ? formatPhoneDisplay(person.mobile)
+    : maskMobile(person.mobile)}
+</TableCell>
 
                       <TableCell>{person.city || "-"}</TableCell>
 
