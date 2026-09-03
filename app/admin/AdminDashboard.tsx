@@ -6438,9 +6438,14 @@ function getEffectiveDikshaDate(person: Registration) {
 
   return addDaysToDateString(meetingDate, 1);
 }
-function maskMobile(mobile: string) {
-  if (!mobile || mobile.length < 4) return mobile;
-  return `${mobile.slice(0, 2)}xxxxxx${mobile.slice(-2)}`;
+function maskMobile(mobile: string | null | undefined) {
+  const cleanMobile = String(mobile || "").trim();
+
+  if (!cleanMobile) return "-";
+
+  if (cleanMobile.length < 4) return cleanMobile;
+
+  return `${cleanMobile.slice(0, 2)}xxxxxx${cleanMobile.slice(-2)}`;
 }
 function formatIdType(idType: string | null) {
   if (!idType) return "ID";
